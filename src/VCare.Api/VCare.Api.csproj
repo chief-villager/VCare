@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\Patients\VCare.Modules.Patients.csproj" />
+    <ProjectReference Include="..\Modules\CarePlans\Vcare.Modules.CarePlans.csproj" />
+  </ItemGroup>
+</Project>

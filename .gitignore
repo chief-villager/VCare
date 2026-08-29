@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+*.user
+*.dll
+
+# Secrets / local config
+appsettings.json
+
+# Logs & test output
+*.log
+TestResults/
+[Tt]est[Rr]esult*/

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VCare.Api/VCare.Api.csproj" />
+    <Project Path="src/VCare.SharedKernel/VCare.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/CarePlans/Vcare.Modules.CarePlans.csproj" />
+    <Project Path="src/Modules/Patients/VCare.Modules.Patients.csproj" />
+    <Project Path="src/Modules/medications/VCare.Modules.Medications.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VCare.Modules.Patients.Tests/VCare.Modules.Patients.Tests.csproj" />
+  </Folder>
+</Solution>
