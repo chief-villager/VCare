@@ -2,21 +2,66 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using VCare.SharedKernel.Results;
 
 namespace Medications.Domain.Entities
 {
     internal class MedicationAdministration
     {
-        internal Guid Id { get; set; }
-        internal Guid MedicationOrderId { get; set; }
+        public Guid Id { get; private set; }
+        
+        public Guid PatientId {get; private set;}
+        public Guid MedicationOrderId { get; private set; }
 
-        internal DateTime? ScheduledFor { get; set; }   // null for PRN
-        internal DateTime? AdministeredAt { get; set; }
-        internal Guid OutcomeCodeId { get; set; }       // Given, Refused, Omitted...
-        internal Guid AdministeredByStaffId { get; set; }
-        internal Guid? WitnessedByStaffId { get; set; } // controlled drugs
-        internal string? QuantityGiven { get; set; }
-        internal string? Notes { get; set; }
-        internal DateTime CreatedAt { get; set; }
+        public DateTime? ScheduledFor { get; private set; }   // null for PRN
+        public DateTime? AdministeredAt { get; private set; }
+        public Guid OutcomeCodeId { get; private set; }       // Given, Refused, Omitted...
+        public Guid AdministeredByStaffId { get; private set; }
+        public Guid? WitnessedByStaffId { get; private set; } // controlled drugs
+        public string? Notes { get; private set; }
+        public DateTime CreatedAt { get; private set; }
+
+        private MedicationAdministration(){}
+
+        private MedicationAdministration(Guid medicationOrderId, DateTime? scheduledFor, 
+        DateTime? admninisteredAt, Guid outcomeId, Guid administeredByStaffId, 
+        Guid? witnessedByStaffId, string? notes)
+        {
+            Id = Guid.NewGuid();
+            MedicationOrderId = medicationOrderId;
+            ScheduledFor = scheduledFor;
+            AdministeredAt = admninisteredAt;
+            OutcomeCodeId = outcomeId;
+            AdministeredByStaffId = administeredByStaffId;
+            WitnessedByStaffId = witnessedByStaffId;
+            Notes = notes;
+            CreatedAt = DateTime.Now;
+        }
+
+        public static Result<MedicationAdministration> Create(Guid medicationOrderId, DateTime? scheduledFor, 
+        DateTime? admninisteredAt, Guid outcomeId, Guid administeredByStaffId, 
+        Guid? witnessedByStaffId, string? notes)
+        {
+            if (medicationOrderId == Guid.Empty)
+            {
+                return Result.Failure<MedicationAdministration>("medicationOrderId id required");
+            }
+            if ( outcomeId == Guid.Empty)
+            {
+                return Result.Failure<MedicationAdministration>("outcomeId id required");
+            }
+            if ( administeredByStaffId == Guid.Empty)
+            {
+                return Result.Failure<MedicationAdministration>("StaffId id required");
+            }
+            var administration = new MedicationAdministration(
+                medicationOrderId, scheduledFor, admninisteredAt,
+                outcomeId,administeredByStaffId, witnessedByStaffId, notes);
+            return Result.Success(administration);
+            
+        }
+
+
+       
     }
 }
