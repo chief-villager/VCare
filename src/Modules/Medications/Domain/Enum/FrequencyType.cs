@@ -1,6 +1,6 @@
 namespace Medications.Domain.Enum
 {
-    internal enum FrequencyType
+    public enum FrequencyType
     {
         DailyAtTimes,     // OD, BD, TDS, QDS — N fixed times every day
         IntervalDays,     // alternate days, every 3 days

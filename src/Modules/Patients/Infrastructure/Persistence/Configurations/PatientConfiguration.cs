@@ -8,7 +8,7 @@ internal sealed class PatientConfiguration : IEntityTypeConfiguration<Patient>
 {
     public void Configure(EntityTypeBuilder<Patient> builder)
     {
-        builder.ToTable("Patients");
+        builder.ToTable("Patients", PatientsDbContext.Schema);
         builder.HasKey(p => p.Id);
         builder.Property(p => p.FullName).HasMaxLength(200).IsRequired();
 
