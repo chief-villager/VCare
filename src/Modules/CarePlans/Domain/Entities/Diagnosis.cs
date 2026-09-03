@@ -15,5 +15,7 @@ namespace CarePlans.Domain.Entities
             Description = description;
             CarePlanId = carePlanId;
         }
+
+        public static Diagnosis Create(Guid carePlanId, string description) => new(carePlanId, description);
     }
 }

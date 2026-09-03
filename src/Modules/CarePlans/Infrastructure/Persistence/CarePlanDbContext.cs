@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using VCare.Modules.CarePlans.Domain.Entities;
+using VCare.SharedKernel.Abstractions;
 
 namespace Vcare.Modules.CarePlans.Infrastructure.Persistence
 {
-    public class CarePlanDbContext(DbContextOptions<CarePlanDbContext> options) : DbContext(options)
+    public class CarePlanDbContext(DbContextOptions<CarePlanDbContext> options) : DbContext(options), IUnitOfWork
     {
         public const string Schema = "CarePlan";
 

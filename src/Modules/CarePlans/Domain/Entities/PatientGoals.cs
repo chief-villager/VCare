@@ -12,11 +12,11 @@ namespace CarePlans.Domain.Entities
         public  string GoalDescription { get;  set; } = string.Empty;
         public PatientGoals(){}
 
-        public PatientGoals( Guid carePlanId, string goalDescription)
+        public PatientGoals(Guid carePlanId, string goalDescription)
         {
             GoalDescription = goalDescription;
             CarePlanId = carePlanId;
         }
-
+        
     }
 }
