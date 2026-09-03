@@ -21,39 +21,20 @@ namespace Medications.Domain.Entities
         public OrderStatus Status { get; private set; } 
         public ICollection<MedicationAdministration> Administrations { get; private set; } = [];
         public ICollection<DoseSchedule> Schedule { get; private set; }= [];
+        public DateTime CreatedAt { get; private set; } = DateTime.Now;
+        public DateTime? ModifiedAt { get; private set; } = null;
 
 
         private MedicationOrder(){}
-        
-
-        private MedicationOrder(
-            Guid patientId, string medication, 
-            MedicationRouteEnum route, string? instruction, DateOnly startDate,
-            DateOnly? endDate, string prescriber, bool isPrn, string? prnIndication,
-            bool isControlledDrug, OrderStatus orderStatus,  
-             List<DoseSchedule> doseSchedule  )
-        {
-            Id = Guid.NewGuid();
-            PatientId = patientId;
-            Medication = medication;
-            Route = route;
-            Instructions = instruction;
-            StartDate = startDate;
-            EndDate = endDate;
-            Prescriber = prescriber;
-            IsPrn = isPrn ;
-            PrnIndication = prnIndication;
-            IsControlledDrug = isControlledDrug;
-            Status = orderStatus;
-            Schedule = doseSchedule;
-        }
 
         public static Result<MedicationOrder> Record(
             Guid patientId, string medication, 
             MedicationRouteEnum route, string? instruction, DateOnly startDate,
             DateOnly? endDate, string prescriber, bool isPrn, string? prnIndication,
             bool isControlledDrug, OrderStatus orderStatus,  
-             List<DoseSchedule> doseSchedule)
+            IEnumerable<(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, 
+            DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, 
+            DateOnly? EffectiveTo, int Sequence)> doseSchedule, DateTime createdAt, DateTime? modifiedAt = null)
 
         {
              if (patientId == Guid.Empty)
@@ -69,8 +50,28 @@ namespace Medications.Domain.Entities
             if (isPrn && string.IsNullOrWhiteSpace(prnIndication))
                 return Result.Failure<MedicationOrder>(
                     "PRN indication is required for PRN medication.");
-            var order = new MedicationOrder( patientId, medication, route, instruction, startDate,
-            endDate, prescriber, isPrn, prnIndication, isControlledDrug, orderStatus, doseSchedule);
+            var order = new MedicationOrder
+            {
+                Id = Guid.NewGuid(),
+                PatientId = patientId,
+                Medication = medication,
+                Route = route,
+                Instructions = instruction,
+                StartDate = startDate,
+                EndDate = endDate,
+                Prescriber = prescriber,
+                IsPrn = isPrn ,
+                PrnIndication = prnIndication,
+                IsControlledDrug = isControlledDrug,
+                Status = orderStatus,
+                CreatedAt = createdAt
+            };
+            if (modifiedAt.HasValue)
+            {
+                order.ModifiedAt = modifiedAt.Value;
+            }
+        
+           order.ReplaceDetails(doseSchedule);
             return Result.Success(order) ;
             
             
@@ -90,6 +91,20 @@ namespace Medications.Domain.Entities
             }
             return Result.Failure("Invalid OrderStatus");
            
+        }
+
+        private void ReplaceDetails( IEnumerable<(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, 
+            DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, 
+            DateOnly? EffectiveTo, int Sequence)>? doseSchedule = null)
+        {
+            if (doseSchedule != null)
+            {
+                Schedule = [..
+                    doseSchedule.Select(ds => DoseSchedule.Create(Id, ds.Dose, ds.FType, ds.Times, ds.IntervalDays, 
+                    ds.DaysOfWeek, ds.AnchorDate, ds.EffectiveFrom, ds.EffectiveTo, ds.Sequence).Value)
+                ];
+            }
+
         }
 
     }

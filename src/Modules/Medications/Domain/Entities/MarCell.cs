@@ -17,13 +17,6 @@ namespace Medications.Domain.Entities
 
         public MarCell(){}
 
-        public MarCell(DateTime dueDate, MedicationAdministration? administration)
-        {
-            DueAt = dueDate;
-            Administration = administration;
-            
-        }
-
       
     }
 

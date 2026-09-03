@@ -19,9 +19,11 @@ namespace Medications.Application.Services
         int? PrnMinIntervalMinutes,
         string? PrnMaxDose24h,
         bool IsControlledDrug,
-        List<DoseSchedule> Schedules,
-        OrderStatus Status
+        List<ScheduleRequest> Schedules,
+        OrderStatus Status,
+        DateTime CreatedAt
     );
 
+    internal record ScheduleRequest(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
     internal record DueSlot(Guid OrderId, Guid ScheduleId, string Dose, DateTime DueAt);
 }
