@@ -12,10 +12,6 @@ namespace Medications.Domain.Entities
 
         public MarRow(){}
 
-        public MarRow(MedicationOrder order, IReadOnlyList<MarCell> cells)
-        {
-            
-        }
        
     }
 }

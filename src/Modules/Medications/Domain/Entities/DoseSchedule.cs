@@ -51,7 +51,7 @@ namespace Medications.Domain.Entities
         }
 
         public static Result<DoseSchedule> Create(Guid medicationOrderId, string dose, FrequencyType fType, List<TimeOnly> times,
-         int intervalDays, DayOfWeekFlags dayOfWeek, DateOnly anchorDate , DateOnly effectiveFrom, DateOnly? effectiveTo, int sequence)
+         int intervalDays, DayOfWeekFlags dayOfWeek, DateOnly? anchorDate , DateOnly effectiveFrom, DateOnly? effectiveTo, int sequence)
         {
             if (medicationOrderId == Guid.Empty)
             {

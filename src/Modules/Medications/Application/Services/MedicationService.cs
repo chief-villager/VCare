@@ -17,7 +17,9 @@ namespace Medications.Application.Services
         {
             var medicationOrder = MedicationOrder.Record(patientId,request.MedicatioName,request.Route,request.Instructions,
             request.StartDate,request.EndDate,request.Prescriber,request.IsPrn,request.PrnIndication,
-            request.IsControlledDrug, request.Status,request.Schedules);
+            request.IsControlledDrug, request.Status,
+            request.Schedules.Select(s => (s.Dose, s.FType, s.Times, s.IntervalDays, s.DaysOfWeek, s.AnchorDate, s.EffectiveFrom, s.EffectiveTo, s.Sequence)), 
+            request.CreatedAt);
             if (medicationOrder.IsFailure)
             {
                 return Result.Failure<MedicationOrder>(medicationOrder.Error);
@@ -30,6 +32,10 @@ namespace Medications.Application.Services
         public async Task<Result>UpdateMedicationOrderStatusAsync(Guid medicationOrderId, string status, CancellationToken token)
         {
             var medicationOrder = await _medicationOrder.GetAsync(medicationOrderId, token);
+            if (medicationOrder.Status != OrderStatus.Active)
+            {
+                return Result.Failure("Cannot update status of completed or cancelled order");
+            }
             medicationOrder.UpdateStatus(status);
             await unitOfWork.SaveChangesAsync(token);
             return Result.Success();
