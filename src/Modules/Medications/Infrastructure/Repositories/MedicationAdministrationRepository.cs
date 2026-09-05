@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Medications.Application.Abstracts;
 using Medications.Domain.Entities;
 using Medications.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using VCare.SharedKernel.Abstractions;
 
 namespace Medications.Infrastructure.Repositories
 {
@@ -19,8 +21,9 @@ namespace Medications.Infrastructure.Repositories
 
         public async Task<MedicationAdministration?> Find(Guid orderId, DateTime scheduledFor)
         {
+            var medicationOrderId = new MedicationOrderId(orderId);
             return await medicationDbContext.MedicationAdministrations.FirstOrDefaultAsync
-            ( x => x.MedicationOrderId == orderId && x.ScheduledFor == scheduledFor);
+            ( x => x.MedicationOrderId == medicationOrderId && x.ScheduledFor == scheduledFor);
         }
 
         /// <summary>
@@ -32,12 +35,16 @@ namespace Medications.Infrastructure.Repositories
         /// <returns></returns>
         public IEnumerable<MedicationAdministration> ForResidentBetween(Guid patientId, DateOnly from, DateOnly to)
         {
+            var patient = new PatientId(patientId);
             var result = medicationDbContext.MedicationAdministrations
-                        .Where(a => a.PatientId == patientId
+                        .Where(a => a.PatientId == patient
                                 && a.ScheduledFor >= from.ToDateTime(TimeOnly.MinValue)
                                 && a.ScheduledFor <= to.ToDateTime(TimeOnly.MaxValue)).ToList();
             return result;
             
         }
+
+
+        
     }
 }

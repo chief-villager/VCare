@@ -9,6 +9,7 @@ namespace Medications.Domain.Entities
     {
         
         public IReadOnlyList<MarRow> Rows { get; set; } = [];
+       
     
     }
 }

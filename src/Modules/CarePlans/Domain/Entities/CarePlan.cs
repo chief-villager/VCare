@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CarePlans.Domain.Entities;
+using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
 using VCare.SharedKernel.Results;
 
 namespace VCare.Modules.CarePlans.Domain.Entities
 {
-    public sealed class CarePlan : AggregateRoot
+    internal sealed class CarePlan : AggregateRoot<CarePlanId>
     {
-        public Guid PatientId { get; private set; }
+        public PatientId PatientId { get; private set; }
         public List<Diagnosis> Diagnoses { get; private set; } = [];
         public List<PatientGoals> Goals { get; private set; } = [];
         public List<Intervention> Intervention {get; private set;} = [];
@@ -33,8 +34,8 @@ namespace VCare.Modules.CarePlans.Domain.Entities
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var carePlan = new CarePlan
             {
-                Id = Guid.NewGuid(),
-                PatientId = patientId,
+                Id = CarePlanId.New(),
+                PatientId = new PatientId(patientId),
                 StaffId = staffId,
                 CreatedDate = today,
                 ModifiedDate = today,

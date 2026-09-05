@@ -26,7 +26,7 @@ namespace Medications.Application.Services
             //     (paracetamol, 1 Aug 20:00) → JT's signature
             var admins = _admins.ForResidentBetween(PatiendId, from, to).ToList();
             var scheduledLookup = admins.Where(a => a.ScheduledFor.HasValue)
-                .ToLookup(a => (a.MedicationOrderId, a.ScheduledFor!.Value));
+                .ToLookup(a => (a.MedicationOrderId.Value, a.ScheduledFor!.Value));
 
             
                                 
@@ -40,7 +40,7 @@ namespace Medications.Application.Services
                         // look in the index under (this order, this slot):
                         //   found    → attach the signature   → IsSigned true
                         //   not found→ FirstOrDefault() = null → blank or missed
-                        Administration = scheduledLookup[(order.Id, slot.DueAt)].FirstOrDefault()
+                        Administration = scheduledLookup[(order.Id.Value, slot.DueAt)].FirstOrDefault()
                         
                     })
                     .ToList();

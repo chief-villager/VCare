@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CarePlans.Application.Abstract;
+using Microsoft.EntityFrameworkCore;
 using Vcare.Modules.CarePlans.Infrastructure.Persistence;
 using VCare.Modules.CarePlans.Domain.Entities;
 using VCare.SharedKernel.Abstractions;
@@ -16,10 +17,11 @@ namespace CarePlans.Infrastructure.Repository
              await dbContext.CarePlans.AddAsync(carePlan, token);
         }
 
-        public async Task<CarePlan> GetCarePlanAync(Guid Id, CancellationToken token)
+        public async Task<CarePlan> GetCarePlanAync(Guid PatientId, CancellationToken token)
         {
-            return await dbContext.CarePlans.FindAsync([Id, token], cancellationToken: token) ??
-            throw new NotFoundException("Careplan not found");
+            var patientId = new PatientId(PatientId);
+            return await dbContext.CarePlans.FirstOrDefaultAsync(cp => cp.PatientId == patientId, cancellationToken: token)
+            ?? throw new NotFoundException("Careplan not found");
         }
 
         public void UpdateCarePlan(CarePlan carePlan)

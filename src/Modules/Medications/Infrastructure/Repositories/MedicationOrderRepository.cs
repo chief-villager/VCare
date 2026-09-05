@@ -27,8 +27,9 @@ namespace Medications.Infrastructure.Repositories
         /// <returns></returns>
         public IEnumerable<MedicationOrder> ActiveBetween(Guid patientId, DateOnly from, DateOnly to)
         {
+            var patient = new PatientId(patientId);
             var listofOrder = _medicationOrderDb.MedicationOrders.Include(o => o.Schedule)                      // load the schedule too
-                .Where(o => o.PatientId == patientId
+                .Where(o => o.PatientId == patient
                    && o.StartDate <= to                  // started on/before month end
                    && (o.EndDate == null || o.EndDate >= from))  // and not ended before month start
                     .ToList();
@@ -49,7 +50,7 @@ namespace Medications.Infrastructure.Repositories
 
         public async Task<MedicationOrder> GetAsync(Guid Id, CancellationToken cancellationToken)
         {
-            var result = await _medicationOrderDb.MedicationOrders.FindAsync(new object?[] { Id, cancellationToken }, cancellationToken: cancellationToken) ?? throw new NotFoundException("MedicationOrder not found");
+            var result = await _medicationOrderDb.MedicationOrders.FindAsync(new object?[] { new MedicationOrderId(Id) }, cancellationToken: cancellationToken) ?? throw new NotFoundException("MedicationOrder not found");
             return result;
             
         }

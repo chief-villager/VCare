@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Medications.Application.Abstracts;
+using Medications.Application.Services.Interfaces;
 using Medications.Domain.Entities;
 using Medications.Domain.Enum;
 using VCare.SharedKernel.Abstractions;
@@ -11,9 +12,10 @@ using VCare.SharedKernel.Results;
 namespace Medications.Application.Services
 {
     internal class MedicationService( IMedicationOrderRepository _medicationOrder, 
-    IMedicalAdministrationRepository _medicalAdministrationRepository, IUnitOfWork unitOfWork)
+    IMedicalAdministrationRepository _medicalAdministrationRepository, 
+    IUnitOfWork unitOfWork) : IMedicationService
     {
-        public async Task<Result<MedicationOrder>>CreateMedicationOrderAsync( Guid patientId, CreateMedicationOrderRequest request, CancellationToken token)
+        public async Task<Result<CreateMedicationOrderResponse>>CreateMedicationOrderAsync( Guid patientId, CreateMedicationOrderRequest request, CancellationToken token)
         {
             var medicationOrder = MedicationOrder.Record(patientId,request.MedicatioName,request.Route,request.Instructions,
             request.StartDate,request.EndDate,request.Prescriber,request.IsPrn,request.PrnIndication,
@@ -22,11 +24,11 @@ namespace Medications.Application.Services
             request.CreatedAt);
             if (medicationOrder.IsFailure)
             {
-                return Result.Failure<MedicationOrder>(medicationOrder.Error);
+                return Result.Failure<CreateMedicationOrderResponse>(medicationOrder.Error);
             }
             await _medicationOrder.AddAsync(medicationOrder.Value, token);
             await unitOfWork.SaveChangesAsync(token);
-            return Result.Success(medicationOrder.Value);
+            return Result.Success(new CreateMedicationOrderResponse(medicationOrder.Value.Id.Value, medicationOrder.Value.Medication));
         }
 
         public async Task<Result>UpdateMedicationOrderStatusAsync(Guid medicationOrderId, string status, CancellationToken token)
@@ -43,7 +45,7 @@ namespace Medications.Application.Services
 
        
 
-        public async Task<Result<MedicationAdministration>> RecordAministration(Guid orderId,DateTime scheduledFor, Guid outcomeCodeId,        
+        public async Task<Result<MedicationAdministrationResponse>> RecordAministration(Guid orderId,DateTime scheduledFor, Guid outcomeCodeId,        
         Guid staffId, CancellationToken token, Guid? witnessId = null, string? notes = null)
         {
             var order = await  _medicationOrder.GetAsync(orderId, token) ?? throw new InvalidOperationException("Order not found");
@@ -55,17 +57,55 @@ namespace Medications.Application.Services
             {
                 throw new InvalidOperationException("This dose is already recorded.");
             }
-            var administration = MedicationAdministration.Create(orderId, scheduledFor,DateTime.Now, outcomeCodeId, staffId,witnessId,notes);
+            var administration = MedicationAdministration.Create(orderId, order.PatientId.Value, scheduledFor,DateTime.Now, outcomeCodeId, staffId,witnessId,notes);
             if (administration.IsFailure)
             {
-                return Result.Failure<MedicationAdministration>(administration.Error);
+                return Result.Failure<MedicationAdministrationResponse>(administration.Error);
             }
             await _medicalAdministrationRepository.AddAsync(administration.Value);
             await unitOfWork.SaveChangesAsync(token);
-            return administration;  
-                
+            return Result.Success(new MedicationAdministrationResponse(
+                administration.Value.Id,
+                administration.Value.MedicationOrderId.Value,
+                administration.Value.ScheduledFor,
+                administration.Value.AdministeredAt,
+                administration.Value.OutcomeCodeId,
+                administration.Value.AdministeredByStaffId,
+                administration.Value.WitnessedByStaffId,
+                administration.Value.Notes
+            ));
         }
 
-       
+        public async Task<Result<MedicationOrderResponse>> GetMedicationOrder(Guid orderId, CancellationToken token)
+        {
+            var order = await _medicationOrder.GetAsync(orderId, token);
+            return Result.Success(new MedicationOrderResponse(
+                order.Id.Value,
+                order.Medication,
+                order.Route,
+                order.Instructions,
+                order.StartDate,
+                order.EndDate,
+                order.Prescriber,
+                order.IsPrn,
+                order.PrnIndication,
+                order.PrnMinIntervalMinutes,
+                order.PrnMaxDose24h,
+                order.IsControlledDrug,
+                order.Schedule.Select(s => new ScheduleResponse(
+                    s.Dose,
+                    s.FType,
+                    [.. s.Times],
+                    s.IntervalDays,
+                    s.DaysOfWeek,
+                    s.AnchorDate,
+                    s.EffectiveFrom,
+                    s.EffectiveTo,
+                    s.Sequence
+                )).ToList(),
+                order.Status,
+                order.CreatedAt
+            ));
+        }
     }
 }

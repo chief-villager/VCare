@@ -1,12 +1,13 @@
 using Medications.Domain.Enum;
+using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
 using VCare.SharedKernel.Results;
 
 namespace Medications.Domain.Entities
 {
-    internal sealed class MedicationOrder : AggregateRoot
+    internal sealed class MedicationOrder : AggregateRoot<MedicationOrderId>
     {
-        public Guid PatientId { get; private set; }
+        public PatientId PatientId { get; private set; }
         public string Medication { get; private set; } = null!; 
         public MedicationRouteEnum Route { get; private set; }        // oral, topical, s/c...
         public string? Instructions { get; private set; }  // "take with food"
@@ -52,8 +53,8 @@ namespace Medications.Domain.Entities
                     "PRN indication is required for PRN medication.");
             var order = new MedicationOrder
             {
-                Id = Guid.NewGuid(),
-                PatientId = patientId,
+                Id = MedicationOrderId.New(),
+                PatientId = new PatientId(patientId),
                 Medication = medication,
                 Route = route,
                 Instructions = instruction,
@@ -100,7 +101,7 @@ namespace Medications.Domain.Entities
             if (doseSchedule != null)
             {
                 Schedule = [..
-                    doseSchedule.Select(ds => DoseSchedule.Create(Id, ds.Dose, ds.FType, ds.Times, ds.IntervalDays, 
+                    doseSchedule.Select(ds => DoseSchedule.Create(Id.Value, ds.Dose, ds.FType, ds.Times, ds.IntervalDays,
                     ds.DaysOfWeek, ds.AnchorDate, ds.EffectiveFrom, ds.EffectiveTo, ds.Sequence).Value)
                 ];
             }

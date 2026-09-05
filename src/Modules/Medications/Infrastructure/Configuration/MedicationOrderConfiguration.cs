@@ -16,7 +16,7 @@ namespace Medications.Infrastructure.Configuration
         {
             builder.ToTable("MedicationOrder", MedicationDbContext.Schema);
             builder.HasKey(x => x.Id);
-            builder.Ignore("domainEvent");
+            builder.Ignore(x => x.DomainEvents);
             builder.HasMany(x => x.Administrations).WithOne().HasForeignKey(x => x.MedicationOrderId).OnDelete(DeleteBehavior.ClientNoAction);
             builder.HasMany(x => x.Schedule).WithOne().HasForeignKey(x => x.MedicationOrderId).OnDelete(DeleteBehavior.ClientNoAction);
 
