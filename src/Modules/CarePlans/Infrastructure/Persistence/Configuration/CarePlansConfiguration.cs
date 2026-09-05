@@ -5,7 +5,7 @@ using Vcare.Modules.CarePlans.Infrastructure.Persistence;
 
 namespace VCare.Modules.CarePlans.Infrastructure.Persistence.Configuration
 {
-    public class CarePlansConfiguration : IEntityTypeConfiguration<CarePlan>
+    internal sealed class CarePlansConfiguration : IEntityTypeConfiguration<CarePlan>
     {
         public void Configure(EntityTypeBuilder<CarePlan> builder)
         {

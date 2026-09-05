@@ -10,8 +10,7 @@ namespace Medications.Domain.Entities
         public MedicationOrder Order { get; set; } = null!;         // one order = one row
         public IReadOnlyList<MarCell> Cells { get; set; } = [];
 
-        public MarRow(){}
-
+        
        
     }
 }

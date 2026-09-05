@@ -6,9 +6,9 @@ using VCare.Modules.CarePlans.Domain.Entities;
 
 namespace CarePlans.Application.Abstract
 {
-    public interface ICarePlanRepository
+    internal interface ICarePlanRepository
     {
-        Task<CarePlan> GetCarePlanAync(Guid Id, CancellationToken token);
+        Task<CarePlan> GetCarePlanAync(Guid PatientId, CancellationToken token);
         Task CreateCarePlanAsync(CarePlan carePlan, CancellationToken token );
         void UpdateCarePlan(CarePlan carePlan);
     }

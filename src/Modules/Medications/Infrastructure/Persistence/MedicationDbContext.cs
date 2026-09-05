@@ -21,6 +21,10 @@ namespace Medications.Infrastructure.Persistence
             
         }
        
+        protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+        {
+            builder.Properties<MedicationOrderId>().HaveConversion<MedicationIdConverter>();
+        }
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             return base.SaveChangesAsync(cancellationToken);

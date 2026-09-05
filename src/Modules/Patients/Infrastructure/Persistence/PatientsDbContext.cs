@@ -1,14 +1,25 @@
 using Microsoft.EntityFrameworkCore;
+using Patients.Infrastructure.Persistence;
 using VCare.Modules.Patients.Domain.Entities;
+using VCare.SharedKernel.Abstractions;
 
 namespace VCare.Modules.Patients.Infrastructure.Persistence;
 
-public sealed class PatientsDbContext(DbContextOptions<PatientsDbContext> options) : DbContext(options)
+internal sealed class PatientsDbContext(DbContextOptions<PatientsDbContext> options) : DbContext(options),IUnitOfWork
 {
     public const string Schema = "patients";
 
     public DbSet<Patient> Patients => Set<Patient>();
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+    {
+        builder.Properties<PatientId>().HaveConversion<PatientTypedIConverter>();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await base.SaveChangesAsync(cancellationToken);
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);

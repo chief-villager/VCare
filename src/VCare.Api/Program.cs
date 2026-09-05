@@ -22,6 +22,5 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // Each module maps its own endpoint group.
-app.MapPatientsEndpoints();
 
 app.Run();

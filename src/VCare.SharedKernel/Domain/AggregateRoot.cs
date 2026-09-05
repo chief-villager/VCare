@@ -1,10 +1,10 @@
 namespace VCare.SharedKernel.Domain;
 
-public abstract class AggregateRoot : Entity
+public abstract class AggregateRoot<TId> : Entity<TId> where TId : notnull
 {
     private readonly List<IDomainEvent> _domainEvents = [];
 
-    protected AggregateRoot(Guid id) : base(id) { }
+    protected AggregateRoot(TId id) : base(id) { }
 
     protected AggregateRoot() { }
 

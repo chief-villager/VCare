@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
 using VCare.SharedKernel.Results;
 
@@ -11,8 +12,8 @@ namespace Medications.Domain.Entities
     {
         public Guid Id { get; private set; }
         
-        public Guid PatientId {get; private set;}
-        public Guid MedicationOrderId { get; private set; }
+        public PatientId PatientId {get; private set;}
+        public MedicationOrderId MedicationOrderId { get; private set; }
 
         public DateTime? ScheduledFor { get; private set; }   // null for PRN
         public DateTime? AdministeredAt { get; private set; }
@@ -26,7 +27,7 @@ namespace Medications.Domain.Entities
         private MedicationAdministration(){}
 
 
-        public static Result<MedicationAdministration> Create(Guid medicationOrderId, DateTime? scheduledFor, 
+        public static Result<MedicationAdministration> Create(Guid medicationOrderId, Guid patientId, DateTime? scheduledFor, 
         DateTime? admninisteredAt, Guid outcomeId, Guid administeredByStaffId, 
         Guid? witnessedByStaffId, string? notes, DateTime? modifiedAt = null)
         {
@@ -42,10 +43,16 @@ namespace Medications.Domain.Entities
             {
                 return Result.Failure<MedicationAdministration>("StaffId id required");
             }
+            if (patientId == Guid.Empty )
+            {
+                return Result.Failure<MedicationAdministration>("patientId id required");
+            };
+    
             var administration = new MedicationAdministration
             {
                 Id = Guid.NewGuid(),
-                MedicationOrderId = medicationOrderId,
+                MedicationOrderId = new MedicationOrderId(medicationOrderId),
+                PatientId = new PatientId(patientId),
                 ScheduledFor = scheduledFor,
                 AdministeredAt = admninisteredAt,
                 OutcomeCodeId = outcomeId,

@@ -1,24 +1,33 @@
+using Patients.Application.Services.Interfaces;
 using VCare.Modules.Patients.Application.Abstractions;
 using VCare.Modules.Patients.Application.Dtos;
 using VCare.Modules.Patients.Domain.Entities;
+using VCare.SharedKernel.Abstractions;
+using VCare.SharedKernel.Results;
 
 namespace VCare.Modules.Patients.Application.Services;
 
-public  class PatientService(IPatientRepository repository)
+internal  class PatientService(
+    IPatientRepository repository, IUnitOfWork unitOfWork) : IPatientService
 {
     public async Task<PatientResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var patient = await repository.GetByIdAsync(id, cancellationToken);
         return patient is null
             ? null
-            : new PatientResponse(patient.Id, patient.FullName, patient.DateOfBirth);
+            : new PatientResponse(patient.Id.Value, patient.FullName, patient.DateOfBirth);
     }
 
-    public async Task<Guid> RegisterAsync(RegisterPatientRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<PatientResponse>> RegisterAsync(RegisterPatientRequest request, CancellationToken cancellationToken = default)
     {
-        var patient = Patient.Register(request.FullName, request.DateOfBirth);
-        await repository.AddAsync(patient, cancellationToken);
-        await repository.SaveChangesAsync(cancellationToken);
-        return patient.Id;
+        var patient = Patient.Register(request.firstname, request.lastname, 
+        request.gender, request.address, request.dateOfBirth, 
+        request.emergencyContactRelationship, request.emergencyContactPhoneNumber, 
+        request.emergencyContactName, request.phoneNumber, request.email);
+
+        await repository.AddAsync(patient.Value, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<PatientResponse>.Success(new PatientResponse(patient.Value.Id.Value, patient.Value.FullName, patient.Value.DateOfBirth));
     }
 }
