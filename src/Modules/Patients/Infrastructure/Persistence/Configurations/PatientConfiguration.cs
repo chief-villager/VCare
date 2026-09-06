@@ -19,6 +19,13 @@ internal sealed class PatientConfiguration : IEntityTypeConfiguration<Patient>
         builder.Property(p => p.Address).HasMaxLength(200).IsRequired();
         builder.Property(p => p.DateOfBirth).IsRequired();
 
+        // Care plans live inside the Patient aggregate boundary.
+        builder.HasMany(p => p.CarePlans)
+            .WithOne()
+            .HasForeignKey(cp => cp.PatientId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(p => p.CarePlans).UsePropertyAccessMode(PropertyAccessMode.Field);
+
         // Domain events are behaviour, not persisted state.
         builder.Ignore(p => p.DomainEvents);
     }

@@ -10,6 +10,7 @@ namespace Patients.Application.Services.Interfaces
     public interface IPatientService
     {
         Task<PatientResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<Result<PatientDashboardResponse>> GetDashboardAsync(Guid id, CancellationToken cancellationToken = default);
         Task<Result<PatientResponse>> RegisterAsync(RegisterPatientRequest request, CancellationToken cancellationToken = default);
     }
 }

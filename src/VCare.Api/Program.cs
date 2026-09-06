@@ -1,4 +1,3 @@
-using VCare.Modules.CarePlans;
 using VCare.Modules.Patients;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,8 +8,7 @@ builder.Services.AddOpenApi();
 // Each module registers its own DbContext, repositories and services.
 // The host stays a thin composition root: it knows modules exist, nothing more.
 builder.Services
-    .AddPatientsModule(builder.Configuration)
-    .AddCarePlansModule(builder.Configuration);
+    .AddPatientsModule(builder.Configuration);
 
 var app = builder.Build();
 

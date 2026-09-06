@@ -6,4 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\VCare.SharedKernel\VCare.SharedKernel.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VCare.Modules.Patients.Tests" />
+  </ItemGroup>
 </Project>
