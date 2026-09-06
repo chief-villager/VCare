@@ -1,3 +1,4 @@
+using Patients.Application.Dtos;
 using Patients.Application.Services.Interfaces;
 using VCare.Modules.Patients.Application.Abstractions;
 using VCare.Modules.Patients.Application.Dtos;
@@ -29,5 +30,21 @@ internal  class PatientService(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PatientResponse>.Success(new PatientResponse(patient.Value.Id.Value, patient.Value.FullName, patient.Value.DateOfBirth));
+    }
+
+    public async Task<Result> UpdateAsync(Guid id, UpdatePatientRequest request, CancellationToken cancellationToken = default)
+    {
+        var patient = await repository.GetByIdAsync(id, cancellationToken);
+        if (patient is null)
+        {
+            return Result.Failure("Patient not found");
+        }
+
+        patient.Update(request.Firstname, request.Lastname, request.Gender, request.Address, request.DateOfBirth, 
+        request.EmergencyContactRelationship, request.EmergencyContactPhoneNumber, request.EmergencyContactName, 
+        request.phoneNumber, request.Email);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+
     }
 }

@@ -25,5 +25,12 @@ namespace VCare.SharedKernel.Abstractions
         public override string ToString() => Value.ToString();
         
     }
+
+    public readonly record struct StaffId(Guid Value)
+    {
+        public static  StaffId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+        
+    }
   
 }
