@@ -8,6 +8,7 @@ using VCare.Modules.Patients.Application.Abstractions;
 using VCare.Modules.Patients.Application.Services;
 using VCare.Modules.Patients.Infrastructure.Persistence;
 using VCare.Modules.Patients.Infrastructure.Repositories;
+using VCare.SharedKernel.Abstractions;
 
 namespace VCare.Modules.Patients;
 
@@ -22,8 +23,10 @@ public static class PatientsModule
                 configuration.GetConnectionString("Default"),
                 sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", PatientsDbContext.Schema)));
 
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<PatientsDbContext>());
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IPatientService, PatientService>();
+        services.AddScoped<ICarePlanService, CarePlanService>();
 
         return services;
     }

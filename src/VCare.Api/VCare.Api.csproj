@@ -6,7 +6,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Modules\Patients\VCare.Modules.Patients.csproj" />
-    <ProjectReference Include="..\Modules\CarePlans\Vcare.Modules.CarePlans.csproj" />
     <ProjectReference Include="..\Modules\Medications\Vcare.Modules.Medications.csproj" />
     <ProjectReference Include="..\Modules\Staffs\VCare.Modules.Staffs.csproj" />
   </ItemGroup>

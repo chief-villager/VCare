@@ -4,7 +4,6 @@
     <Project Path="src/VCare.SharedKernel/VCare.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/src/Modules/">
-    <Project Path="src/Modules/CarePlans/Vcare.Modules.CarePlans.csproj" />
     <Project Path="src/Modules/Patients/VCare.Modules.Patients.csproj" />
     <Project Path="src/Modules/medications/VCare.Modules.Medications.csproj" />
     <Project Path="src/Modules/Staffs/VCare.Modules.Staffs.csproj" />
