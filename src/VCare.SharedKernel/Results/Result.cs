@@ -4,7 +4,7 @@ public class Result
 {
     protected Result(bool isSuccess, string error)
     {
-        if (isSuccess && string.IsNullOrEmpty(error))
+        if (isSuccess && !string.IsNullOrEmpty(error))
             throw new InvalidOperationException("A successful result cannot carry an error.");
         if (!isSuccess && string.IsNullOrEmpty(error))
             throw new InvalidOperationException("A failed result must carry an error.");
