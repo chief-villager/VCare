@@ -12,6 +12,7 @@ internal sealed class CarePlanService(IPatientRepository patientRepository, IUni
         var patient = await patientRepository.GetByIdAsync(request.PatientId, token);
         if (patient is null)
             return Result.Failure<Guid>("Patient not found.");
+       
 
         var carePlan = patient.AddCarePlan(
             request.StaffId,
@@ -32,7 +33,7 @@ internal sealed class CarePlanService(IPatientRepository patientRepository, IUni
         var patient = await patientRepository.GetByCarePlanIdAsync(id, token);
         if (patient is null)
             return Result.Failure("Care plan not found.");
-
+        
         var result = patient.UpdateCarePlan(
             id,
             request.Diagnoses,

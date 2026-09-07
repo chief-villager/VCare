@@ -11,8 +11,9 @@ using VCare.SharedKernel.Results;
 
 namespace Medications.Application.Services
 {
-    internal class MedicationService( IMedicationOrderRepository _medicationOrder, 
-    IMedicalAdministrationRepository _medicalAdministrationRepository, 
+    internal class MedicationService( IMedicationOrderRepository _medicationOrder,
+    IMedicalAdministrationRepository _medicalAdministrationRepository,
+    ScheduleExpander _expander,
     IUnitOfWork unitOfWork) : IMedicationService
     {
         public async Task<Result<CreateMedicationOrderResponse>>CreateMedicationOrderAsync( Guid patientId, CreateMedicationOrderRequest request, CancellationToken token)
@@ -43,7 +44,14 @@ namespace Medications.Application.Services
             return Result.Success();
         }
 
-       
+        public async Task<Result<IEnumerable<DueSlot>>> GetDueForDay(Guid patientId, DateOnly day, CancellationToken token)
+        {
+            var orders = await _medicationOrder.ActiveBetween(patientId, day, day);
+            var slots = orders.SelectMany(order => _expander.ExpandSchedule(order, day, day));
+            return Result.Success(slots);
+        }
+
+
 
         public async Task<Result<MedicationAdministrationResponse>> RecordAministration(Guid orderId,DateTime scheduledFor, Guid outcomeCodeId,        
         Guid staffId, CancellationToken token, Guid? witnessId = null, string? notes = null)
@@ -65,7 +73,7 @@ namespace Medications.Application.Services
             await _medicalAdministrationRepository.AddAsync(administration.Value);
             await unitOfWork.SaveChangesAsync(token);
             return Result.Success(new MedicationAdministrationResponse(
-                administration.Value.Id,
+                administration.Value.Id.Value,
                 administration.Value.MedicationOrderId.Value,
                 administration.Value.ScheduledFor,
                 administration.Value.AdministeredAt,

@@ -13,7 +13,7 @@ namespace Medications.Application.Abstracts
         Task UpdateAsync (MedicationOrder medicationOrder, CancellationToken cancellationToken);
         Task AddAsync( MedicationOrder medicationOrder, CancellationToken cancellationToken);
         Task<List<MedicationOrder>> GetAllMedicationBelongingToAUserAsync(Expression<Func<MedicationOrder, bool>> expression, CancellationToken cancellationToken);
-        IEnumerable<MedicationOrder> ActiveBetween(Guid patientId, DateOnly from, DateOnly to);
+        Task<IEnumerable<MedicationOrder>> ActiveBetween(Guid patientId, DateOnly from, DateOnly to);
 
     };
 }

@@ -8,9 +8,8 @@ using VCare.SharedKernel.Results;
 
 namespace Medications.Domain.Entities
 {
-    internal class MedicationAdministration
+    internal class MedicationAdministration: Entity<MedicationAdministrationId>
     {
-        public Guid Id { get; private set; }
         
         public PatientId PatientId {get; private set;}
         public MedicationOrderId MedicationOrderId { get; private set; }
@@ -50,7 +49,7 @@ namespace Medications.Domain.Entities
     
             var administration = new MedicationAdministration
             {
-                Id = Guid.NewGuid(),
+                Id = MedicationAdministrationId.New(),
                 MedicationOrderId = new MedicationOrderId(medicationOrderId),
                 PatientId = new PatientId(patientId),
                 ScheduledFor = scheduledFor,

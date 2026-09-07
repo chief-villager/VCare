@@ -23,7 +23,8 @@ namespace Medications.Infrastructure.Persistence
        
         protected override void ConfigureConventions(ModelConfigurationBuilder builder)
         {
-            builder.Properties<MedicationOrderId>().HaveConversion<MedicationIdConverter>();
+            builder.Properties<MedicationOrderId>().HaveConversion<MedicationOrderIdConverter>();
+            builder.Properties<MedicationAdministrationId>().HaveConversion<MedicationAdministrationIdConverter>();
         }
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
