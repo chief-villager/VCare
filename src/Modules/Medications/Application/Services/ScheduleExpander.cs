@@ -36,6 +36,7 @@ namespace Medications.Application.Services
             }
         }
 
+       
         private bool IsDueOnDay(DoseSchedule s, DateOnly day)
         {
             return s.FType switch

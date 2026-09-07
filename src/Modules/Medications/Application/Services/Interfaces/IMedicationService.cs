@@ -14,5 +14,6 @@ namespace Medications.Application.Services.Interfaces
         Task<Result<MedicationAdministrationResponse>> RecordAministration(Guid orderId,DateTime scheduledFor, Guid outcomeCodeId,        
         Guid staffId, CancellationToken token, Guid? witnessId = null, string? notes = null);
         Task<Result<MedicationOrderResponse>> GetMedicationOrder(Guid orderId, CancellationToken token);
+        Task<Result<IEnumerable<DueSlot>>> GetDueForDay(Guid patientId, DateOnly day, CancellationToken token);
     }
 }

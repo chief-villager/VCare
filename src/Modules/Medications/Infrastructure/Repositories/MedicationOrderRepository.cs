@@ -25,14 +25,14 @@ namespace Medications.Infrastructure.Repositories
         /// <param name="from"></param>
         /// <param name="to"></param>
         /// <returns></returns>
-        public IEnumerable<MedicationOrder> ActiveBetween(Guid patientId, DateOnly from, DateOnly to)
+        public async Task<IEnumerable<MedicationOrder>> ActiveBetween(Guid patientId, DateOnly from, DateOnly to)
         {
             var patient = new PatientId(patientId);
-            var listofOrder = _medicationOrderDb.MedicationOrders.Include(o => o.Schedule)                      // load the schedule too
+            var listofOrder = await _medicationOrderDb.MedicationOrders.Include(o => o.Schedule)                      // load the schedule too
                 .Where(o => o.PatientId == patient
                    && o.StartDate <= to                  // started on/before month end
                    && (o.EndDate == null || o.EndDate >= from))  // and not ended before month start
-                    .ToList();
+                    .ToListAsync();
             return listofOrder;
         }
 

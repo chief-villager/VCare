@@ -2,15 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VCare.SharedKernel.Abstractions;
 
 namespace Medications.Infrastructure.Persistence
 {
-    public class MedicationOrderIdConverter : ValueConverter<MedicationOrderId, Guid>
+    public class MedicationAdministrationIdConverter : ValueConverter<MedicationAdministrationId, Guid>
     {
-        public MedicationOrderIdConverter() : base( x => x.Value, x => new MedicationOrderId(x))
+        public MedicationAdministrationIdConverter() : base( x => x.Value, x => new MedicationAdministrationId(x))
         {
         }
         

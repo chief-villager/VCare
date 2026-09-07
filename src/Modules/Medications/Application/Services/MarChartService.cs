@@ -10,15 +10,15 @@ namespace Medications.Application.Services
     internal class MarChartService (IMedicationOrderRepository _orders, 
     IMedicalAdministrationRepository _admins, ScheduleExpander _expander )
     {
-        public MarChart BuildChart(Guid PatiendId, int year, int month)
+        public async Task<MarChart> BuildChart(Guid PatiendId, int year, int month)
         {
             // Month boundaries. "1st of next month minus a day" = last day, any length.
             var from = new DateOnly(year, month, 1);
             var to   = from.AddMonths(1).AddDays(-1);
-    
+
             // TWO database reads:
             //   orders = the rows-to-be (every order live this month)
-            var orders = _orders.ActiveBetween(PatiendId, from, to);
+            var orders = await _orders.ActiveBetween(PatiendId, from, to);
     
             //   admins = every signed dose this month, RE-FILED by (order, slot) so we
             //   can look one up instantly. Think of ToLookup as building an index:
