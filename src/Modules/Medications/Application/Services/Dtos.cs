@@ -62,7 +62,6 @@ namespace Medications.Application.Services
         DateTime? AdministeredAt,
         Guid OutcomeCodeId,
         Guid AdministeredByStaffId,
-        Guid? WitnessedByStaffId,
         string? Notes
     );
 }

@@ -18,7 +18,6 @@ namespace Medications.Domain.Entities
         public DateTime? AdministeredAt { get; private set; }
         public Guid OutcomeCodeId { get; private set; }       // Given, Refused, Omitted...
         public Guid AdministeredByStaffId { get; private set; }
-        public Guid? WitnessedByStaffId { get; private set; } // controlled drugs
         public string? Notes { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime? ModifiedAt { get; private set; }
@@ -28,7 +27,7 @@ namespace Medications.Domain.Entities
 
         public static Result<MedicationAdministration> Create(Guid medicationOrderId, Guid patientId, DateTime? scheduledFor, 
         DateTime? admninisteredAt, Guid outcomeId, Guid administeredByStaffId, 
-        Guid? witnessedByStaffId, string? notes, DateTime? modifiedAt = null)
+         string? notes, DateTime? modifiedAt = null)
         {
             if (medicationOrderId == Guid.Empty)
             {
@@ -56,7 +55,6 @@ namespace Medications.Domain.Entities
                 AdministeredAt = admninisteredAt,
                 OutcomeCodeId = outcomeId,
                 AdministeredByStaffId = administeredByStaffId,
-                WitnessedByStaffId = witnessedByStaffId,
                 Notes = notes,
                 CreatedAt = DateTime.Now
             };

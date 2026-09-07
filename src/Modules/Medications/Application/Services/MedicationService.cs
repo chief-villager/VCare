@@ -51,11 +51,31 @@ namespace Medications.Application.Services
             return Result.Success(slots);
         }
 
+        // Slots still needing action today: the day's scheduled doses minus the ones
+        // already administered. A slot counts as done once any administration exists
+        // for its (order, due time) — Given, Refused and Omitted all sign the slot off.
+        public async Task<Result<IEnumerable<DueSlot>>> GetOutstandingForDay(Guid patientId, DateOnly day, CancellationToken token)
+        {
+            var orders = await _medicationOrder.ActiveBetween(patientId, day, day);
+            var slots = orders.SelectMany(order => _expander.ExpandSchedule(order, day, day));
+
+            var signed = _medicalAdministrationRepository
+                .ForResidentBetween(patientId, day, day)
+                .Where(a => a.ScheduledFor.HasValue)
+                .Select(a => (a.MedicationOrderId.Value, a.ScheduledFor!.Value))
+                .ToHashSet();
+
+            var outstanding = slots.Where(slot => !signed.Contains((slot.OrderId, slot.DueAt)));
+            return Result.Success(outstanding);
+        }
+
 
 
         public async Task<Result<MedicationAdministrationResponse>> RecordAministration(Guid orderId,DateTime scheduledFor, Guid outcomeCodeId,        
-        Guid staffId, CancellationToken token, Guid? witnessId = null, string? notes = null)
+        Guid staffId, CancellationToken token, string? notes = null)
         {
+            
+
             var order = await  _medicationOrder.GetAsync(orderId, token) ?? throw new InvalidOperationException("Order not found");
             if (order.Status != OrderStatus.Active)
             {
@@ -65,7 +85,7 @@ namespace Medications.Application.Services
             {
                 throw new InvalidOperationException("This dose is already recorded.");
             }
-            var administration = MedicationAdministration.Create(orderId, order.PatientId.Value, scheduledFor,DateTime.Now, outcomeCodeId, staffId,witnessId,notes);
+            var administration = MedicationAdministration.Create(orderId, order.PatientId.Value, scheduledFor,DateTime.Now, outcomeCodeId, staffId,notes);
             if (administration.IsFailure)
             {
                 return Result.Failure<MedicationAdministrationResponse>(administration.Error);
@@ -79,9 +99,9 @@ namespace Medications.Application.Services
                 administration.Value.AdministeredAt,
                 administration.Value.OutcomeCodeId,
                 administration.Value.AdministeredByStaffId,
-                administration.Value.WitnessedByStaffId,
                 administration.Value.Notes
             ));
+            
         }
 
         public async Task<Result<MedicationOrderResponse>> GetMedicationOrder(Guid orderId, CancellationToken token)
