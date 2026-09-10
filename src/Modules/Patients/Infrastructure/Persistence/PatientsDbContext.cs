@@ -5,11 +5,13 @@ using VCare.SharedKernel.Abstractions;
 
 namespace VCare.Modules.Patients.Infrastructure.Persistence;
 
-internal sealed class PatientsDbContext(DbContextOptions<PatientsDbContext> options) : DbContext(options),IUnitOfWork
+internal sealed class PatientsDbContext(DbContextOptions<PatientsDbContext> options, ICurrentUser currentUser) : DbContext(options),IUnitOfWork
 {
     public const string Schema = "patients";
 
     public DbSet<Patient> Patients => Set<Patient>();
+
+    private CareHomeId CurrentCareHome => new(currentUser.CareHomeId); 
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
@@ -26,5 +28,7 @@ internal sealed class PatientsDbContext(DbContextOptions<PatientsDbContext> opti
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PatientsDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Patient>().HasQueryFilter(p => p.CareHomeId == CurrentCareHome);
+
     }
 }

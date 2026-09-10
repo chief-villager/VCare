@@ -20,6 +20,7 @@ public class PatientTests
             emergencyContactPhoneNumber: "08000000000",
             emergencyContactName: "Charles Babbage",
             phoneNumber: null,
+            careHomeId: Guid.NewGuid(),
             email: null);
 
     [Fact]
@@ -48,6 +49,7 @@ public class PatientTests
             emergencyContactPhoneNumber: "08000000000",
             emergencyContactName: "Charles Babbage",
             phoneNumber: null,
+            careHomeId: Guid.NewGuid(),
             email: null);
 
         Assert.True(result.IsFailure);

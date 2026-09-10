@@ -33,9 +33,16 @@ namespace VCare.SharedKernel.Abstractions
         
     }
 
-      public readonly record struct MedicationAdministrationId(Guid Value)
+    public readonly record struct MedicationAdministrationId(Guid Value)
     {
         public static  MedicationAdministrationId New() => new(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+        
+    }
+
+      public readonly record struct CareHomeId(Guid Value)
+    {
+        public static  CareHomeId New() => new(Guid.NewGuid());
         public override string ToString() => Value.ToString();
         
     }

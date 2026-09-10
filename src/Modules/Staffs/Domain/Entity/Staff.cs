@@ -15,11 +15,13 @@ namespace Staffs.Domain.Entity
         public string PhoneNumber { get; private set; } = null!;
         public string Role { get; private set; } = null!;
         public string Address { get; private set; } = null!;
+        public string UserName {get; private set;} = null!;
         public string FullName => $"{FirstName} {LastName}";
+        public CareHomeId CareHomeId {get; private set;}
 
         private Staff() { } // Required by EF Core
 
-        public static Staff Create(string firstName, string lastName, string email, string phoneNumber, string role, string address)
+        public static Staff Create(string firstName, string lastName, string email, string phoneNumber, string role, string address, string username, Guid careHomeId)
         {
             var id = StaffId.New();
             return new Staff
@@ -30,7 +32,9 @@ namespace Staffs.Domain.Entity
                 Email = email,
                 PhoneNumber = phoneNumber,
                 Role = role,
-                Address = address
+                Address = address,
+                UserName = username,
+                CareHomeId = new CareHomeId(careHomeId)
             };
         }
 
@@ -50,6 +54,9 @@ namespace Staffs.Domain.Entity
                 Address = address;
         }
     
+  
         
     }
+
+   
 }
