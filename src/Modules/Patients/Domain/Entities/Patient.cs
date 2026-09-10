@@ -17,6 +17,7 @@ internal sealed class Patient : AggregateRoot<PatientId>
     public string Address { get; private set; } = null!;
     // EF Core only.
     public DateTime CreatedAt { get; private set; } = DateTime.Now;
+    public CareHomeId CareHomeId {get; private set;}
     public DateTime? ModifiedAt { get; private set; } = null;
     public string? PhoneNumber { get; private set; } = null!;
     public string? Email { get; private set; } = null!;
@@ -32,7 +33,7 @@ internal sealed class Patient : AggregateRoot<PatientId>
     public static Result<Patient> Register(string firstname, string lastname, 
     string gender,string address, DateOnly dateOfBirth, 
     string emergencyContactRelationship, string emergencyContactPhoneNumber,
-    string emergencyContactName, string? phoneNumber, string? email, DateTime? modifiedAt = null)
+    string emergencyContactName, string? phoneNumber, Guid careHomeId, string? email, DateTime? modifiedAt = null)
     {
         if (string.IsNullOrWhiteSpace(firstname))
             return Result.Failure<Patient>("Firstname is required.");
@@ -48,6 +49,11 @@ internal sealed class Patient : AggregateRoot<PatientId>
             return Result.Failure<Patient>("Emergency contact phone number is required.");
         if (string.IsNullOrWhiteSpace(emergencyContactRelationship))
             return Result.Failure<Patient>("Emergency contact relationship is required.");
+        if (careHomeId == Guid.Empty)
+        {
+            return Result.Failure<Patient>("carehomeid is required");
+
+        }
         var patient = new Patient
         {
             Id = PatientId.New(),
@@ -61,6 +67,7 @@ internal sealed class Patient : AggregateRoot<PatientId>
             EmergencyContactRelationship = emergencyContactRelationship,
             EmergencyContactName = emergencyContactName,
             PhoneNumber = phoneNumber,
+            CareHomeId = new CareHomeId(careHomeId),
             Email = email
         };
         patient.Raise(new PatientRegistered(patient.Id.Value));

@@ -11,7 +11,9 @@ namespace Staffs.Application.Dto
         string Email,
         string PhoneNumber,
         string Address,
-        string Role
+        string Role,
+        string Password,
+        string UserName
     );
 
     public record UpdateStaffRequest(

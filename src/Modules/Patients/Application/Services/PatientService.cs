@@ -9,7 +9,7 @@ using VCare.SharedKernel.Results;
 namespace VCare.Modules.Patients.Application.Services;
 
 internal  class PatientService(
-    IPatientRepository repository, IUnitOfWork unitOfWork) : IPatientService
+    IPatientRepository repository, IUnitOfWork unitOfWork, ICurrentUser currentUser) : IPatientService
 {
     public async Task<PatientResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -44,10 +44,11 @@ internal  class PatientService(
 
     public async Task<Result<PatientResponse>> RegisterAsync(RegisterPatientRequest request, CancellationToken cancellationToken = default)
     {
+        var careHomeId = currentUser.CareHomeId;
         var patient = Patient.Register(request.firstname, request.lastname, 
         request.gender, request.address, request.dateOfBirth, 
         request.emergencyContactRelationship, request.emergencyContactPhoneNumber, 
-        request.emergencyContactName, request.phoneNumber, request.email);
+        request.emergencyContactName, request.phoneNumber,careHomeId, request.email);
 
         await repository.AddAsync(patient.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
