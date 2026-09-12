@@ -26,7 +26,6 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services
     .AddPatientsModule(builder.Configuration)
     .AddCarePlansModule(builder.Configuration)
-    .AddStaffModule(builder.Configuration);
     .AddStaffModule(builder.Configuration)
     .AddCareHomeModule(builder.Configuration);
 

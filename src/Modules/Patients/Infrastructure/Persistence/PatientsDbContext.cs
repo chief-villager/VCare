@@ -17,11 +17,6 @@ internal sealed class PatientsDbContext(DbContextOptions<PatientsDbContext> opti
     {
         builder.Properties<PatientId>().HaveConversion<PatientTypedIConverter>();
     }
-
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return await base.SaveChangesAsync(cancellationToken);
-    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
