@@ -23,11 +23,10 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 // Each module registers its own DbContext, repositories and services.
 // The host stays a thin composition root: it knows modules exist, nothing more.
-builder.Services
-    .AddPatientsModule(builder.Configuration)
-    .AddCarePlansModule(builder.Configuration)
-    .AddStaffModule(builder.Configuration)
-    .AddCareHomeModule(builder.Configuration);
+builder.Services.AddPatientsModule(builder.Configuration);
+builder.Services.AddCarePlansModule(builder.Configuration);
+builder.Services.AddStaffModule(builder.Configuration);
+builder.Services.AddCareHomeModule(builder.Configuration);
 
 // Composes the patient and its care plan from the two modules that own them.
 builder.Services.AddScoped<DashboardService>();
