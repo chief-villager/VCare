@@ -8,6 +8,7 @@
     <Project Path="src/Modules/CarePlans/VCare.Modules.CarePlans.csproj" />
     <Project Path="src/Modules/medications/VCare.Modules.Medications.csproj" />
     <Project Path="src/Modules/Staffs/VCare.Modules.Staffs.csproj" />
+    <Project Path="src/Modules/CareHomes/VCare.Modules.CareHome.Csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/VCare.Modules.Patients.Tests/VCare.Modules.Patients.Tests.csproj" />
