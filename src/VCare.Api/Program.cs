@@ -1,3 +1,4 @@
+using src.Modules.CareHomes.Infrastructure.Configuration;
 using Staffs.Domain.Entity;
 using Staffs.Infrastructure;
 using VCare.Api.Services;
@@ -23,7 +24,8 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // The host stays a thin composition root: it knows modules exist, nothing more.
 builder.Services
     .AddPatientsModule(builder.Configuration)
-    .AddStaffModule(builder.Configuration);
+    .AddStaffModule(builder.Configuration)
+    .AddCareHomeModule(builder.Configuration);
 
 builder.Services.AddAuthorization();
 
