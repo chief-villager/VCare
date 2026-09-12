@@ -6,8 +6,6 @@ namespace VCare.Modules.Patients.Application.Abstractions;
 internal interface IPatientRepository
 {
     Task<Patient?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<Patient?> GetWithCarePlansAsync(PatientId id, CancellationToken cancellationToken = default);
-    Task<Patient?> GetByCarePlanIdAsync(CarePlanId carePlanId, CancellationToken cancellationToken = default);
     Task AddAsync(Patient patient, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

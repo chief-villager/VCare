@@ -5,11 +5,13 @@
   </Folder>
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/Patients/VCare.Modules.Patients.csproj" />
+    <Project Path="src/Modules/CarePlans/VCare.Modules.CarePlans.csproj" />
     <Project Path="src/Modules/medications/VCare.Modules.Medications.csproj" />
     <Project Path="src/Modules/Staffs/VCare.Modules.Staffs.csproj" />
     <Project Path="src/Modules/CareHome/VCare.Modules.CareHome.csproj"/>
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/VCare.Modules.Patients.Tests/VCare.Modules.Patients.Tests.csproj" />
+    <Project Path="tests/VCare.Modules.CarePlans.Tests/VCare.Modules.CarePlans.Tests.csproj" />
   </Folder>
 </Solution>

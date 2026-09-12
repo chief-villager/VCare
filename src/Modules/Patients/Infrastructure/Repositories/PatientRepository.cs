@@ -14,16 +14,6 @@ internal sealed class PatientRepository(PatientsDbContext context) : IPatientRep
         return await context.Patients.FirstOrDefaultAsync(p => p.Id == patientId, cancellationToken);
     }
 
-    public async Task<Patient?> GetWithCarePlansAsync(PatientId id, CancellationToken cancellationToken = default) =>
-        await context.Patients
-            .Include(p => p.CarePlans)
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-
-    public async Task<Patient?> GetByCarePlanIdAsync(CarePlanId carePlanId, CancellationToken cancellationToken = default) =>
-        await context.Patients
-            .Include(p => p.CarePlans)
-            .FirstOrDefaultAsync(p => p.CarePlans.Any(c => c.Id == carePlanId), cancellationToken);
-
     public async Task AddAsync(Patient patient, CancellationToken cancellationToken = default) =>
         await context.Patients.AddAsync(patient, cancellationToken);
 

@@ -2,13 +2,14 @@ using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
 using VCare.SharedKernel.Results;
 
-namespace VCare.Modules.Patients.Domain.Entities;
+namespace VCare.Modules.CarePlans.Domain.Entities;
 
-// Child entity within the Patient aggregate. It is created and mutated only
-// through the Patient aggregate root, never persisted on its own.
-internal sealed class CarePlan : Entity<CarePlanId>
+// An aggregate root of its own. It references the patient it belongs to by id
+// only: the Patients module owns the patient, this module owns the plan.
+internal sealed class CarePlan : AggregateRoot<CarePlanId>
 {
     public PatientId PatientId { get; private set; }
+    public CareHomeId CareHomeId { get; private set; }
     public List<Diagnosis> Diagnoses { get; private set; } = [];
     public List<PatientGoals> Goals { get; private set; } = [];
     public List<Intervention> Intervention { get; private set; } = [];
@@ -18,29 +19,35 @@ internal sealed class CarePlan : Entity<CarePlanId>
 
     private CarePlan() { }
 
-    internal static Result<CarePlan> Create(
-        PatientId patientId,
+    public static Result<CarePlan> Create(
+        Guid patientId,
         Guid staffId,
+        Guid careHomeId,
         IEnumerable<string>? diagnoses = null,
         IEnumerable<string>? goals = null,
         IEnumerable<(string Description, bool Implemented)>? interventions = null)
     {
+        if (patientId == Guid.Empty)
+            return Result.Failure<CarePlan>("Patient is required.");
+        if (careHomeId == Guid.Empty)
+            return Result.Failure<CarePlan>("carehomeid is required");
+
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var carePlan = new CarePlan
         {
             Id = CarePlanId.New(),
-            PatientId = patientId,
+            PatientId = new PatientId(patientId),
+            CareHomeId = new CareHomeId(careHomeId),
             StaffId = staffId,
             CreatedDate = today,
             ModifiedDate = today,
-            
         };
 
         carePlan.ReplaceDetails(diagnoses, goals, interventions);
         return Result.Success(carePlan);
     }
 
-    internal Result Update(
+    public Result Update(
         IEnumerable<string>? diagnoses = null,
         IEnumerable<string>? goals = null,
         IEnumerable<(string Description, bool Implemented)>? interventions = null)

@@ -1,6 +1,6 @@
 using VCare.SharedKernel.Abstractions;
 
-namespace VCare.Modules.Patients.Domain.Entities;
+namespace VCare.Modules.CarePlans.Domain.Entities;
 
 internal sealed class Intervention
 {
