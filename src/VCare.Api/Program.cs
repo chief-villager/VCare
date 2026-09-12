@@ -1,3 +1,4 @@
+using src.Modules.CareHomes.Infrastructure.Configuration;
 using Staffs.Domain.Entity;
 using Staffs.Infrastructure;
 using VCare.Api.Services;
@@ -26,6 +27,8 @@ builder.Services
     .AddPatientsModule(builder.Configuration)
     .AddCarePlansModule(builder.Configuration)
     .AddStaffModule(builder.Configuration);
+    .AddStaffModule(builder.Configuration)
+    .AddCareHomeModule(builder.Configuration);
 
 // Composes the patient and its care plan from the two modules that own them.
 builder.Services.AddScoped<DashboardService>();
