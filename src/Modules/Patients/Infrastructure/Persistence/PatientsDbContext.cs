@@ -16,7 +16,6 @@ internal sealed class PatientsDbContext(DbContextOptions<PatientsDbContext> opti
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
         builder.Properties<PatientId>().HaveConversion<PatientTypedIConverter>();
-        builder.Properties<CarePlanId>().HaveConversion<CarePlanTypedIdConverter>();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

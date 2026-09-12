@@ -26,7 +26,6 @@ public static class PatientsModule
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<PatientsDbContext>());
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IPatientService, PatientService>();
-        services.AddScoped<ICarePlanService, CarePlanService>();
 
         return services;
     }

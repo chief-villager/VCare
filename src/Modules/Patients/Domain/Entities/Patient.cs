@@ -7,9 +7,6 @@ namespace VCare.Modules.Patients.Domain.Entities;
 
 internal sealed class Patient : AggregateRoot<PatientId>
 {
-    private readonly List<CarePlan> _carePlans = [];
-    public IReadOnlyCollection<CarePlan> CarePlans => _carePlans.AsReadOnly();
-
     public string Firstname { get; private set; } = null!;
     public string Lastname { get; private set; } = null!;
     public DateOnly DateOfBirth { get; private set; }
@@ -103,29 +100,4 @@ internal sealed class Patient : AggregateRoot<PatientId>
         ModifiedAt = DateTime.Now;
     }
 
-    public Result<CarePlan> AddCarePlan(
-        Guid staffId,
-        IEnumerable<string>? diagnoses = null,
-        IEnumerable<string>? goals = null,
-        IEnumerable<(string Description, bool Implemented)>? interventions = null)
-    {
-        var carePlan = CarePlan.Create(Id, staffId, diagnoses, goals, interventions);
-        if (carePlan.IsSuccess)
-            _carePlans.Add(carePlan.Value);
-
-        return carePlan;
-    }
-
-    public Result UpdateCarePlan(
-        CarePlanId carePlanId,
-        IEnumerable<string>? diagnoses = null,
-        IEnumerable<string>? goals = null,
-        IEnumerable<(string Description, bool Implemented)>? interventions = null)
-    {
-        var carePlan = _carePlans.FirstOrDefault(c => c.Id == carePlanId);
-        if (carePlan is null)
-            return Result.Failure("Care plan not found.");
-
-        return carePlan.Update(diagnoses, goals, interventions);
-    }
 }

@@ -2,6 +2,7 @@ using src.Modules.CareHomes.Infrastructure.Configuration;
 using Staffs.Domain.Entity;
 using Staffs.Infrastructure;
 using VCare.Api.Services;
+using VCare.Modules.CarePlans;
 using VCare.Modules.Patients;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
@@ -24,8 +25,13 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // The host stays a thin composition root: it knows modules exist, nothing more.
 builder.Services
     .AddPatientsModule(builder.Configuration)
+    .AddCarePlansModule(builder.Configuration)
+    .AddStaffModule(builder.Configuration);
     .AddStaffModule(builder.Configuration)
     .AddCareHomeModule(builder.Configuration);
+
+// Composes the patient and its care plan from the two modules that own them.
+builder.Services.AddScoped<DashboardService>();
 
 builder.Services.AddAuthorization();
 

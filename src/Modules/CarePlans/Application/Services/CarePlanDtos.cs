@@ -1,4 +1,4 @@
-namespace VCare.Modules.Patients.Application.Services;
+namespace VCare.Modules.CarePlans.Application.Services;
 
 public sealed record CreateCarePlanRequest(
     Guid PatientId,
