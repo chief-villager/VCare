@@ -31,7 +31,7 @@ namespace Medications.Application.Services
 
                     foreach (var time in phase.Times)
                         yield return new DueSlot(
-                            order.Id.Value, phase.Id, phase.Dose, day.ToDateTime(time));
+                            order.Id.Value, order.Medication, phase.Id, phase.Dose, day.ToDateTime(time));
                 }
             }
         }

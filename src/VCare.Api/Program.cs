@@ -4,6 +4,7 @@ using Staffs.Infrastructure;
 using VCare.Api.Services;
 using VCare.Modules.CarePlans;
 using VCare.Modules.Patients;
+using VCare.Modules.Visitation;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
 
@@ -27,6 +28,7 @@ builder.Services.AddPatientsModule(builder.Configuration);
 builder.Services.AddCarePlansModule(builder.Configuration);
 builder.Services.AddStaffModule(builder.Configuration);
 builder.Services.AddCareHomeModule(builder.Configuration);
+builder.Services.AddVisitationModule(builder.Configuration);
 
 // Composes the patient and its care plan from the two modules that own them.
 builder.Services.AddScoped<DashboardService>();
