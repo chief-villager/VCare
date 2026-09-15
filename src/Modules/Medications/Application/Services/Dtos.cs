@@ -25,7 +25,7 @@ namespace Medications.Application.Services
     );
 
     public record ScheduleRequest(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
-    public record DueSlot(Guid OrderId, Guid ScheduleId, string Dose, DateTime DueAt);
+    public record DueSlot(Guid OrderId,string MedicationName,Guid ScheduleId, string Dose, DateTime DueAt);
 
     public sealed record CreateMedicationOrderResponse
     (

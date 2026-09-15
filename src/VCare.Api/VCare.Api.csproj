@@ -10,5 +10,6 @@
     <ProjectReference Include="..\Modules\Medications\Vcare.Modules.Medications.csproj" />
     <ProjectReference Include="..\Modules\Staffs\VCare.Modules.Staffs.csproj" />
     <ProjectReference Include="..\Modules\CareHomes\VCare.Modules.CareHome.Csproj" />
+    <ProjectReference Include="..\Modules\Visitation\VCare.Modules.Visitation.csproj" />
   </ItemGroup>
 </Project>
