@@ -32,10 +32,5 @@ namespace Staffs.Infrastructure.Repositories
         {
             return await dbContext.SaveChangesAsync(cancellationToken);
         }
-
-        public async Task<Staff?> GetStaffWithUserNameAsync(string userName, CancellationToken token)
-        {
-            return await dbContext.Staffs.FirstOrDefaultAsync( x => x.UserName.Equals(userName, StringComparison.CurrentCultureIgnoreCase));
-        }
     }
 }

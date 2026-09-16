@@ -28,6 +28,8 @@ namespace Staffs.Infrastructure
             services.AddScoped<Staffs.Application.Services.Interface.IStaffService, Staffs.Application.Services.StaffService>();
             services.AddScoped<Staffs.Application.Services.Interface.IAuthService, Staffs.Application.Services.AuthService>();
             services.AddScoped<Staffs.Application.Services.Interface.IJwtTokenService, Staffs.Application.Services.TokenService>();
+            services.AddScoped<Staffs.Application.Services.Interface.IRefreshTokenRepository, Staffs.Infrastructure.Repositories.RefreshTokenRepository>();
+            services.AddScoped<VCare.SharedKernel.Abstractions.IRefreshToken, Staffs.Application.Services.RefreshTokenGenerator>();
             services.AddIdentity<ApplicationUser, ApplicationRole>()
                 .AddEntityFrameworkStores<StaffDbContext>()
                 .AddDefaultTokenProviders();

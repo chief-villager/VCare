@@ -12,7 +12,6 @@ namespace Staffs.Application.Abstraction
         Task AddAsync(Staff staff, CancellationToken cancellationToken = default);
         void Update(Staff staff);
         Task<int> SaveChangesAsync( CancellationToken cancellationToken = default);
-        Task<Staff?> GetStaffWithUserNameAsync(string userName, CancellationToken token);
 
     }
 }

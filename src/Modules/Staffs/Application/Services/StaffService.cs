@@ -71,28 +71,27 @@ namespace Staffs.Application.Services
             return Result.Success();
         }
 
-        public async Task<Result<string>> LoginStaffAsync( string userName, string password, CancellationToken token)
+        public async Task<Result<(string AccessToken, string RefreshToken)>> LoginStaffAsync( string userName, string password, CancellationToken token)
         {
             if (string.IsNullOrWhiteSpace(userName))
             {
-                return Result.Failure<string>("invalid login credentials");
+                return Result.Failure<(string, string)>("invalid login credentials");
             }
             if (string.IsNullOrWhiteSpace(password))
             {
-                return Result.Failure<string>("invalid login credentials");
+                return Result.Failure<(string, string)>("invalid login credentials");
             }
-            var getStaff =  await staffRepository.GetStaffWithUserNameAsync(userName, token);
-            if (getStaff == null)
-            {
-                return Result.Failure<string>("invalid login credentials");
-            };
-            var result = await authService.LoginAsync(userName, password, getStaff.Id, getStaff.CareHomeId.Value);
-           if (result.IsFailure)
-           {
-             return Result.Failure<string>(result.Error);
-           }
-           return result;
-           
+
+            // No staff lookup first. Staffs sits behind a care-home query filter and
+            // the caller is unauthenticated here, so that filter matches nothing and
+            // turned every login into "invalid credentials". AuthService reads the
+            // identity and care home off the stored user instead.
+            return await authService.LoginAsync(userName, password, token);
+        }
+
+        public async Task<Result> LogoutStaffAsync(string refreshToken, CancellationToken token)
+        {
+            return await authService.LogoutAsync(refreshToken, token);
         }
 
         public async Task<Result<string>> GenerateConfirmEmailLinkAsync(string email)
