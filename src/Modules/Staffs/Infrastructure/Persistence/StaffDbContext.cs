@@ -15,6 +15,7 @@ namespace Staffs.Infrastructure.Persistence
     {
         public static string schemaName = "Staffs";
         public DbSet<Staff> Staffs { get; set; } = null!;
+        public DbSet<RefreshToken> RefreshTokens {get; set;}
 
         // The caller's care home. Referenced by the query filter so EF re-evaluates
         // it per request; a DbContext is scoped, so the care home is fixed for its lifetime.

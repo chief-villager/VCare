@@ -13,7 +13,10 @@ namespace Staffs.Application.Services.Interface
         Task<Result<StaffResponse>> GetStaffByIdAsync(StaffId id, CancellationToken cancellationToken);
         Task<Result<Guid>> CreateStaffAsync(CreateStaffRequest staffRequest, CancellationToken cancellationToken);
         Task<Result> UpdateStaffAsync(StaffId staffId, UpdateStaffRequest staff, CancellationToken cancellationToken);
-        Task<Result<string>> LoginStaffAsync(string userName, string password, CancellationToken cancellationToken);
+        Task<Result<(string AccessToken, string RefreshToken)>> LoginStaffAsync(string userName, string password, CancellationToken cancellationToken);
+
+        /// <summary>Ends a session by revoking every live token in its family.</summary>
+        Task<Result> LogoutStaffAsync(string refreshToken, CancellationToken cancellationToken);
 
         /// <summary>Builds the callback link a staff member follows to confirm their email address.</summary>
         Task<Result<string>> GenerateConfirmEmailLinkAsync(string email);

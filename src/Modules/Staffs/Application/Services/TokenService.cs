@@ -20,7 +20,7 @@ namespace Staffs.Application.Services
     {
         public Result<string> CreateToken(string name, StaffId staffId, Guid careHomeId, IEnumerable<string> roles)
         {
-           var claims = new[]
+           var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, name ),
                 new Claim(ClaimTypes.NameIdentifier, staffId.ToString()),
@@ -28,9 +28,11 @@ namespace Staffs.Application.Services
                
             };
 
+            // Append returns a new sequence and mutates nothing: discarding it
+            // shipped every access token with no role claims at all.
             foreach (var role in roles)
             {
-                _ = claims.Append(new Claim(ClaimTypes.Role, role));
+                claims.Add(new Claim(ClaimTypes.Role, role));
             }
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Value.Key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -39,7 +41,7 @@ namespace Staffs.Application.Services
             issuer: options.Value.Issuer,
             audience: options.Value.Audience,
             claims: claims,
-            expires: DateTime.Now.AddMinutes(Convert.ToDouble(options.Value.DurationInMinutes)),
+            expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(options.Value.DurationInMinutes)),
             signingCredentials: creds );
             return Result.Success(new JwtSecurityTokenHandler().WriteToken(token));
         }

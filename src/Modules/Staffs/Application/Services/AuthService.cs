@@ -19,7 +19,7 @@ namespace Staffs.Application.Services
     (
         UserManager<ApplicationUser> userManager, 
         RoleManager<ApplicationRole> roleManager,
-        IJwtTokenService jwtTokenService,
+        IRefreshToken refreshTokenService,
         IOptions<Hosting> options) : IAuthService
     {
         public async Task<Result> CreateApplicationUser(Guid staffId, string username, string email, string password, string phonenumber, string roleName, Guid careHomeId)
@@ -48,22 +48,40 @@ namespace Staffs.Application.Services
             return Result.Success();
         }
 
-        public async Task<Result<string>> LoginAsync (string userName, string password, StaffId staffId, Guid careHomeId)
+        public async Task<Result<(string AccessToken, string RefreshToken)>> LoginAsync (string userName, string password, CancellationToken cancellationToken)
         {
             var user = await userManager.FindByNameAsync(userName);
-            // userManager.GenerateEmailConfirmationTokenAsync()
            
             if (user == null)
             {
-                return Result.Failure<string>("invalid login credentials");
+                return Result.Failure<(string, string)>("invalid login credentials");
             }
             if (!await userManager.CheckPasswordAsync(user!, password))
             {
-               return Result.Failure<string>("invalid login credentials");
+               return Result.Failure<(string, string)>("invalid login credentials");
             }
             var role = await userManager.GetRolesAsync(user);
-            return jwtTokenService.CreateToken(userName,staffId, careHomeId, role);
-            
+
+            // Identity and care home are read off the stored user, never taken from
+            // the caller: a caller-supplied care home would mint a token that walks
+            // straight through the query filters every module isolates on.
+            // Each login opens a new token family, so ending one session leaves the
+            // same staff member's other sessions alone.
+            return await refreshTokenService.CreateTokensAsync(
+                userName, Guid.NewGuid(), new StaffId(user.Id), user.CareHomeId, role, cancellationToken);
+        }
+
+        public async Task<Result> LogoutAsync (string refreshToken, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Result.Failure("A refresh token is required.");
+            }
+
+            // The whole family goes, not just the token presented: every token
+            // rotated out of this login dies with it, including one an attacker
+            // may be holding from the middle of the chain.
+            return await refreshTokenService.RevokeFamilyAsync(refreshToken, cancellationToken);
         }
 
         public async Task<Result<string>>GenerateConfirmEmailLink(string email)

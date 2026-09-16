@@ -13,7 +13,10 @@ namespace Staffs.Application.Services.Interface
         Task<Result> CreateApplicationUser (Guid staffId, string username, string email, 
         string password, string phonenumber, string roleName, Guid careHomeId);
 
-        Task<Result<string>> LoginAsync (string userName, string password, StaffId staffId, Guid careHomeId);
+        Task<Result<(string AccessToken, string RefreshToken)>> LoginAsync (string userName, string password, CancellationToken cancellationToken);
+
+        /// <summary>Ends a session by revoking every live token in its family.</summary>
+        Task<Result> LogoutAsync (string refreshToken, CancellationToken cancellationToken);
 
         Task<Result<string>> GenerateConfirmEmailLink( string email);
 
