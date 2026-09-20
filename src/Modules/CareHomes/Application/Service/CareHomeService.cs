@@ -25,6 +25,18 @@ namespace src.Modules.CareHomes.Application.Service
           return Result.Success(careHome.Value.Id.ToString());
         }
 
+        public async Task<Result> DeleteCareHomeAsync(Guid careHomeId, CancellationToken cancellationToken)
+        {
+            var careHome = await careHomeRepository.GetByIdAsync(new CareHomeId(careHomeId), cancellationToken);
+            if (careHome == null)
+            {
+                return Result.Failure("carehome does not exist");
+            }
+            careHomeRepository.Delete(careHome);
+            await careHomeRepository.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }
+
         public async Task<Result> UpdateCareHomeAsync(Guid careHomeId, UpdateCareHomeRequest request, CancellationToken cancellationToken)
         {
 

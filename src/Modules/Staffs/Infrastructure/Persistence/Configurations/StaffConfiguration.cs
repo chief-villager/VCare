@@ -45,7 +45,7 @@ namespace Staffs.Infrastructure.Persistence.Configurations
                     NormalizedName = nameof(RoleEnum.Admin).ToUpper()
                     
                 },
-                new IdentityRole<Guid>
+                new ApplicationRole
                 {
                     Id = CarerRoleId,
                     Name = nameof(RoleEnum.Carer),

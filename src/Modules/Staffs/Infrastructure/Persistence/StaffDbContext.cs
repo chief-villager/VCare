@@ -21,6 +21,11 @@ namespace Staffs.Infrastructure.Persistence
         // it per request; a DbContext is scoped, so the care home is fixed for its lifetime.
         private CareHomeId CurrentCareHome => new(currentUser.CareHomeId);
 
+        protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+        {
+            builder.Properties<StaffId>().HaveConversion<StaffTypedIdConverter>();
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

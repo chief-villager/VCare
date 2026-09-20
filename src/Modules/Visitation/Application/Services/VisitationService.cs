@@ -11,9 +11,9 @@ internal sealed class VisitationService(IVisitRepository visitRepository, ICurre
     public async Task<Result> CheckInAsync(Guid patientId, CheckInVisitRequest request, CancellationToken token)
     {
         var visit = Visit.CreateCheckin(patientId, currentUser.CareHomeId, currentUser.UserId, request.CheckedInAt);
-        if (visit == null)
+        if (visit.IsFailure)
         {
-            return Result.Failure(visit!.Error);
+            return Result.Failure(visit.Error);
         }
         await visitRepository.AddAsync(visit.Value, token);
         await visitRepository.SaveChangesAsync(token);
@@ -57,18 +57,20 @@ internal sealed class VisitationService(IVisitRepository visitRepository, ICurre
         return Result.Success();
     }
 
-    private static VisitResponse ToResponse(Visit visit)
-    {
-        var feedingTask = new List<FeedingTask>();
-        var medicationTask = new List<MedicationTask>();
-        var personalCareTask = new List<PersonalCareTask>();
+    // The three task records only exist once the visit is checked out, so a
+    // visit still in progress reports empty lists rather than blowing up.
+    private static VisitResponse ToResponse(Visit visit) =>
+        new(visit.Id.Value, visit.PatientId.Value, visit.StaffId.Value,
+            visit.Status.ToString(),
+            visit.FeedingTask is null
+                ? []
+                : [new FeedingTask(visit.FeedingTask.FeedingTaskNote, visit.FeedingTask.IsFeedingCompleted)],
+            visit.MedicationTask is null
+                ? []
+                : [new MedicationTask(visit.MedicationTask.MedicationTaskNote, visit.MedicationTask.IsMedicationCompleted)],
+            visit.PersonalcareTask is null
+                ? []
+                : [new PersonalCareTask(visit.PersonalcareTask.CareTaskNote, visit.PersonalcareTask.IsCareCompleted)],
+            visit.CheckedInAt, visit.CheckedOutAt);
 
-        var result = new VisitResponse(visit.Id.Value, visit.PatientId.Value, visit.StaffId.Value,
-        nameof(visit.Status), [.. feedingTask, new FeedingTask(visit.FeedingTask!.FeedingTaskNote, visit.FeedingTask.IsFeedingCompleted)],
-        [.. medicationTask, new MedicationTask(visit.MedicationTask!.MedicationTaskNote, visit.MedicationTask.IsMedicationCompleted)],
-        [.. personalCareTask, new PersonalCareTask(visit.PersonalcareTask!.CareTaskNote, visit.PersonalcareTask.IsCareCompleted)], visit.CheckedInAt, visit.CheckedOutAt);
-        return result;
-    }
-
-  
 }

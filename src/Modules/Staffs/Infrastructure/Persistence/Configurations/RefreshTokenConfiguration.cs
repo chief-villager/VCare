@@ -18,6 +18,7 @@ namespace Staffs.Infrastructure.Persistence.Configurations
             builder.HasIndex(r => r.TokenFamily);
 
             builder.Property(r => r.TokenFamily).IsRequired();
+            builder.Property(r => r.StaffId).IsRequired();
             builder.Property(r => r.CreatedTime).IsRequired();
             builder.Property(r => r.ExpirationDate).IsRequired();
             builder.Property(r => r.IsRevoked).IsRequired();

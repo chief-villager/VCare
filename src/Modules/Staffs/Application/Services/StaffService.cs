@@ -35,10 +35,20 @@ namespace Staffs.Application.Services
             ));
         }
 
-        public async Task<Result<Guid>> CreateStaffAsync(CreateStaffRequest staffRequest, CancellationToken cancellationToken)
+        // New staff belong to the care home of the caller creating them.
+        public Task<Result<Guid>> CreateStaffAsync(CreateStaffRequest staffRequest, CancellationToken cancellationToken) =>
+            CreateStaffForCareHomeAsync(currentUser.CareHomeId, staffRequest, cancellationToken);
+
+        public Task<Result> ValidateNewStaffAsync(CreateStaffRequest staffRequest) =>
+            authService.ValidateNewUserAsync(staffRequest.UserName, staffRequest.Email,
+                staffRequest.Password, staffRequest.Role);
+
+        public async Task<Result<Guid>> CreateStaffForCareHomeAsync(Guid careHomeId, CreateStaffRequest staffRequest, CancellationToken cancellationToken)
         {
-            // New staff belong to the care home of the caller creating them.
-            var careHomeId = currentUser.CareHomeId;
+            if (careHomeId == Guid.Empty)
+            {
+                return Result.Failure<Guid>("A care home is required to create staff");
+            }
             var staff = Staff.Create(staffRequest.FirstName, staffRequest.LastName,
             staffRequest.Email, staffRequest.PhoneNumber, staffRequest.Role, staffRequest.Address, staffRequest.UserName, careHomeId);
             if (staff is null)
@@ -48,9 +58,9 @@ namespace Staffs.Application.Services
             await staffRepository.AddAsync(staff, cancellationToken);
             var result = await authService.CreateApplicationUser( staff.Id.Value, staffRequest.UserName,
             staffRequest.Email, staffRequest.Password, staffRequest.PhoneNumber, staffRequest.Role, careHomeId);
-            if (!result.IsSuccess)
+            if (result.IsFailure)
             {
-                return Result.Failure<Guid>("Unable to created application user");
+                return Result.Failure<Guid>(result.Error);
             }
             await staffRepository.SaveChangesAsync(cancellationToken);
             return Result.Success(staff.Id.Value);
@@ -87,6 +97,11 @@ namespace Staffs.Application.Services
             // turned every login into "invalid credentials". AuthService reads the
             // identity and care home off the stored user instead.
             return await authService.LoginAsync(userName, password, token);
+        }
+
+        public async Task<Result<(string AccessToken, string RefreshToken)>> RefreshTokenAsync(string refreshToken, CancellationToken token)
+        {
+            return await authService.RefreshAsync(refreshToken, token);
         }
 
         public async Task<Result> LogoutStaffAsync(string refreshToken, CancellationToken token)

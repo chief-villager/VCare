@@ -11,7 +11,7 @@ using VCare.SharedKernel.Results;
 namespace Staffs.Application.Services
 {
     public class RefreshTokenGenerator( IJwtTokenService tokenService, 
-    IRefreshTokenRepository refreshTokenRepository) : IRefreshToken
+    IRefreshTokenRepository refreshTokenRepository, IStaffPrincipalReader principalReader) : IRefreshToken
     {
         private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromHours(1);
         private const int SecretBytes = 32;
@@ -37,6 +37,7 @@ namespace Staffs.Application.Services
             var refreshToken = RefreshToken.Create(
                 tokenHash: SHA256.HashData(secret),
                 tokenFamily: tokenFamily,
+                staffId: staffId.Value,
                 createdTime: issuedAt,
                 expirationDate: issuedAt.Add(RefreshTokenLifetime));
 
@@ -52,8 +53,8 @@ namespace Staffs.Application.Services
             return Result.Success((accessToken.Value, Convert.ToHexString(secret)));
         }
 
-        public async Task<Result<(string AccessToken, string RefreshToken)>> RefreshTokenAsync(string currentRefreshToken,string name,
-        StaffId staffId, Guid careHomeId,IEnumerable<string> roles, CancellationToken cancellationToken)
+        public async Task<Result<(string AccessToken, string RefreshToken)>> RefreshTokenAsync(string currentRefreshToken,
+        CancellationToken cancellationToken)
         {
             if (!TryReadSecret(currentRefreshToken, out var secret))
                 return Result.Failure<(string, string)>(InvalidToken);
@@ -77,13 +78,21 @@ namespace Staffs.Application.Services
             if (token.IsExpired(now))
                 return Result.Failure<(string, string)>(InvalidToken);
 
+            // Who the replacement is for is settled by the stored row, so a caller
+            // cannot rotate someone else's session into a token of their choosing.
+            var staffId = new StaffId(token.StaffId);
+            var principal = await principalReader.GetByStaffIdAsync(staffId, cancellationToken);
+            if (principal.IsFailure)
+                return Result.Failure<(string, string)>(InvalidToken);
+
             var revoked = token.RevokeToken(now);
             if (revoked.IsFailure)
                 return Result.Failure<(string, string)>(InvalidToken);
 
             // The replacement stays in the family it came from, so a later reuse
             // of any token in the chain revokes the whole chain.
-            return await CreateTokensAsync(name, token.TokenFamily, staffId, careHomeId, roles, cancellationToken);
+            return await CreateTokensAsync(principal.Value.UserName, token.TokenFamily, staffId,
+                principal.Value.CareHomeId, principal.Value.Roles, cancellationToken);
         }
 
         public async Task<Result> RevokeFamilyAsync(string currentRefreshToken, CancellationToken cancellationToken)

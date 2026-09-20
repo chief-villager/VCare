@@ -30,6 +30,7 @@ namespace Staffs.Infrastructure
             services.AddScoped<Staffs.Application.Services.Interface.IJwtTokenService, Staffs.Application.Services.TokenService>();
             services.AddScoped<Staffs.Application.Services.Interface.IRefreshTokenRepository, Staffs.Infrastructure.Repositories.RefreshTokenRepository>();
             services.AddScoped<VCare.SharedKernel.Abstractions.IRefreshToken, Staffs.Application.Services.RefreshTokenGenerator>();
+            services.AddScoped<Staffs.Application.Services.Interface.IStaffPrincipalReader, StaffPrincipalReader>();
             services.AddIdentity<ApplicationUser, ApplicationRole>()
                 .AddEntityFrameworkStores<StaffDbContext>()
                 .AddDefaultTokenProviders();
@@ -53,9 +54,5 @@ namespace Staffs.Infrastructure
 
             return services;
         }
-
-      
-
-       
     }
 }

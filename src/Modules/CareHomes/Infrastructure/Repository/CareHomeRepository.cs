@@ -27,6 +27,11 @@ namespace src.Modules.CareHomes.Infrastructure.Repository
             dbContext.Update(careHome);
         }
 
+        public void Delete(CareHome careHome)
+        {
+            dbContext.CareHomes.Remove(careHome);
+        }
+
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             return await dbContext.SaveChangesAsync(cancellationToken);

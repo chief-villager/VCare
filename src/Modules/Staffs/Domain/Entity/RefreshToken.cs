@@ -14,6 +14,11 @@ namespace Staffs.Domain.Entity
         // at issue: a leaked table must not hand out usable refresh tokens.
         public byte[] TokenHash{get; private set;} = null!;
         public Guid TokenFamily {get; private set;}
+
+        // Who the token was issued to. Rotation reads the owner from here rather
+        // than from the caller: a caller-supplied identity would let anyone
+        // holding one valid refresh token mint an access token as anyone else.
+        public Guid StaffId {get; private set;}
         public DateTime ExpirationDate {get; private set;}
         public DateTime CreatedTime {get; private set;}
         public bool IsRevoked {get; private set;}
@@ -24,13 +29,15 @@ namespace Staffs.Domain.Entity
             
         }
 
-        public static Result<RefreshToken> Create(byte[] tokenHash, Guid tokenFamily, 
+        public static Result<RefreshToken> Create(byte[] tokenHash, Guid tokenFamily, Guid staffId,
              DateTime createdTime,DateTime expirationDate)
         {
             if (tokenHash is null || tokenHash.Length == 0)
                 return Result.Failure<RefreshToken>("A refresh token hash is required.");
             if (tokenFamily == Guid.Empty)
                 return Result.Failure<RefreshToken>("A token family is required.");
+            if (staffId == Guid.Empty)
+                return Result.Failure<RefreshToken>("A token owner is required.");
             if (expirationDate <= createdTime)
                 return Result.Failure<RefreshToken>("A refresh token cannot expire before it was created.");
 
@@ -39,6 +46,7 @@ namespace Staffs.Domain.Entity
                 Id = Guid.NewGuid(),
                 TokenHash = tokenHash,
                 TokenFamily = tokenFamily,
+                StaffId = staffId,
                 CreatedTime = createdTime,
                 ExpirationDate = expirationDate,
                 IsRevoked = false
