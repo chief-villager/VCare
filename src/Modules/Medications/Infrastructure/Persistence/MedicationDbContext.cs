@@ -14,6 +14,7 @@ namespace Medications.Infrastructure.Persistence
         internal const string Schema = "Medication";
         internal DbSet<MedicationOrder> MedicationOrders{ get; set;}
         internal DbSet<MedicationAdministration> MedicationAdministrations{get; set;}
+        internal DbSet<OutcomeCode> Outcomes{get; set;}
        
         internal MedicationDbContext(DbContextOptions<MedicationDbContext> options)
         : base(options)
