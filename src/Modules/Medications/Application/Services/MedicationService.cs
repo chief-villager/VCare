@@ -13,7 +13,7 @@ namespace Medications.Application.Services
 {
     internal class MedicationService( IMedicationOrderRepository _medicationOrder,
     IMedicalAdministrationRepository _medicalAdministrationRepository,
-    ScheduleExpander _expander,
+    ScheduleExpander _expander, IOutcomeRepository outcomeRepository,
     IUnitOfWork unitOfWork) : IMedicationService
     {
         public async Task<Result<CreateMedicationOrderResponse>>CreateMedicationOrderAsync( Guid patientId, CreateMedicationOrderRequest request, CancellationToken token)
@@ -71,7 +71,7 @@ namespace Medications.Application.Services
 
 
 
-        public async Task<Result<MedicationAdministrationResponse>> RecordAministration(Guid orderId,DateTime scheduledFor, Guid outcomeCodeId,        
+        public async Task<Result<MedicationAdministrationResponse>> RecordAministration(Guid orderId,DateTime scheduledFor, string outcome,        
         Guid staffId, CancellationToken token, string? notes = null)
         {
             
@@ -85,7 +85,13 @@ namespace Medications.Application.Services
             {
                 throw new InvalidOperationException("This dose is already recorded.");
             }
-            var administration = MedicationAdministration.Create(orderId, order.PatientId.Value, scheduledFor,DateTime.Now, outcomeCodeId, staffId,notes);
+            var outcomeResult = await outcomeRepository.GetOutcomeByName(outcome, token);
+            if (outcomeResult == null)
+            {
+                return Result.Failure<MedicationAdministrationResponse>("Outcome not Found");
+            }
+            
+            var administration = MedicationAdministration.Create(orderId, order.PatientId.Value, scheduledFor,DateTime.Now, outcomeResult.Id, staffId,notes);
             if (administration.IsFailure)
             {
                 return Result.Failure<MedicationAdministrationResponse>(administration.Error);

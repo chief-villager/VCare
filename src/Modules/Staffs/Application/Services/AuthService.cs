@@ -24,8 +24,7 @@ namespace Staffs.Application.Services
     {
         public async Task<Result> CreateApplicationUser(Guid staffId, string username, string email, string password, string phonenumber, string roleName, Guid careHomeId)
         {
-            if (!roleName.Equals(nameof(RoleEnum.Admin), StringComparison.CurrentCultureIgnoreCase) 
-            && !roleName.Equals(nameof(RoleEnum.Carer), StringComparison.CurrentCultureIgnoreCase))
+            if (!IsAllowedRole(roleName))
             {
                 return Result.Failure("Admin and care roles allowed only");
             }
@@ -37,16 +36,71 @@ namespace Staffs.Application.Services
             var principal = new ApplicationUser
             {
                 Id = staffId,
-                Email = username,
+                Email = email,
                 PhoneNumber = phonenumber,
                 UserName = username,
                 CareHomeId = careHomeId
             };
             
-            await userManager.CreateAsync(principal, password);
-            await userManager.AddToRoleAsync(principal, roleName);
+            // Identity reports a duplicate username, a duplicate email or a password
+            // that fails policy through the result. Discarding it returned success
+            // with no user created, and the caller went on believing it had one.
+            var created = await userManager.CreateAsync(principal, password);
+            if (!created.Succeeded)
+            {
+                return Result.Failure(Describe(created));
+            }
+
+            var assigned = await userManager.AddToRoleAsync(principal, roleName.ToUpper());
+            if (!assigned.Succeeded)
+            {
+                // A user with no role authenticates but authorises nowhere. Better
+                // no user at all than one nobody can explain later.
+                await userManager.DeleteAsync(principal);
+                return Result.Failure(Describe(assigned));
+            }
             return Result.Success();
         }
+
+        public async Task<Result> ValidateNewUserAsync(string username, string email, string password, string roleName)
+        {
+            if (!IsAllowedRole(roleName))
+            {
+                return Result.Failure("Admin and care roles allowed only");
+            }
+            if (!await roleManager.RoleExistsAsync(roleName.ToUpper()))
+            {
+                return Result.Failure("Role does not exist");
+            }
+            if (await userManager.FindByNameAsync(username) is not null)
+            {
+                return Result.Failure("That username is already taken");
+            }
+            if (await userManager.FindByEmailAsync(email) is not null)
+            {
+                return Result.Failure("That email address is already registered");
+            }
+
+            // The configured password policy, run against an unsaved user, so the
+            // caller hears "password too short" before anything has been written.
+            var candidate = new ApplicationUser { UserName = username, Email = email };
+            foreach (var validator in userManager.PasswordValidators)
+            {
+                var result = await validator.ValidateAsync(userManager, candidate, password);
+                if (!result.Succeeded)
+                {
+                    return Result.Failure(Describe(result));
+                }
+            }
+            return Result.Success();
+        }
+
+        private static bool IsAllowedRole(string roleName) =>
+            roleName.Equals(nameof(RoleEnum.Admin), StringComparison.CurrentCultureIgnoreCase)
+            || roleName.Equals(nameof(RoleEnum.Carer), StringComparison.CurrentCultureIgnoreCase);
+
+        private static string Describe(IdentityResult result) =>
+            string.Join("; ", result.Errors.Select(e => e.Description));
 
         public async Task<Result<(string AccessToken, string RefreshToken)>> LoginAsync (string userName, string password, CancellationToken cancellationToken)
         {
@@ -69,6 +123,18 @@ namespace Staffs.Application.Services
             // same staff member's other sessions alone.
             return await refreshTokenService.CreateTokensAsync(
                 userName, Guid.NewGuid(), new StaffId(user.Id), user.CareHomeId, role, cancellationToken);
+        }
+
+        public async Task<Result<(string AccessToken, string RefreshToken)>> RefreshAsync (string refreshToken, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Result.Failure<(string, string)>("A refresh token is required.");
+            }
+
+            // Identity, care home and roles all come off the stored token's owner,
+            // so nothing the caller sends beyond the token itself is trusted.
+            return await refreshTokenService.RefreshTokenAsync(refreshToken, cancellationToken);
         }
 
         public async Task<Result> LogoutAsync (string refreshToken, CancellationToken cancellationToken)

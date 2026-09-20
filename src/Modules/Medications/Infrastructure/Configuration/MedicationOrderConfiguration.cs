@@ -49,6 +49,20 @@ namespace Medications.Infrastructure.Configuration
         {
             builder.ToTable("OutcomeCode", MedicationDbContext.Schema);
             builder.HasKey( x => x.Id);
+            builder.HasData([
+                new{
+                    Id = Guid.Parse("f3c9d1e5-6078-4901-c345-d678e901f234"),
+                    Name = "Refused",
+                    DisplayLetter = "R"
+
+                },
+                new {
+                    Id = Guid.Parse("e2b8c0d4-5f67-4890-b234-c567d890e123"),
+                    Name = "Taken",
+                    DisplayLetter = "T",
+                },
+
+            ]);
         }
     }
 

@@ -1,10 +1,15 @@
+using Patients.Presenstation;
 using src.Modules.CareHomes.Infrastructure.Configuration;
+using src.Modules.CareHomes.Presentation;
 using Staffs.Domain.Entity;
+using Staffs.Presentation;
 using Staffs.Infrastructure;
+using VCare.Api.Endpoints;
 using VCare.Api.Services;
 using VCare.Modules.CarePlans;
 using VCare.Modules.Patients;
 using VCare.Modules.Visitation;
+using Visitation.Presentation;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
 
@@ -33,6 +38,9 @@ builder.Services.AddVisitationModule(builder.Configuration);
 // Composes the patient and its care plan from the two modules that own them.
 builder.Services.AddScoped<DashboardService>();
 
+// Creates a care home and its first admin together, across CareHomes and Staffs.
+builder.Services.AddScoped<CareHomeRegistrationService>();
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -48,5 +56,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Each module maps its own endpoint group.
+app.AddPatientEndpoints();
+app.AddStaffEndpoints();
+app.AddAuthEndpoints();
+app.AddVisitationEndpoints();
+app.AddCareHomeEndpoint();
+app.AddCareHomeRegistrationEndpoint();
 
 app.Run();

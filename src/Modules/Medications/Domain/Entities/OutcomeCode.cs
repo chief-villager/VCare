@@ -13,23 +13,19 @@ namespace Medications.Domain.Entities
         internal Guid Id {get; private set;}
         internal string Name {get; private set;} = null!; //Refused
         internal string DisplayLetter { get; private set; }  = null!;// "R"
-        internal bool CountsAsMissed { get; private set; }    // for reporting
-        internal bool RequiresReason { get; private set; }
+       
 
         private OutcomeCode(){}
 
-        private OutcomeCode( string name, string displayLetter, bool countsAsMissed
-        , bool requiresReason)
+        private OutcomeCode(string name, string displayLetter)
         {
             Id = Guid.NewGuid();
             Name = name;
             DisplayLetter = displayLetter;
-            CountsAsMissed = countsAsMissed;
-            RequiresReason = requiresReason;
+           
         }
 
-        public static Result<OutcomeCode> Create(string name, string displayLetter, bool countsAsMissed
-        , bool requiresReason)
+        public static Result<OutcomeCode> Create(string name, string displayLetter)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -39,7 +35,7 @@ namespace Medications.Domain.Entities
             {
                 return Result.Failure<OutcomeCode>("display name is required");
             }
-            var outcome = new OutcomeCode(name, displayLetter, countsAsMissed, requiresReason);
+            var outcome = new OutcomeCode(name, displayLetter);
             return  Result.Success(outcome);
         }
     }

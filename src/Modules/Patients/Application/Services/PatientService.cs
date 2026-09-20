@@ -19,6 +19,14 @@ internal  class PatientService(
             : new PatientResponse(patient.Id.Value, patient.FullName, patient.DateOfBirth);
     }
 
+    public async Task<IReadOnlyList<PatientResponse>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        var patients = await repository.ListAsync(cancellationToken);
+        return patients
+            .Select(p => new PatientResponse(p.Id.Value, p.FullName, p.DateOfBirth))
+            .ToList();
+    }
+
     public async Task<Result<PatientResponse>> RegisterAsync(RegisterPatientRequest request, CancellationToken cancellationToken = default)
     {
         var careHomeId = currentUser.CareHomeId;
@@ -26,6 +34,9 @@ internal  class PatientService(
         request.gender, request.address, request.dateOfBirth, 
         request.emergencyContactRelationship, request.emergencyContactPhoneNumber, 
         request.emergencyContactName, request.phoneNumber,careHomeId, request.email);
+
+        if (patient.IsFailure)
+            return Result.Failure<PatientResponse>(patient.Error);
 
         await repository.AddAsync(patient.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -41,9 +52,17 @@ internal  class PatientService(
             return Result.Failure("Patient not found");
         }
 
-        patient.Update(request.Firstname, request.Lastname, request.Gender, request.Address, request.DateOfBirth, 
-        request.EmergencyContactRelationship, request.EmergencyContactPhoneNumber, request.EmergencyContactName, 
-        request.phoneNumber, request.Email);
+        patient.Update(
+            firstname: request.Firstname,
+            lastname: request.Lastname,
+            gender: request.Gender,
+            address: request.Address,
+            dateOfBirth: request.DateOfBirth,
+            phoneNumber: request.phoneNumber,
+            email: request.Email,
+            emergencyContactName: request.EmergencyContactName,
+            emergencyContactPhoneNumber: request.EmergencyContactPhoneNumber,
+            emergencyContactRelationship: request.EmergencyContactRelationship);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();
 

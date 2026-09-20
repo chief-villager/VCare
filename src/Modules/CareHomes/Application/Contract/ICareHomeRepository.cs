@@ -11,6 +11,7 @@ namespace src.Modules.CareHomes.Application.Contract
     {
         Task AddAsync(CareHome careHome, CancellationToken cancellationToken);
         void UpdateAsync(CareHome careHome);
+        void Delete(CareHome careHome);
         Task<CareHome?> GetByIdAsync(CareHomeId id, CancellationToken cancellationToken);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         
