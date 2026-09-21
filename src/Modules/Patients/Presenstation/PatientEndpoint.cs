@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Patients.Application.Dtos;
 using Patients.Application.Services.Interfaces;
 using VCare.Modules.Patients.Application.Dtos;
+using VCare.SharedKernel.Results;
 
 namespace Patients.Presenstation
 {
@@ -29,7 +30,7 @@ namespace Patients.Presenstation
         {
            var response =  await patientService.RegisterAsync(request,cancellationToken);
            return response.IsFailure
-               ? TypedResults.BadRequest(response.Error)
+               ? response.ToProblem()
                : TypedResults.Created($"/api/patient/{response.Value.Id}", response.Value);
 
         }
@@ -50,7 +51,7 @@ namespace Patients.Presenstation
             IPatientService patientService, CancellationToken cancellationToken)
         {
             var response = await patientService.UpdateAsync(patientId,request,cancellationToken);
-            return response.IsFailure ? TypedResults.NotFound(response.Error) : TypedResults.NoContent();
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
     }
 }

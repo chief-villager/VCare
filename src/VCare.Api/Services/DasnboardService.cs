@@ -13,7 +13,7 @@ namespace VCare.Api.Services
         {
             var patient = await patientService.GetByIdAsync(patientId, token);
             if (patient is null)
-                return Result.Failure<PatientDashboardResponse>("Patient not found.");
+                return Result.Failure<PatientDashboardResponse>(Error.NotFound("Patients.NotFound", "Patient not found."));
 
             // An absent care plan is not an error.
             var carePlan = await carePlanService.GetForPatientAsync(patientId, token);

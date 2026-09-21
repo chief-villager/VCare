@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using VCare.Modules.CarePlans.Application.Services;
 using VCare.SharedKernel.Abstractions;
+using VCare.SharedKernel.Results;
 
 namespace CarePlans.Presentation
 {
@@ -35,7 +36,7 @@ namespace CarePlans.Presentation
             CancellationToken cancellationToken)
         {
            var response =  await carePlanService.CreateCarePlanAsync(request, cancellationToken);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.Created(response.Value.ToString());
+            return response.IsFailure ? response.ToProblem() : TypedResults.Created(response.Value.ToString());
         }
 
 
@@ -45,7 +46,7 @@ namespace CarePlans.Presentation
         {
             await carePlanService.GetForPatientAsync(carePlanId, cancellationToken);
             var response =  await carePlanService.UpdateCarePlanAsync(carePlanId,request, cancellationToken);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.Ok();
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
         }
 
 

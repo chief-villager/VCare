@@ -47,7 +47,7 @@ internal sealed class VisitationService(IVisitRepository visitRepository, ICurre
     {
         var visit = await visitRepository.GetByIdAsync(new VisitId(visitId), token);
         if (visit is null)
-            return Result.Failure("Visit not found.");
+            return Result.Failure(Error.NotFound("Visits.NotFound", "Visit not found."));
 
         var result = transition(visit);
         if (result.IsFailure)

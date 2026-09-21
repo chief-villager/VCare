@@ -58,7 +58,7 @@ internal sealed class Visit : AggregateRoot<VisitId>
     string medicationTaskNote, string personalCareTaskNote, string feedingTaskNote, DateTime? checkedOutAt = null)
     {
         if (Status is not VisitStatus.CheckedIn)
-            return Result.Failure($"Only a checked-in visit can be checked out; this one is {Status}.");
+            return Result.Failure(Error.Conflict("Visits.NotCheckedIn", $"Only a checked-in visit can be checked out; this one is {Status}."));
         if (string.IsNullOrWhiteSpace(medicationTaskNote))
         {
             return Result.Failure("medication summary is required");
@@ -92,7 +92,7 @@ internal sealed class Visit : AggregateRoot<VisitId>
         if (string.IsNullOrWhiteSpace(reason))
             return Result.Failure("A cancellation reason is required.");
         if (Status is not VisitStatus.Scheduled)
-            return Result.Failure($"Only a scheduled visit can be cancelled; this one is {Status}.");
+            return Result.Failure(Error.Conflict("Visits.NotScheduled", $"Only a scheduled visit can be cancelled; this one is {Status}."));
 
         Status = VisitStatus.Cancelled;
         CancellationReason = reason.Trim();

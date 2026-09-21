@@ -1,2 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <!-- For the Result -> IResult mapping in Results/ResultExtensions.cs only.
+         Nothing else here may depend on ASP.NET: modules stay web-framework free. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 </Project>

@@ -10,9 +10,9 @@ namespace Medications.Domain.Entities
 {
     internal class OutcomeCode
     {
-        internal Guid Id {get; private set;}
-        internal string Name {get; private set;} = null!; //Refused
-        internal string DisplayLetter { get; private set; }  = null!;// "R"
+        public  Guid Id {get; private set;}
+        public string Name {get; private set;} = null!; //Refused
+        public string DisplayLetter { get; private set; }  = null!;// "R"
        
 
         private OutcomeCode(){}

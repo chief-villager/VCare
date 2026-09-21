@@ -8,6 +8,7 @@ namespace Medications.Domain.Entities
     internal sealed class MedicationOrder : AggregateRoot<MedicationOrderId>
     {
         public PatientId PatientId { get; private set; }
+        public CareHomeId CareHomeId { get; private set; }
         public string Medication { get; private set; } = null!; 
         public MedicationRouteEnum Route { get; private set; }        // oral, topical, s/c...
         public string? Instructions { get; private set; }  // "take with food"
@@ -29,7 +30,7 @@ namespace Medications.Domain.Entities
         private MedicationOrder(){}
 
         public static Result<MedicationOrder> Record(
-            Guid patientId, string medication, 
+            Guid patientId, Guid careHomeId, string medication, 
             MedicationRouteEnum route, string? instruction, DateOnly startDate,
             DateOnly? endDate, string prescriber, bool isPrn, string? prnIndication,
             bool isControlledDrug, OrderStatus orderStatus,  
@@ -40,6 +41,9 @@ namespace Medications.Domain.Entities
         {
              if (patientId == Guid.Empty)
                 return Result.Failure<MedicationOrder>("Patient is required.");
+
+            if (careHomeId == Guid.Empty)
+                return Result.Failure<MedicationOrder>("Care home is required.");
 
             if (string.IsNullOrWhiteSpace(medication))
                 return Result.Failure<MedicationOrder>("Medication is required.");
@@ -55,6 +59,7 @@ namespace Medications.Domain.Entities
             {
                 Id = MedicationOrderId.New(),
                 PatientId = new PatientId(patientId),
+                CareHomeId = new CareHomeId(careHomeId),
                 Medication = medication,
                 Route = route,
                 Instructions = instruction,

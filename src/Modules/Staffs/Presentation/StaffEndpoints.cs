@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Staffs.Application.Dto;
 using Staffs.Application.Services.Interface;
 using VCare.SharedKernel.Abstractions;
+using VCare.SharedKernel.Results;
 
 namespace Staffs.Presentation
 {
@@ -28,7 +29,7 @@ namespace Staffs.Presentation
         {
             var response = await staffService.CreateStaffAsync(request,cancellationToken);
             return response.IsFailure 
-                ? TypedResults.BadRequest(response.Error) 
+                ? response.ToProblem() 
                 : TypedResults.Created($"/api/staff/{response.Value}", response.Value);
         }
 
@@ -36,14 +37,14 @@ namespace Staffs.Presentation
             IStaffService staffService, CancellationToken cancellationToken)
         {
             var response = await staffService.GetStaffByIdAsync(new StaffId(staffId),cancellationToken);
-            return response.IsFailure ? TypedResults.NotFound(response.Error) : TypedResults.Ok(response.Value);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
 
         public static async Task<IResult>UpdateStaff(Guid staffId, UpdateStaffRequest request, 
             IStaffService staffService, CancellationToken cancellationToken)
         {
             var response = await staffService.UpdateStaffAsync(new StaffId(staffId),request,cancellationToken);
-            return response.IsFailure ? TypedResults.NotFound(response.Error) : TypedResults.NoContent();
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
     }
 }

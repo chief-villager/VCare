@@ -18,7 +18,7 @@ namespace Staffs.Infrastructure
         {
             var user = await userManager.FindByIdAsync(staffId.Value.ToString());
             if (user is null)
-                return Result.Failure<StaffPrincipal>("Invalid Token");
+                return Result.Failure<StaffPrincipal>(Error.Unauthorized("Auth.InvalidToken", "Invalid Token"));
 
             var roles = await userManager.GetRolesAsync(user);
             return Result.Success(new StaffPrincipal(user.UserName!, user.CareHomeId, [.. roles]));

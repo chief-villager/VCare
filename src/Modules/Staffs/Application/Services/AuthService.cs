@@ -74,11 +74,11 @@ namespace Staffs.Application.Services
             }
             if (await userManager.FindByNameAsync(username) is not null)
             {
-                return Result.Failure("That username is already taken");
+                return Result.Failure(Error.Conflict("Auth.UsernameTaken", "That username is already taken"));
             }
             if (await userManager.FindByEmailAsync(email) is not null)
             {
-                return Result.Failure("That email address is already registered");
+                return Result.Failure(Error.Conflict("Auth.EmailRegistered", "That email address is already registered"));
             }
 
             // The configured password policy, run against an unsaved user, so the
@@ -108,11 +108,11 @@ namespace Staffs.Application.Services
            
             if (user == null)
             {
-                return Result.Failure<(string, string)>("invalid login credentials");
+                return Result.Failure<(string, string)>(Error.Unauthorized("Auth.InvalidCredentials", "invalid login credentials"));
             }
             if (!await userManager.CheckPasswordAsync(user!, password))
             {
-               return Result.Failure<(string, string)>("invalid login credentials");
+               return Result.Failure<(string, string)>(Error.Unauthorized("Auth.InvalidCredentials", "invalid login credentials"));
             }
             var role = await userManager.GetRolesAsync(user);
 

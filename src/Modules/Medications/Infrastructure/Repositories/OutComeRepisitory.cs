@@ -13,7 +13,10 @@ namespace Medications.Infrastructure.Repositories
     {
         public async Task<OutcomeCode?>GetOutcomeByName(string name, CancellationToken cancellationToken)
         {
-           return await dbContext.Outcomes.FirstOrDefaultAsync(o => o.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase), cancellationToken);
+           // Compared in the database: the StringComparison overload of Equals has
+           // no SQL translation and throws when the query is executed.
+           var target = name.ToLower();
+           return await dbContext.Outcomes.FirstOrDefaultAsync(o => o.Name.ToLower() == target, cancellationToken);
         }
     }
 }

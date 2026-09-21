@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Staffs.Application.Dto;
 using Staffs.Application.Services.Interface;
+using VCare.SharedKernel.Results;
 
 namespace Staffs.Presentation
 {
@@ -31,7 +32,7 @@ namespace Staffs.Presentation
         {
             var response = await staffService.LoginStaffAsync(request.UserName,request.Password,cancellationToken);
             return response.IsFailure
-                ? TypedResults.Unauthorized()
+                ? response.ToProblem()
                 : TypedResults.Ok(new LoginResponse(response.Value.AccessToken, response.Value.RefreshToken));
         }
 
@@ -43,7 +44,7 @@ namespace Staffs.Presentation
         {
             var response = await staffService.RefreshTokenAsync(request.RefreshToken,cancellationToken);
             return response.IsFailure
-                ? TypedResults.Unauthorized()
+                ? response.ToProblem()
                 : TypedResults.Ok(new LoginResponse(response.Value.AccessToken, response.Value.RefreshToken));
         }
 
@@ -51,33 +52,33 @@ namespace Staffs.Presentation
             IStaffService staffService, CancellationToken cancellationToken)
         {
             var response = await staffService.LogoutStaffAsync(request.RefreshToken,cancellationToken);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.NoContent();
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
         // Hands back the callback link for the staff member to follow.
         public static async Task<IResult>RequestEmailConfirmation(EmailRequest request, IStaffService staffService)
         {
             var response = await staffService.GenerateConfirmEmailLinkAsync(request.Email);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.Ok(response.Value);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
 
         // The target of that link: a GET, because the staff member arrives by browser.
         public static async Task<IResult>ConfirmEmail(string email, string token, IStaffService staffService)
         {
             var response = await staffService.ConfirmEmailAsync(email,token);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.Ok();
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
         }
 
         public static async Task<IResult>RequestPasswordReset(EmailRequest request, IStaffService staffService)
         {
             var response = await staffService.RequestPasswordResetAsync(request.Email);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.Ok(response.Value);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
 
         public static async Task<IResult>ResetPassword(ResetPasswordRequest request, IStaffService staffService)
         {
             var response = await staffService.ResetPasswordAsync(request.Email,request.Token,request.Password);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.Ok();
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
         }
     }
 }

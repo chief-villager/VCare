@@ -1,5 +1,6 @@
 using VCare.Api.Dtos;
 using VCare.Api.Services;
+using VCare.SharedKernel.Results;
 
 namespace VCare.Api.Endpoints
 {
@@ -21,7 +22,7 @@ namespace VCare.Api.Endpoints
         {
             var response = await registrationService.RegisterAsync(request, cancellationToken);
             return response.IsFailure
-                ? TypedResults.BadRequest(response.Error)
+                ? response.ToProblem()
                 : TypedResults.Created($"/api/carehome/{response.Value.CareHomeId}", response.Value);
         }
     }

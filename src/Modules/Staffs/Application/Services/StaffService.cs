@@ -10,6 +10,7 @@ using Staffs.Application.Services.Interface;
 using Staffs.Domain.Entity;
 using Staffs.Infrastructure;
 using VCare.SharedKernel.Abstractions;
+using Staffs.Domain.Errors;
 using VCare.SharedKernel.Results;
 
 namespace Staffs.Application.Services
@@ -22,7 +23,7 @@ namespace Staffs.Application.Services
             var result = await staffRepository.GetByIdAsync(id, cancellationToken);
             if (result is null)
             {
-                return Result.Failure<StaffResponse>("Staff not found");
+                return Result.Failure<StaffResponse>(StaffErrors.NotFound);
             }
             return Result.Success(new StaffResponse(
                 Id: result.Id.Value,
@@ -47,7 +48,7 @@ namespace Staffs.Application.Services
         {
             if (careHomeId == Guid.Empty)
             {
-                return Result.Failure<Guid>("A care home is required to create staff");
+                return Result.Failure<Guid>(Error.Forbidden("Staffs.NoCareHome", "A care home is required to create staff"));
             }
             var staff = Staff.Create(staffRequest.FirstName, staffRequest.LastName,
             staffRequest.Email, staffRequest.PhoneNumber, staffRequest.Role, staffRequest.Address, staffRequest.UserName, careHomeId);
@@ -71,7 +72,7 @@ namespace Staffs.Application.Services
             var existingStaff = await staffRepository.GetByIdAsync( staffId, cancellationToken);
             if (existingStaff is null)
             {
-                return Result.Failure("Staff not found");
+                return Result.Failure(StaffErrors.NotFound);
             }
 
             existingStaff.Update(staff.FirstName, staff.LastName, staff.Email, staff.PhoneNumber, staff.Role, staff.Address);
@@ -85,11 +86,11 @@ namespace Staffs.Application.Services
         {
             if (string.IsNullOrWhiteSpace(userName))
             {
-                return Result.Failure<(string, string)>("invalid login credentials");
+                return Result.Failure<(string, string)>(StaffErrors.InvalidLogin);
             }
             if (string.IsNullOrWhiteSpace(password))
             {
-                return Result.Failure<(string, string)>("invalid login credentials");
+                return Result.Failure<(string, string)>(StaffErrors.InvalidLogin);
             }
 
             // No staff lookup first. Staffs sits behind a care-home query filter and

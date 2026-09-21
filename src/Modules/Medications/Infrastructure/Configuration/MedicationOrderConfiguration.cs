@@ -17,6 +17,9 @@ namespace Medications.Infrastructure.Configuration
             builder.ToTable("MedicationOrder", MedicationDbContext.Schema);
             builder.HasKey(x => x.Id);
             builder.Ignore(x => x.DomainEvents);
+
+            // Every read is filtered by care home, so it leads the index.
+            builder.HasIndex(x => x.CareHomeId);
             builder.HasMany(x => x.Administrations).WithOne().HasForeignKey(x => x.MedicationOrderId).OnDelete(DeleteBehavior.ClientNoAction);
             builder.HasMany(x => x.Schedule).WithOne().HasForeignKey(x => x.MedicationOrderId).OnDelete(DeleteBehavior.ClientNoAction);
 
@@ -29,6 +32,7 @@ namespace Medications.Infrastructure.Configuration
         {
             builder.ToTable("MedicationAdminstration", MedicationDbContext.Schema);
             builder.HasKey(x => x.Id);
+            builder.HasIndex(x => x.CareHomeId);
         }
     }
 

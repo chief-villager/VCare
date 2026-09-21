@@ -12,5 +12,6 @@ namespace Medications.Application.Abstracts
         Task AddAsync(MedicationAdministration administration);
         Task<MedicationAdministration?> Find(Guid orderId, DateTime scheduledFor);
         IEnumerable<MedicationAdministration> ForResidentBetween(Guid patientId, DateOnly from, DateOnly to);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }
