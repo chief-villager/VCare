@@ -54,6 +54,15 @@ namespace Medications.Application.Services
 
     public record ScheduleResponse(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
 
+    public sealed record RecordAdministrationRequest
+    (
+        DateTime ScheduledFor,
+        string Outcome,
+        string? Notes
+    );
+
+    public sealed record UpdateMedicationOrderStatusRequest(string Status);
+
     public sealed record MedicationAdministrationResponse
     (
         Guid Id,

@@ -19,6 +19,11 @@ namespace Medications.Infrastructure.Repositories
             await medicationDbContext.MedicationAdministrations.AddAsync(administration);
         }
 
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return await medicationDbContext.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task<MedicationAdministration?> Find(Guid orderId, DateTime scheduledFor)
         {
             var medicationOrderId = new MedicationOrderId(orderId);

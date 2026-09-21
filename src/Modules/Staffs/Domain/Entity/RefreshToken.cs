@@ -64,7 +64,7 @@ namespace Staffs.Domain.Entity
         public Result RevokeToken(DateTime utcNow)
         {
             if (IsRevoked)
-                return Result.Failure("Already revoked token passes in!");
+                return Result.Failure(Error.Conflict("Auth.TokenAlreadyRevoked", "Already revoked token passes in!"));
 
             IsRevoked = true;
             RevokedAt = utcNow;

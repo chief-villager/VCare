@@ -4,6 +4,7 @@ using VCare.Modules.Patients.Application.Abstractions;
 using VCare.Modules.Patients.Application.Dtos;
 using VCare.Modules.Patients.Domain.Entities;
 using VCare.SharedKernel.Abstractions;
+using VCare.Modules.Patients.Domain.Errors;
 using VCare.SharedKernel.Results;
 
 namespace VCare.Modules.Patients.Application.Services;
@@ -49,7 +50,7 @@ internal  class PatientService(
         var patient = await repository.GetByIdAsync(id, cancellationToken);
         if (patient is null)
         {
-            return Result.Failure("Patient not found");
+            return Result.Failure(PatientErrors.NotFound(id));
         }
 
         patient.Update(

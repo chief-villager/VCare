@@ -16,22 +16,37 @@ namespace Medications.Infrastructure.Persistence
         internal DbSet<MedicationAdministration> MedicationAdministrations{get; set;}
         internal DbSet<OutcomeCode> Outcomes{get; set;}
        
-        internal MedicationDbContext(DbContextOptions<MedicationDbContext> options)
+        private readonly ICurrentUser _currentUser;
+
+        public MedicationDbContext(DbContextOptions<MedicationDbContext> options, ICurrentUser currentUser)
         : base(options)
         {
-            
+            _currentUser = currentUser;
         }
+
+        // The caller's care home. Referenced by the query filter so EF re-evaluates
+        // it per request; a DbContext is scoped, so the care home is fixed for its lifetime.
+        private CareHomeId CurrentCareHome => new(_currentUser.CareHomeId);
        
         protected override void ConfigureConventions(ModelConfigurationBuilder builder)
         {
             builder.Properties<MedicationOrderId>().HaveConversion<MedicationOrderIdConverter>();
             builder.Properties<MedicationAdministrationId>().HaveConversion<MedicationAdministrationIdConverter>();
+            builder.Properties<CareHomeId>().HaveConversion<CareHomeIdConverter>();
+            builder.Properties<PatientId>().HaveConversion<PatientIdConverter>();
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema(Schema);
-            modelBuilder.ApplyConfiguration(new MedicationOrderConfiguration());
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(MedicationDbContext).Assembly);
             base.OnModelCreating(modelBuilder);
+
+            // Care home isolation: a caller can only ever read medication orders and
+            // administrations from their own care home. Writes are stamped with the
+            // care home at creation time. Outcome codes are shared reference data and
+            // stay unfiltered.
+            modelBuilder.Entity<MedicationOrder>().HasQueryFilter(o => o.CareHomeId == CurrentCareHome);
+            modelBuilder.Entity<MedicationAdministration>().HasQueryFilter(a => a.CareHomeId == CurrentCareHome);
         }
       
     }

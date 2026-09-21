@@ -19,7 +19,7 @@ namespace Staffs.Application.Services
         // Every rejection says the same thing. Distinguishing "unknown", "expired"
         // and "revoked" to the caller tells a probing client which of its guesses
         // was closest.
-        private const string InvalidToken = "Invalid Token";
+        private static readonly Error InvalidToken = Error.Unauthorized("Auth.InvalidToken", "Invalid Token");
 
         public async Task<Result<(string AccessToken, string RefreshToken)>> CreateTokensAsync(string name, Guid tokenFamily,
         StaffId staffId, Guid careHomeId, IEnumerable<string> roles, CancellationToken cancellationToken)

@@ -9,11 +9,12 @@ namespace Medications.Application.Abstracts
 {
     internal interface IMedicationOrderRepository
     {
-        Task<MedicationOrder> GetAsync(Guid Id, CancellationToken cancellationToken);
+        Task<MedicationOrder?> GetAsync(Guid Id, CancellationToken cancellationToken);
         Task UpdateAsync (MedicationOrder medicationOrder, CancellationToken cancellationToken);
         Task AddAsync( MedicationOrder medicationOrder, CancellationToken cancellationToken);
         Task<List<MedicationOrder>> GetAllMedicationBelongingToAUserAsync(Expression<Func<MedicationOrder, bool>> expression, CancellationToken cancellationToken);
         Task<IEnumerable<MedicationOrder>> ActiveBetween(Guid patientId, DateOnly from, DateOnly to);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
     };
 }

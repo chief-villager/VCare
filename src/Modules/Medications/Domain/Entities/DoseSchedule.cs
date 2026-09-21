@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using Medications.Domain.Enum;
+using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Results;
 
 namespace Medications.Domain.Entities
@@ -11,7 +12,7 @@ namespace Medications.Domain.Entities
     internal class DoseSchedule
     {
         public Guid Id { get; private set; }
-        public Guid MedicationOrderId { get; private set; }
+        public MedicationOrderId MedicationOrderId { get; private set; }
         public string Dose { get; private set; } = null!;         // "1 tablet", "5ml"
 
         public FrequencyType FType { get; private set; }
@@ -44,7 +45,7 @@ namespace Medications.Domain.Entities
             IntervalDays = intervalDays;
             DaysOfWeek = dayOfWeek;
             AnchorDate = anchorDate;
-            MedicationOrderId = medicationOrderId;
+            MedicationOrderId = new MedicationOrderId(medicationOrderId);
             EffectiveFrom = effectiveFrom;
             EffectiveTo = effectiveTo;
             Sequence = sequence;

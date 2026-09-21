@@ -30,7 +30,7 @@ namespace src.Modules.CareHomes.Application.Service
             var careHome = await careHomeRepository.GetByIdAsync(new CareHomeId(careHomeId), cancellationToken);
             if (careHome == null)
             {
-                return Result.Failure("carehome does not exist");
+                return Result.Failure(Error.NotFound("CareHomes.NotFound", "Care home does not exist."));
             }
             careHomeRepository.Delete(careHome);
             await careHomeRepository.SaveChangesAsync(cancellationToken);
@@ -43,7 +43,7 @@ namespace src.Modules.CareHomes.Application.Service
             var careHome = await careHomeRepository.GetByIdAsync(new CareHomeId(careHomeId), cancellationToken);
             if (careHome == null)
             {
-                return Result.Failure("carehome does not exist");
+                return Result.Failure(Error.NotFound("CareHomes.NotFound", "Care home does not exist."));
             }
             careHome.UpdateCareHome(request.Name,request.Address,request.Email);
             careHomeRepository.UpdateAsync(careHome);

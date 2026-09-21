@@ -12,6 +12,7 @@ namespace Medications.Domain.Entities
     {
         
         public PatientId PatientId {get; private set;}
+        public CareHomeId CareHomeId { get; private set; }
         public MedicationOrderId MedicationOrderId { get; private set; }
 
         public DateTime? ScheduledFor { get; private set; }   // null for PRN
@@ -25,7 +26,7 @@ namespace Medications.Domain.Entities
         private MedicationAdministration(){}
 
 
-        public static Result<MedicationAdministration> Create(Guid medicationOrderId, Guid patientId, DateTime? scheduledFor, 
+        public static Result<MedicationAdministration> Create(Guid medicationOrderId, Guid patientId, Guid careHomeId, DateTime? scheduledFor, 
         DateTime? admninisteredAt, Guid outcomeId, Guid administeredByStaffId, 
          string? notes, DateTime? modifiedAt = null)
         {
@@ -45,12 +46,17 @@ namespace Medications.Domain.Entities
             {
                 return Result.Failure<MedicationAdministration>("patientId id required");
             };
+            if (careHomeId == Guid.Empty)
+            {
+                return Result.Failure<MedicationAdministration>("careHomeId is required");
+            }
     
             var administration = new MedicationAdministration
             {
                 Id = MedicationAdministrationId.New(),
                 MedicationOrderId = new MedicationOrderId(medicationOrderId),
                 PatientId = new PatientId(patientId),
+                CareHomeId = new CareHomeId(careHomeId),
                 ScheduledFor = scheduledFor,
                 AdministeredAt = admninisteredAt,
                 OutcomeCodeId = outcomeId,

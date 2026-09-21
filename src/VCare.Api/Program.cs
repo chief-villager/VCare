@@ -6,6 +6,8 @@ using Staffs.Presentation;
 using Staffs.Infrastructure;
 using VCare.Api.Endpoints;
 using VCare.Api.Services;
+using Medications;
+using Medications.Presentation;
 using VCare.Modules.CarePlans;
 using VCare.Modules.Patients;
 using VCare.Modules.Visitation;
@@ -31,6 +33,7 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // The host stays a thin composition root: it knows modules exist, nothing more.
 builder.Services.AddPatientsModule(builder.Configuration);
 builder.Services.AddCarePlansModule(builder.Configuration);
+builder.Services.AddMedicationsModule(builder.Configuration);
 builder.Services.AddStaffModule(builder.Configuration);
 builder.Services.AddCareHomeModule(builder.Configuration);
 builder.Services.AddVisitationModule(builder.Configuration);
@@ -60,6 +63,7 @@ app.AddPatientEndpoints();
 app.AddStaffEndpoints();
 app.AddAuthEndpoints();
 app.AddVisitationEndpoints();
+app.AddMedicationEndpoint();
 app.AddCareHomeEndpoint();
 app.AddCareHomeRegistrationEndpoint();
 

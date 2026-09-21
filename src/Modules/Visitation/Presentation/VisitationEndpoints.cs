@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using VCare.Modules.Visitation.Application.Services;
 using Visitation.Application.Services.Interfaces;
+using VCare.SharedKernel.Results;
 
 namespace Visitation.Presentation
 {
@@ -29,14 +30,14 @@ namespace Visitation.Presentation
             IVisitationService visitationService, CancellationToken token)
         {
             var response = await visitationService.GetForPatientAsync(patientId,token);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.Ok(response.Value);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
 
         public static async Task<IResult>CheckIn(Guid patientId, CheckInVisitRequest request, 
             IVisitationService visitationService, CancellationToken token)
         {
             var response = await visitationService.CheckInAsync(patientId,request,token);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.NoContent();
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
         public static async Task<IResult>GetVisit(Guid visitId, 
@@ -44,7 +45,7 @@ namespace Visitation.Presentation
         {
             var response = await visitationService.GetByIdAsync(visitId,token);
             if (response.IsFailure)
-                return TypedResults.BadRequest(response.Error);
+                return response.ToProblem();
             return response.Value is null ? TypedResults.NotFound() : TypedResults.Ok(response.Value);
         }
 
@@ -52,14 +53,14 @@ namespace Visitation.Presentation
             IVisitationService visitationService, CancellationToken token)
         {
             var response = await visitationService.CheckOutAsync(visitId,request,token);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.NoContent();
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
         public static async Task<IResult>CancelVisit(Guid visitId, CancelVisitRequest request, 
             IVisitationService visitationService, CancellationToken token)
         {
             var response = await visitationService.CancelVisitAsync(visitId,request,token);
-            return response.IsFailure ? TypedResults.BadRequest(response.Error) : TypedResults.NoContent();
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
     }
 }

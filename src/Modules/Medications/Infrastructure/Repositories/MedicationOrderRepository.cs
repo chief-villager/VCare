@@ -48,11 +48,18 @@ namespace Medications.Infrastructure.Repositories
             return medicationOrders;
         }
 
-        public async Task<MedicationOrder> GetAsync(Guid Id, CancellationToken cancellationToken)
+        // Null when there is no such order, and equally when it belongs to another
+        // care home: the query filter hides it, and the caller reports "not found"
+        // either way rather than confirming it exists elsewhere.
+        public async Task<MedicationOrder?> GetAsync(Guid Id, CancellationToken cancellationToken)
         {
-            var result = await _medicationOrderDb.MedicationOrders.FindAsync(new object?[] { new MedicationOrderId(Id) }, cancellationToken: cancellationToken) ?? throw new NotFoundException("MedicationOrder not found");
-            return result;
-            
+            return await _medicationOrderDb.MedicationOrders
+                .FindAsync(new object?[] { new MedicationOrderId(Id) }, cancellationToken: cancellationToken);
+        }
+
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return await _medicationOrderDb.SaveChangesAsync(cancellationToken);
         }
 
         public  async Task UpdateAsync(MedicationOrder medicationOrder, CancellationToken cancellationToken)

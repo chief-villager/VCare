@@ -31,7 +31,7 @@ internal sealed class CarePlanService(ICarePlanRepository carePlanRepository, IC
     {
         var carePlan = await carePlanRepository.GetByIdAsync(new CarePlanId(carePlanId), token);
         if (carePlan is null)
-            return Result.Failure("Care plan not found.");
+            return Result.Failure(Error.NotFound("CarePlans.NotFound", "Care plan not found."));
 
         var result = carePlan.Update(
             request.Diagnoses,
