@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Staffs.Domain.Entity;
 using VCare.SharedKernel.Abstractions;
+using VCare.SharedKernel.Domain;
+using VCare.SharedKernel.Services;
 
 namespace Staffs.Infrastructure.Persistence
 {
-    internal class StaffDbContext(DbContextOptions<StaffDbContext> options, ICurrentUser currentUser)
-        : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
+    internal class StaffDbContext(DbContextOptions<StaffDbContext> options, ICurrentUser currentUser, IDomainEventDispatcher domainEventDispatcher)
+        : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IUnitOfWork
     {
         public static string schemaName = "Staffs";
         public DbSet<Staff> Staffs { get; set; } = null!;
@@ -21,6 +23,11 @@ namespace Staffs.Infrastructure.Persistence
         // it per request; a DbContext is scoped, so the care home is fixed for its lifetime.
         private CareHomeId CurrentCareHome => new(currentUser.CareHomeId);
 
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+           await DispatchDomainEventsAsync(cancellationToken);
+           return await base.SaveChangesAsync(cancellationToken);
+        }
         protected override void ConfigureConventions(ModelConfigurationBuilder builder)
         {
             builder.Properties<StaffId>().HaveConversion<StaffTypedIdConverter>();
@@ -34,6 +41,27 @@ namespace Staffs.Infrastructure.Persistence
             // Care home isolation: a caller can only ever read staff from their own care home,
             // regardless of role. Writes are stamped with the care home at creation time.
             modelBuilder.Entity<Staff>().HasQueryFilter(s => s.CareHomeId == CurrentCareHome);
+        }
+
+        private async Task DispatchDomainEventsAsync(CancellationToken ct)
+        {
+            // Loop so that events raised by handlers (rare) are also dispatched.
+            while (true)
+            {
+                var aggregates = ChangeTracker
+                    .Entries<IHasDomainEvents>()
+                    .Where(e => e.Entity.DomainEvents.Count > 0)
+                    .Select(e => e.Entity)
+                    .ToList();
+                if (aggregates.Count == 0)
+                    break;
+
+                var domainEvents = aggregates.SelectMany(a => a.DomainEvents).ToList();
+                foreach (var aggregate in aggregates)
+                    aggregate.ClearDomainEvents();
+
+                await domainEventDispatcher.DispatchAsync(domainEvents, ct);
+            }
         }
 
     }

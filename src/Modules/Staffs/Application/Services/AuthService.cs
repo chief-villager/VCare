@@ -196,6 +196,7 @@ namespace Staffs.Application.Services
             
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
             var callbackurl = $"{options.Value.BaseUrl}/api/auth/Reset_password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
+            user.Raise(new ResetPawordEventEvent(user.Email!,user.UserName!,callbackurl));
             return Result.Success<string>(callbackurl);
         }
 

@@ -33,7 +33,7 @@ public class PatientTests
         Assert.NotEqual(Guid.Empty, patient.Id.Value);
         Assert.Equal("Ada Lovelace", patient.FullName);
         Assert.Single(patient.DomainEvents);
-        Assert.IsType<PatientRegistered>(patient.DomainEvents[0]);
+        Assert.IsType<PatientRegistered>(patient.DomainEvents.First());
     }
 
     [Fact]

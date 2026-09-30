@@ -10,6 +10,10 @@
     <Project Path="src/Modules/Staffs/VCare.Modules.Staffs.csproj" />
     <Project Path="src/Modules/CareHomes/VCare.Modules.CareHome.Csproj" />
     <Project Path="src/Modules/Visitation/VCare.Modules.Visitation.csproj" />
+    <Project Path="src/Modules/Outbox/VCare.Modules.Outbox.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/VCare.Modules.Notifications.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/VCare.Modules.Patients.Tests/VCare.Modules.Patients.Tests.csproj" />
