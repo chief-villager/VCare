@@ -18,6 +18,7 @@ namespace Notifications
                 .Bind(configuration.GetSection("Smtp"))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
+            services.AddScoped<Notifications.Application.Contract.ISmtpEmailSender, SmtpEmailSender>();
             services.AddScoped<INotification, NotificationService>();
             return services;
         }

@@ -32,5 +32,10 @@ namespace Staffs.Infrastructure.Repositories
         {
             return await dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<int> CommitandSaveAsync(CancellationToken cancellationToken = default)
+        {
+            return await dbContext.CommitandSaveAsync(cancellationToken);
+        }
     }
 }

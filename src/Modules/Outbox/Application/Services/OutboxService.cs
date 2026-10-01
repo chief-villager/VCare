@@ -11,7 +11,7 @@ using VCare.SharedKernel.Results;
 
 namespace Outbox.Application.Services
 {
-    internal class OutboxService(IOutboxRepository outboxRepository) : IOutboxService, IOutboxWriter 
+    internal class OutboxService(IOutboxRepository outboxRepository) : IOutboxService 
     {   
         
         public async Task<Result> AddOutboxMessageAsync<TPayload>(TPayload payload,string Email, string UserName, 
@@ -19,6 +19,11 @@ namespace Outbox.Application.Services
         {
             var payloadName = typeof(TPayload).Name;
             var message = OutboxMessage.Create(eventType, payload,payloadName);
+            if (message.IsFailure)
+            {
+                return Result.
+                Failure<OutboxMessage>(new Error("404","No pending messages",ErrorKind.NotFound));
+            }
             await outboxRepository.AddAsync(message.Value,cancellationToken);
             return Result.Success();
         }
@@ -37,24 +42,24 @@ namespace Outbox.Application.Services
         }
 
 
-                public async Task<Result>UpdateOutBoxMessageStatusAsync(Guid Id, string Status, CancellationToken cancellationToken)
-        {
-            var message = await outboxRepository.GetOutboxMessageAsync(Id, cancellationToken);
-            return message == null ? 
-                Result.Failure(new Error("404","message not found", ErrorKind.NotFound)) :
-                Result.Success<OutboxMessage>(message);
-        }
-
         public async Task<Result>UpdateMessageStatus(string status,Guid Id,CancellationToken cancellationToken)
         {
-          var message = await outboxRepository.GetOutboxMessageAsync(Id,cancellationToken);
-          if (message == null)
-          {
-             Result.Failure(new Error("404","message not found", ErrorKind.NotFound));
-          } 
-          var statusUpdate = message!.UpdateStatus(status);
-         return  statusUpdate!.IsFailure ? Result.Failure(statusUpdate.Error):
-                Result.Success<OutboxMessage>(message);
+            var message = await outboxRepository.GetOutboxMessageAsync(Id,cancellationToken);
+            if (message == null)
+            {
+                return Result.Failure(new Error("404","message not found", ErrorKind.NotFound));
+            }
+
+            var statusUpdate = message.UpdateStatus(status);
+            if (statusUpdate.IsFailure)
+            {
+                return statusUpdate;
+            }
+
+            // The drain side owns its own commit. Without this the processor
+            // re-claims the same row on every loop and re-sends the same email.
+            await outboxRepository.SaveChangesAsync(cancellationToken);
+            return Result.Success();
         }
     }
 }

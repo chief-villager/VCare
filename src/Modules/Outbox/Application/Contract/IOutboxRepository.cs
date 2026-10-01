@@ -11,5 +11,9 @@ namespace Outbox.Application.Contract
         Task AddAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken);
         Task<OutboxMessage?> ClaimNextPendingAsync(CancellationToken cancellationToken);
         Task<OutboxMessage?> GetOutboxMessageAsync(Guid Id, CancellationToken cancellationToken); 
+
+        // Only the drain side saves. The enqueue side is flushed by the writing
+        // module's transaction, so AddAsync deliberately does not persist.
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

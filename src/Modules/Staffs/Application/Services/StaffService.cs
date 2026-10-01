@@ -12,6 +12,7 @@ using Staffs.Infrastructure;
 using VCare.SharedKernel.Abstractions;
 using Staffs.Domain.Errors;
 using VCare.SharedKernel.Results;
+using Staffs.Infrastructure.Persistence;
 
 namespace Staffs.Application.Services
 {
@@ -57,14 +58,19 @@ namespace Staffs.Application.Services
                 return Result.Failure<Guid>("Failed to create staff");
             }
             
-            await staffRepository.AddAsync(staff, cancellationToken);
+            // The Identity user goes first and commits on its own: the StaffCreated
+            // handler looks it up by email, and that is a database query, not a
+            // change-tracker hit. Tracking the Staff only afterwards also keeps its
+            // insert inside the transaction CommitandSaveAsync opens, alongside the
+            // outbox row -- Identity's save would otherwise have committed it early.
             var result = await authService.CreateApplicationUser( staff.Id.Value, staffRequest.UserName,
             staffRequest.Email, staffRequest.Password, staffRequest.PhoneNumber, staffRequest.Role, careHomeId);
             if (result.IsFailure)
             {
                 return Result.Failure<Guid>(result.Error);
             }
-            await staffRepository.SaveChangesAsync(cancellationToken);
+            await staffRepository.AddAsync(staff, cancellationToken);
+            await staffRepository.CommitandSaveAsync(cancellationToken);
             return Result.Success(staff.Id.Value);
         }
 
