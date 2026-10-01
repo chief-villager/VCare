@@ -14,7 +14,7 @@ namespace Staffs.Infrastructure.Repositories
     {
         async Task IStaffRepository.AddAsync(Staff staff, CancellationToken cancellationToken)
         {
-            _ = dbContext.Staffs.AddAsync(staff, cancellationToken);
+            _ = await dbContext.Staffs.AddAsync(staff, cancellationToken);
             await Task.CompletedTask;
         }
 

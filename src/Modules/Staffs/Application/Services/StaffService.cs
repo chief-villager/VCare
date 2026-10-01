@@ -56,6 +56,7 @@ namespace Staffs.Application.Services
             {
                 return Result.Failure<Guid>("Failed to create staff");
             }
+            
             await staffRepository.AddAsync(staff, cancellationToken);
             var result = await authService.CreateApplicationUser( staff.Id.Value, staffRequest.UserName,
             staffRequest.Email, staffRequest.Password, staffRequest.PhoneNumber, staffRequest.Role, careHomeId);

@@ -24,7 +24,7 @@ namespace Staffs.Domain.Entity
         public static Staff Create(string firstName, string lastName, string email, string phoneNumber, string role, string address, string username, Guid careHomeId)
         {
             var id = StaffId.New();
-            return new Staff
+            var newStaff =  new Staff
             {
                 Id = StaffId.New(),
                 FirstName = firstName,
@@ -36,6 +36,8 @@ namespace Staffs.Domain.Entity
                 UserName = username,
                 CareHomeId = new CareHomeId(careHomeId)
             };
+            newStaff.Raise(new StaffCreatedEvent(email,username));
+            return newStaff;
         }
 
         public void Update(string? firstName = null, string? lastName = null, string? email = null, string? phoneNumber = null, string? role = null, string? address = null)
