@@ -39,5 +39,10 @@ namespace Outbox.Infrastructure.Persistence.Repository
         {
             await outboxDbContext.AddAsync(outboxMessage, cancellationToken);  
         }
+
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return await outboxDbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 }

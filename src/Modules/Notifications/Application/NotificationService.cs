@@ -16,7 +16,7 @@ namespace Notifications.Application
         public async Task<Result> ProcessEmailNotificationAsync(string payload, string payloadName, CancellationToken cancellationToken)
         {   
 
-            var result = payload.ToLower() switch
+            var result = payloadName.ToLower() switch
             {
                 "staffcreatedeventpayload" => await SendWelcomeEmailAsync(payload,cancellationToken),
                 "passwordreseteventpayload" => await SendPassWordResetEmailAsync(payload, cancellationToken),

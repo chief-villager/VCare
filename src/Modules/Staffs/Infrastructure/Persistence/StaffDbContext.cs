@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Staffs.Domain.Entity;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
@@ -12,7 +13,8 @@ using VCare.SharedKernel.Services;
 
 namespace Staffs.Infrastructure.Persistence
 {
-    internal class StaffDbContext(DbContextOptions<StaffDbContext> options, ICurrentUser currentUser, IDomainEventDispatcher domainEventDispatcher)
+    internal class StaffDbContext(DbContextOptions<StaffDbContext> options, ICurrentUser currentUser,
+     IDomainEventDispatcher domainEventDispatcher, IOutboxParticipant outboxParticipant)
         : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IUnitOfWork
     {
         public static string schemaName = "Staffs";
@@ -23,10 +25,24 @@ namespace Staffs.Infrastructure.Persistence
         // it per request; a DbContext is scoped, so the care home is fixed for its lifetime.
         private CareHomeId CurrentCareHome => new(currentUser.CareHomeId);
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        // public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        // {
+        //    await DispatchDomainEventsAsync(cancellationToken);
+        //    return await base.SaveChangesAsync(cancellationToken);
+        // }
+        public async Task<int> CommitandSaveAsync(CancellationToken cancellationToken)
         {
-           await DispatchDomainEventsAsync(cancellationToken);
-           return await base.SaveChangesAsync(cancellationToken);
+            await using var transaction = await  Database.BeginTransactionAsync(cancellationToken);
+            await DispatchDomainEventsAsync(cancellationToken);
+            // acceptAllChangesOnSuccess: false -- the transaction can still roll back
+            // below, and the tracker must not pretend these rows already landed.
+            var written = await SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken);
+            await outboxParticipant.FlushAsync(transaction.GetDbTransaction(), cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            // Only now does the tracked state match the database.
+            ChangeTracker.AcceptAllChanges();
+            return written;
         }
         protected override void ConfigureConventions(ModelConfigurationBuilder builder)
         {

@@ -13,5 +13,10 @@ namespace Staffs.Application.Abstraction
         void Update(Staff staff);
         Task<int> SaveChangesAsync( CancellationToken cancellationToken = default);
 
+        /// <summary>Ends the request's work: dispatches domain events, saves, flushes
+        /// the outbox and commits, all in one transaction. Identity's own saves go
+        /// through <see cref="SaveChangesAsync"/> and dispatch nothing.</summary>
+        Task<int> CommitandSaveAsync(CancellationToken cancellationToken = default);
+
     }
 }
