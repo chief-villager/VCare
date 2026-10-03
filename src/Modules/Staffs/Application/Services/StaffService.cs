@@ -135,13 +135,24 @@ namespace Staffs.Application.Services
             return await authService.ConfirmEmailAsync(email, token);
         }
 
-        public async Task<Result<string>> RequestPasswordResetAsync(string email)
+        public async Task<Result> RequestPasswordResetAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                return Result.Failure<string>("Email is required");
+                return Result.Failure("Email is required");
             }
-            return await authService.GetPasswordResetcode(email);
+            var callbackUrl =  await authService.GetPasswordResetcode(email);
+            if (callbackUrl.IsFailure)
+            {
+                return Result.Failure(callbackUrl.Error);
+            }
+            var staff = await staffRepository.GetByEmailAsync(email, CancellationToken.None);
+            if (staff is null)
+            {
+                return Result.Failure(new Error("404", "Staff not found", ErrorKind.NotFound));
+            }
+            staff.RaisePassWordUpdatedEvent(email, email, callbackUrl.Value);
+            return Result.Success();
         }
 
         public async Task<Result<bool>> ResetPasswordAsync(string email, string token, string password)

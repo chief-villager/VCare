@@ -23,6 +23,11 @@ namespace Staffs.Infrastructure.Repositories
             return await dbContext.Staffs.FindAsync(new object[] { id }, cancellationToken).AsTask();
         }
 
+        async Task<Staff?> IStaffRepository.GetByEmailAsync(string email, CancellationToken cancellationToken)
+        {
+            return await dbContext.Staffs.FirstOrDefaultAsync(s => s.Email == email, cancellationToken);
+        }
+
         void IStaffRepository.Update(Staff staff)
         {
             dbContext.Staffs.Update(staff);

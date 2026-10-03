@@ -7,6 +7,6 @@ namespace VCare.SharedKernel.Domain
 {
    
     public sealed record StaffCreatedEvent(string Email, string UserName) : IDomainEvent;
-    public sealed record ResetPawordEventEvent(string Email, string UserName, string Url) : IDomainEvent;
+    public sealed record ResetPasswordEvent(string Email, string UserName, string Url) : IDomainEvent;
     
 }

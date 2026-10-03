@@ -19,12 +19,13 @@ namespace Outbox.Infrastructure.Persistence.Repository
             var message = await outboxDbContext.OutboxMessages
                 .FromSqlInterpolated($"""
                     SELECT TOP (1) *
-                    FROM OutboxMessages WITH (ROWLOCK, UPDLOCK, READPAST)
+                    FROM Outboxes WITH (ROWLOCK, UPDLOCK, READPAST)
                     WHERE Status IN ({(int)OutboxStatus.Pending}, {(int)OutboxStatus.Failed})
                     AND (NextAttemptAt IS NULL OR NextAttemptAt <= GETUTCDATE())
                     ORDER BY CreatedAt
                     """)
                 .FirstOrDefaultAsync(cancellationToken);
+            transaction.Commit();
 
             return message;
         }

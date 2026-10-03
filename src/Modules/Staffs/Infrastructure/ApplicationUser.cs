@@ -7,17 +7,10 @@ using VCare.SharedKernel.Domain;
 
 namespace Staffs.Infrastructure
 {
-    internal class ApplicationUser : IdentityUser<Guid>,IHasDomainEvents
+    internal class ApplicationUser : IdentityUser<Guid>
     {
-        private readonly List<IDomainEvent> _domainEvents = [];
         public Guid CareHomeId {get; set;}
 
-        public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
-        public void Raise(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
-
-        public void ClearDomainEvents()
-        {
-            _domainEvents.Clear();
-        }
+      
     }
 }

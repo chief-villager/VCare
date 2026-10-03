@@ -55,6 +55,11 @@ namespace Staffs.Domain.Entity
             if (!string.IsNullOrWhiteSpace(address))
                 Address = address;
         }
+
+        public void RaisePassWordUpdatedEvent(string email, string username, string url)
+        {
+            Raise(new ResetPasswordEvent(email, username, url));
+        }
     
   
         

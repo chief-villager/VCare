@@ -72,7 +72,7 @@ namespace Staffs.Presentation
         public static async Task<IResult>RequestPasswordReset(EmailRequest request, IStaffService staffService)
         {
             var response = await staffService.RequestPasswordResetAsync(request.Email);
-            return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
         }
 
         public static async Task<IResult>ResetPassword(ResetPasswordRequest request, IStaffService staffService)
