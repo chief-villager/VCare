@@ -32,17 +32,29 @@ namespace Staffs.Infrastructure.Persistence
         // }
         public async Task<int> CommitandSaveAsync(CancellationToken cancellationToken)
         {
+            
             await using var transaction = await  Database.BeginTransactionAsync(cancellationToken);
-            await DispatchDomainEventsAsync(cancellationToken);
-            // acceptAllChangesOnSuccess: false -- the transaction can still roll back
-            // below, and the tracker must not pretend these rows already landed.
-            var written = await SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken);
-            await outboxParticipant.FlushAsync(transaction.GetDbTransaction(), cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            try
+            {
+                await DispatchDomainEventsAsync(cancellationToken);
+                 // acceptAllChangesOnSuccess: false -- the transaction can still roll back
+                 // below, and the tracker must not pretend these rows already landed.
+                var written = await SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken);
+                await outboxParticipant.FlushAsync(transaction.GetDbTransaction(), cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
 
-            // Only now does the tracked state match the database.
-            ChangeTracker.AcceptAllChanges();
-            return written;
+                // Only now does the tracked state match the database.
+                ChangeTracker.AcceptAllChanges();
+                return written;
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+            
+           
+          
         }
         protected override void ConfigureConventions(ModelConfigurationBuilder builder)
         {

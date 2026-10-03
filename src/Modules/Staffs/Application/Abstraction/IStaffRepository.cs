@@ -9,6 +9,7 @@ namespace Staffs.Application.Abstraction
     internal interface IStaffRepository
     {
         Task<Staff?> GetByIdAsync(VCare.SharedKernel.Abstractions.StaffId id, CancellationToken cancellationToken = default);
+        Task<Staff?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
         Task AddAsync(Staff staff, CancellationToken cancellationToken = default);
         void Update(Staff staff);
         Task<int> SaveChangesAsync( CancellationToken cancellationToken = default);

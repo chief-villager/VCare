@@ -38,7 +38,7 @@ namespace Staffs.Application.Services.Interface
         Task<Result<bool>> ConfirmEmailAsync(string email, string token);
 
         /// <summary>Builds the callback link a staff member follows to reset a forgotten password.</summary>
-        Task<Result<string>> RequestPasswordResetAsync(string email);
+        Task<Result> RequestPasswordResetAsync(string email);
 
         /// <summary>Sets a new password using the token issued by <see cref="RequestPasswordResetAsync"/>.</summary>
         Task<Result<bool>> ResetPasswordAsync(string email, string token, string password);

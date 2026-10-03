@@ -15,7 +15,7 @@ namespace Staffs.Infrastructure.Repositories
         {
            var confirmationUrl = await authService.GenerateConfirmEmailLink(domainEvent.Email);
            var payload = new StaffCreatedEventPayload(domainEvent.Email, domainEvent.UserName, confirmationUrl.Value);
-           await outboxWriter.AddOutboxMessageAsync(payload,domainEvent.Email,domainEvent.UserName,nameof(StaffCreatedEvent),confirmationUrl.Value,ct);
+           await outboxWriter.AddOutboxMessageAsync(payload,nameof(StaffCreatedEvent),ct);
     
         }
     }

@@ -14,8 +14,8 @@ namespace Outbox.Application.Services
     internal class OutboxService(IOutboxRepository outboxRepository) : IOutboxService 
     {   
         
-        public async Task<Result> AddOutboxMessageAsync<TPayload>(TPayload payload,string Email, string UserName, 
-        string eventType,string url, CancellationToken cancellationToken) where TPayload:IOutboxPayload
+        public async Task<Result> AddOutboxMessageAsync<TPayload>(TPayload payload,
+        string eventType, CancellationToken cancellationToken) where TPayload:IOutboxPayload
         {
             var payloadName = typeof(TPayload).Name;
             var message = OutboxMessage.Create(eventType, payload,payloadName);
