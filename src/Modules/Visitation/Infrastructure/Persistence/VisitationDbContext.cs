@@ -18,6 +18,8 @@ internal sealed class VisitationDbContext(DbContextOptions<VisitationDbContext> 
     {
         builder.Properties<VisitId>().HaveConversion<VisitTypedIdConverter>();
         builder.Properties<PatientId>().HaveConversion<VisitPatientTypedIdConverter>();
+        builder.Properties<StaffId>().HaveConversion<VisitStaffTypedIdConverter>();
+        builder.Properties<CareHomeId>().HaveConversion<VisitCareHomeTypedIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

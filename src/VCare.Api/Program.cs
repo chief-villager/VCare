@@ -19,6 +19,7 @@ using Notifications;
 using Outbox.Infrastructure.Configuration;
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,11 +69,6 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
@@ -86,5 +82,11 @@ app.AddVisitationEndpoints();
 app.AddMedicationEndpoint();
 app.AddCareHomeEndpoint();
 app.AddCareHomeRegistrationEndpoint();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 app.Run();

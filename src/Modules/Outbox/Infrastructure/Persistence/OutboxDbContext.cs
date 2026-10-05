@@ -9,11 +9,13 @@ namespace Outbox.Infrastructure.Persistence
 {
     internal class OutboxDbContext(DbContextOptions<OutboxDbContext> options) : DbContext(options)
     {
-        public static string schemaName = "Outboxes";
+        public static string schemaName = "Outbox";
         public DbSet<OutboxMessage> OutboxMessages{get; set;}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.HasDefaultSchema(schemaName);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(OutboxDbContext).Assembly);
             base.OnModelCreating(modelBuilder);
         }
     }

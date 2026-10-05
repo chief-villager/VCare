@@ -18,3 +18,19 @@ public class VisitPatientTypedIdConverter : ValueConverter<PatientId, Guid>
     {
     }
 }
+
+// The care home and the staff member are referenced by id only, with no
+// navigation out of this module.
+public class VisitCareHomeTypedIdConverter : ValueConverter<CareHomeId, Guid>
+{
+    public VisitCareHomeTypedIdConverter() : base(x => x.Value, x => new CareHomeId(x))
+    {
+    }
+}
+
+public class VisitStaffTypedIdConverter : ValueConverter<StaffId, Guid>
+{
+    public VisitStaffTypedIdConverter() : base(x => x.Value, x => new StaffId(x))
+    {
+    }
+}

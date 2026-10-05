@@ -35,6 +35,12 @@ namespace Staffs.Infrastructure.Persistence.Configurations
     {
         private static readonly Guid AdminRoleId = new("11111111-1111-1111-1111-111111111111");
         private static readonly Guid CarerRoleId = new("22222222-2222-2222-2222-222222222222");
+
+        // IdentityRole's constructor assigns ConcurrencyStamp = Guid.NewGuid(), so
+        // leaving it unset makes the seeded model different on every build and EF
+        // refuses to migrate ("the model changes each time it is built"). Pinned.
+        private const string AdminRoleStamp = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+        private const string CarerRoleStamp = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
         public void Configure(EntityTypeBuilder<ApplicationRole> builder)
         {
             builder.HasData(
@@ -42,14 +48,15 @@ namespace Staffs.Infrastructure.Persistence.Configurations
                 {
                     Id = AdminRoleId,
                     Name = nameof(RoleEnum.Admin),
-                    NormalizedName = nameof(RoleEnum.Admin).ToUpper()
-                    
+                    NormalizedName = nameof(RoleEnum.Admin).ToUpper(),
+                    ConcurrencyStamp = AdminRoleStamp
                 },
                 new ApplicationRole
                 {
                     Id = CarerRoleId,
                     Name = nameof(RoleEnum.Carer),
-                    NormalizedName = nameof(RoleEnum.Carer).ToUpper()
+                    NormalizedName = nameof(RoleEnum.Carer).ToUpper(),
+                    ConcurrencyStamp = CarerRoleStamp
                 }
             );
         }

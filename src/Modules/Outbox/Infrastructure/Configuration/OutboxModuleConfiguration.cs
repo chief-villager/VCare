@@ -25,7 +25,9 @@ namespace Outbox.Infrastructure.Configuration
             services.AddDbContext<OutboxDbContext>((sp, options) =>
             {
                 options.UseSqlServer(sp.GetRequiredService<DbConnection>(),
-                    Options => Options.MigrationsHistoryTable("Outbox",OutboxDbContext.schemaName));
+                    // "OutboxMessages" here collided with the entity's own table of that
+                    // name. Same spelling as every other module instead.
+                    Options => Options.MigrationsHistoryTable("__EFMigrationsHistory",OutboxDbContext.schemaName));
             });
             services.AddScoped<IOutboxRepository, OutboxRepository>();
 

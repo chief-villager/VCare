@@ -11,3 +11,6 @@ appsettings.json
 *.log
 TestResults/
 [Tt]est[Rr]esult*/
+
+# Editor settings are per-developer.
+.vscode/

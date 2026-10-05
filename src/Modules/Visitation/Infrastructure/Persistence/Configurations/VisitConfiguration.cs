@@ -12,9 +12,10 @@ internal sealed class VisitConfiguration : IEntityTypeConfiguration<Visit>
         builder.ToTable("Visits", VisitationDbContext.Schema);
         builder.HasKey(v => v.Id);
 
-        builder.Property(v => v.CareHomeId)
-            .HasConversion(id => id.Value, value => new CareHomeId(value))
-            .IsRequired();
+        // Conversion comes from ConfigureConventions, like the other typed ids:
+        // type-wide, so a new entity carrying a CareHomeId is covered without
+        // anyone remembering to add a line here.
+        builder.Property(v => v.CareHomeId).IsRequired();
         builder.HasIndex(v => v.CareHomeId);
         builder.HasIndex(v => v.PatientId);
 
@@ -26,6 +27,14 @@ internal sealed class VisitConfiguration : IEntityTypeConfiguration<Visit>
             .IsRequired();
 
         builder.Property(v => v.CancellationReason).HasMaxLength(500);
+
+        // The three task records have no key and no life of their own -- a feeding
+        // task is meaningless without its visit -- so they are owned and stored on
+        // the Visits row by table splitting, rather than as three extra tables
+        // keyed by VisitId each holding one bool and one note.
+        builder.OwnsOne(v => v.FeedingTask);
+        builder.OwnsOne(v => v.MedicationTask);
+        builder.OwnsOne(v => v.PersonalcareTask);
 
         // Domain events are behaviour, not persisted state.
         builder.Ignore(v => v.DomainEvents);

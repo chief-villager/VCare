@@ -17,7 +17,7 @@ namespace Staffs.Infrastructure.Persistence
      IDomainEventDispatcher domainEventDispatcher, IOutboxParticipant outboxParticipant)
         : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IUnitOfWork
     {
-        public static string schemaName = "Staffs";
+        public static string schemaName = "Auth";
         public DbSet<Staff> Staffs { get; set; } = null!;
         public DbSet<RefreshToken> RefreshTokens {get; set;}
 
@@ -25,11 +25,6 @@ namespace Staffs.Infrastructure.Persistence
         // it per request; a DbContext is scoped, so the care home is fixed for its lifetime.
         private CareHomeId CurrentCareHome => new(currentUser.CareHomeId);
 
-        // public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        // {
-        //    await DispatchDomainEventsAsync(cancellationToken);
-        //    return await base.SaveChangesAsync(cancellationToken);
-        // }
         public async Task<int> CommitandSaveAsync(CancellationToken cancellationToken)
         {
             
@@ -63,12 +58,13 @@ namespace Staffs.Infrastructure.Persistence
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.HasDefaultSchema(schemaName);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(StaffDbContext).Assembly);
 
             // Care home isolation: a caller can only ever read staff from their own care home,
             // regardless of role. Writes are stamped with the care home at creation time.
             modelBuilder.Entity<Staff>().HasQueryFilter(s => s.CareHomeId == CurrentCareHome);
+            base.OnModelCreating(modelBuilder);
         }
 
         private async Task DispatchDomainEventsAsync(CancellationToken ct)
