@@ -12,17 +12,16 @@ using VCare.SharedKernel.Abstractions;
 
 namespace VCare.Modules.Patients;
 
-public static class PatientsModule
+public static class PatientsModule 
 {
     public static IServiceCollection AddPatientsModule(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration) 
     {
         services.AddDbContext<PatientsDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("Default"),
                 sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", PatientsDbContext.Schema)));
-
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<PatientsDbContext>());
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IPatientService, PatientService>();

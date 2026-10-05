@@ -16,7 +16,11 @@ namespace Outbox.Domain
     {
          Pending,
          Done,
-         Failed
+         Failed,
+         // Out of retries. Excluded from the claim query, so an undeliverable
+         // message stops being picked up instead of sitting at the head of the
+         // queue forever. Appended last: the stored values are ints.
+         Abandoned
     }
   
     internal sealed class OutboxMessage 
@@ -67,44 +71,46 @@ namespace Outbox.Domain
 
         }
 
-        public Result UpdateStatus(string currentStatus)
+        // newStatus is where the message is going, not where it is. Callers pass
+        // nameof(OutboxStatus.Done) or nameof(OutboxStatus.Failed).
+        public Result UpdateStatus(string newStatus)
         {
-            if (string.IsNullOrWhiteSpace(currentStatus))
+            if (string.IsNullOrWhiteSpace(newStatus))
             {
-                return Result.Failure(new VCare.SharedKernel.Results.Error("400","Current message status is required"));
+                return Result.Failure(new VCare.SharedKernel.Results.Error("400", "A status is required."));
             }
-            if (Status == OutboxStatus.Done)
+            if (newStatus != nameof(OutboxStatus.Done) && newStatus != nameof(OutboxStatus.Failed))
             {
-               return Result.Failure
-               (new VCare.SharedKernel.Results.Error("400","Cannot Update status for message with status outboxstatus.done "));
+                return Result.Failure(new VCare.SharedKernel.Results.Error(
+                    "400", "A message can only move to Done or Failed."));
             }
-            if (Status == OutboxStatus.Failed && currentStatus == nameof(OutboxStatus.Failed))
+            if (Status is OutboxStatus.Done or OutboxStatus.Abandoned)
             {
-                               
-                return Result.Failure
-                (new VCare.SharedKernel.Results.Error("403","Cannot Update status from failed to pending ", ErrorKind.Forbidden));
+                return Result.Failure(new VCare.SharedKernel.Results.Error(
+                    "400", $"A message that is already {Status} cannot change status."));
+            }
 
-            }
-           
-            Status = ReturnStatus(currentStatus).Value;
-            if (Status == OutboxStatus.Failed && RetryCount < MaxAttempts)
+            if (newStatus == nameof(OutboxStatus.Done))
             {
-                RetryCount++;
-                NextAttemptAt = DateTime.UtcNow.AddMinutes(3);
+                Status = OutboxStatus.Done;
+                ProcessedAt = DateTime.UtcNow;
+                NextAttemptAt = null;
+                return Result.Success();
             }
+
+            // Failed. Counted once per failure, wherever the message started, so
+            // MaxAttempts actually bounds the number of sends.
+            RetryCount++;
+            if (RetryCount >= MaxAttempts)
+            {
+                Status = OutboxStatus.Abandoned;
+                NextAttemptAt = null;
+                return Result.Success();
+            }
+
+            Status = OutboxStatus.Failed;
+            NextAttemptAt = DateTime.UtcNow.AddMinutes(3);
             return Result.Success();
         }
-
-        private static Result<OutboxStatus> ReturnStatus (string status)
-        {
-            return status switch
-            {
-                nameof(OutboxStatus.Done) =>Result.Success(OutboxStatus.Done),
-                nameof(OutboxStatus.Failed) =>Result.Success(OutboxStatus.Failed),
-                _ => Result.Failure<OutboxStatus>(new VCare.SharedKernel.Results.Error("400","order status not available"))
-            };
-        }
-
-
     }
 }

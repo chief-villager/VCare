@@ -5,6 +5,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\VCare.SharedKernel\VCare.SharedKernel.csproj" />
+    <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="VCare.Modules.Visitation.Tests" />
