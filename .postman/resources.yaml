@@ -1,0 +1,19 @@
+workspace:
+  id: ca6963da-a29c-44ce-8631-93ac5a1e1b6c
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections: {}
+  globals:
+    ../postman/globals/workspace.globals.yaml: 0f76f7b0-bdbb-4bc7-8ed8-c1dcdd3bf5e3
+
+dependencies:
+  collections: {}
+
+localResources:
+  specs:
+    - ../postman/specs/VCare.Api | v1/index.json
+resourceNameMappings:
+  specs:
+    - ../postman/specs/VCare.Api | v1/index.json: VCare.Api | v1

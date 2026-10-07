@@ -1,0 +1,33 @@
+$kind: http-request
+name: /api/auth/login
+description: ""
+url: "{{baseUrl}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "userName": "string",
+      "password": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "userName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "userName",
+        "password"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-auth-login.resources/examples
+order: 1000

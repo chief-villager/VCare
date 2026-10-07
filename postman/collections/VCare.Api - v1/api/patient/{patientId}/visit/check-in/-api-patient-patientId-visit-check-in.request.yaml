@@ -1,0 +1,47 @@
+$kind: http-request
+name: /api/patient/:patientId/visit/check-in
+description: ""
+url: "{{baseUrl}}/api/patient/:patientId/visit/check-in"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  - key: patientId
+    value: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: json
+  content: |-
+    {
+      "checkedInAt": "1953-01-20T01:38:44.265Z"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "checkedInAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "checkedInAt"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-visit-check-in.resources/examples
+order: 1000

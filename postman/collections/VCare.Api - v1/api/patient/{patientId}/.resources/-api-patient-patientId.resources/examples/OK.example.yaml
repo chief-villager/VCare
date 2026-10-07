@@ -1,0 +1,16 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient/:patientId"
+  method: GET
+  pathVariables:
+    patientId: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

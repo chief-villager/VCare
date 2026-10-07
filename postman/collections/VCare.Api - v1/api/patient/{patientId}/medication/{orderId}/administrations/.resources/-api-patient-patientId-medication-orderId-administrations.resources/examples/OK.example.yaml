@@ -1,0 +1,23 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient/:patientId/medication/:orderId/administrations"
+  method: POST
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    orderId: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+  body:
+    type: json
+    content: |-
+      {
+        "scheduledFor": "2000-05-23T13:14:44.666Z",
+        "outcome": "string",
+        "notes": "string"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

@@ -1,0 +1,224 @@
+$kind: http-request
+name: /api/patient/:patientId/medication
+description: ""
+url: "{{baseUrl}}/api/patient/:patientId/medication"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  - key: patientId
+    value: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: json
+  content: |-
+    {
+      "medicatioName": "string",
+      "route": 8627,
+      "instructions": null,
+      "startDate": "1977-05-05",
+      "endDate": "1984-04-09",
+      "prescriber": "string",
+      "isPrn": true,
+      "prnIndication": null,
+      "prnMinIntervalMinutes": "0",
+      "prnMaxDose24h": null,
+      "isControlledDrug": true,
+      "schedules": [
+        {
+          "dose": "string",
+          "fType": 7778,
+          "times": [
+            "13:25:29.626Z",
+            "11:48:28.226Z"
+          ],
+          "intervalDays": "86",
+          "daysOfWeek": 5479,
+          "anchorDate": "1960-01-15",
+          "effectiveFrom": "1974-07-06",
+          "effectiveTo": null,
+          "sequence": "-0"
+        },
+        {
+          "dose": "string",
+          "fType": 5718,
+          "times": [
+            "19:45:30.984Z",
+            "22:30:16.280Z"
+          ],
+          "intervalDays": "0",
+          "daysOfWeek": 1172,
+          "anchorDate": "1969-02-08",
+          "effectiveFrom": "2009-12-13",
+          "effectiveTo": null,
+          "sequence": "749620199"
+        }
+      ],
+      "status": 3991,
+      "createdAt": "1985-10-22T00:28:58.733Z"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "medicatioName": {
+          "type": "string"
+        },
+        "route": {
+          "type": "integer"
+        },
+        "instructions": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "endDate": {
+          "type": [
+            "null",
+            "string"
+          ],
+          "format": "date"
+        },
+        "prescriber": {
+          "type": "string"
+        },
+        "isPrn": {
+          "type": "boolean"
+        },
+        "prnIndication": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "prnMinIntervalMinutes": {
+          "type": [
+            "null",
+            "integer",
+            "string"
+          ],
+          "pattern": "^-?(?:0|[1-9]\\d*)$"
+        },
+        "prnMaxDose24h": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "isControlledDrug": {
+          "type": "boolean"
+        },
+        "schedules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dose": {
+                "type": "string"
+              },
+              "fType": {
+                "type": "integer"
+              },
+              "times": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "time"
+                }
+              },
+              "intervalDays": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "pattern": "^-?(?:0|[1-9]\\d*)$"
+              },
+              "daysOfWeek": {
+                "type": "integer"
+              },
+              "anchorDate": {
+                "type": [
+                  "null",
+                  "string"
+                ],
+                "format": "date"
+              },
+              "effectiveFrom": {
+                "type": "string",
+                "format": "date"
+              },
+              "effectiveTo": {
+                "type": [
+                  "null",
+                  "string"
+                ],
+                "format": "date"
+              },
+              "sequence": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "pattern": "^-?(?:0|[1-9]\\d*)$"
+              }
+            },
+            "required": [
+              "dose",
+              "fType",
+              "times",
+              "intervalDays",
+              "daysOfWeek",
+              "anchorDate",
+              "effectiveFrom",
+              "effectiveTo",
+              "sequence"
+            ]
+          }
+        },
+        "status": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "medicatioName",
+        "route",
+        "instructions",
+        "startDate",
+        "endDate",
+        "prescriber",
+        "isPrn",
+        "prnIndication",
+        "prnMinIntervalMinutes",
+        "prnMaxDose24h",
+        "isControlledDrug",
+        "schedules",
+        "status",
+        "createdAt"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-medication.resources/examples
+order: 1000

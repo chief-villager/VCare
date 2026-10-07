@@ -1,0 +1,27 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient/:patientId/visit/:visitId/check-out"
+  method: POST
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    visitId: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+  body:
+    type: json
+    content: |-
+      {
+        "checkedOutAt": "1973-03-18T15:33:07.922Z",
+        "isMedicationCompleted": true,
+        "isPersonalCareCompleted": false,
+        "isFeedingTaskCompleted": true,
+        "medicationTaskNote": "string",
+        "personalCareTaskNote": "string",
+        "feedingTaskNote": "string"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

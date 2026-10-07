@@ -14,3 +14,4 @@ TestResults/
 
 # Editor settings are per-developer.
 .vscode/
+postman/.dependencies/

@@ -1,0 +1,62 @@
+$kind: http-request
+name: /api/patient/:patientId/medication/:orderId/administrations
+description: ""
+url: "{{baseUrl}}/api/patient/:patientId/medication/:orderId/administrations"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  - key: patientId
+    value: ""
+  - key: orderId
+    value: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: json
+  content: |-
+    {
+      "scheduledFor": "2000-05-23T13:14:44.666Z",
+      "outcome": "string",
+      "notes": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "scheduledFor": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "notes": {
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      },
+      "required": [
+        "scheduledFor",
+        "outcome",
+        "notes"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-medication-orderId-administrations.resources/examples
+order: 1000

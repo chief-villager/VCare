@@ -1,0 +1,93 @@
+$kind: http-request
+name: /api/carehome
+description: ""
+url: "{{baseUrl}}/api/carehome"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "careHome": {
+        "name": "string",
+        "address": "string",
+        "email": "string"
+      },
+      "admin": {
+        "firstName": "string",
+        "lastName": "string",
+        "email": "string",
+        "phoneNumber": "string",
+        "address": "string",
+        "userName": "string",
+        "password": "string"
+      }
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "careHome": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "address",
+            "email"
+          ]
+        },
+        "admin": {
+          "type": "object",
+          "properties": {
+            "firstName": {
+              "type": "string"
+            },
+            "lastName": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "phoneNumber": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "userName": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "firstName",
+            "lastName",
+            "email",
+            "phoneNumber",
+            "address",
+            "userName",
+            "password"
+          ]
+        }
+      },
+      "required": [
+        "careHome",
+        "admin"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-carehome.resources/examples
+order: 2000

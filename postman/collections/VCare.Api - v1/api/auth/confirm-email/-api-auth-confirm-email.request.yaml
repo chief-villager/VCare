@@ -1,0 +1,28 @@
+$kind: http-request
+name: /api/auth/confirm-email
+description: ""
+url: "{{baseUrl}}/api/auth/confirm-email"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "email"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-auth-confirm-email.resources/examples
+order: 1000
