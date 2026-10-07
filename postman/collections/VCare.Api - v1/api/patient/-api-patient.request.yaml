@@ -1,0 +1,74 @@
+$kind: http-request
+name: /api/patient
+description: ""
+url: "{{baseUrl}}/api/patient"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstname": "string",
+      "lastname": "string",
+      "gender": "string",
+      "address": "string",
+      "dateOfBirth": "2001-02-17",
+      "phoneNumber": "string",
+      "email": "string",
+      "emergencyContactName": "string",
+      "emergencyContactPhoneNumber": "string",
+      "emergencyContactRelationship": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "firstname": {
+          "type": "string"
+        },
+        "lastname": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "format": "date"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "emergencyContactName": {
+          "type": "string"
+        },
+        "emergencyContactPhoneNumber": {
+          "type": "string"
+        },
+        "emergencyContactRelationship": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "firstname",
+        "lastname",
+        "gender",
+        "address",
+        "dateOfBirth",
+        "phoneNumber",
+        "email",
+        "emergencyContactName",
+        "emergencyContactPhoneNumber",
+        "emergencyContactRelationship"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-patient.resources/examples
+order: 1000

@@ -1,0 +1,81 @@
+$kind: http-request
+name: /api/staff/:staffId
+description: ""
+url: "{{baseUrl}}/api/staff/:staffId"
+method: PUT
+headers:
+  Content-Type: application/json
+pathVariables:
+  - key: staffId
+    value: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: json
+  content: |-
+    {
+      "firstName": null,
+      "lastName": "string",
+      "email": null,
+      "phoneNumber": "string",
+      "address": "string",
+      "role": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "lastName": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "email": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "phoneNumber": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "address": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "role": {
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      }
+    }
+settings: {}
+examples: ./.resources/-api-staff-staffId-1.resources/examples
+order: 2000

@@ -1,0 +1,31 @@
+$kind: http-request
+name: /api/patient/:patientId/visit/:visitId
+description: ""
+url: "{{baseUrl}}/api/patient/:patientId/visit/:visitId"
+method: GET
+pathVariables:
+  - key: patientId
+    value: ""
+  - key: visitId
+    value: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-patient-patientId-visit-visitId.resources/examples
+order: 1000

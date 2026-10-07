@@ -1,0 +1,32 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/carehome"
+  method: POST
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "careHome": {
+          "name": "string",
+          "address": "string",
+          "email": "string"
+        },
+        "admin": {
+          "firstName": "string",
+          "lastName": "string",
+          "email": "string",
+          "phoneNumber": "string",
+          "address": "string",
+          "userName": "string",
+          "password": "string"
+        }
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

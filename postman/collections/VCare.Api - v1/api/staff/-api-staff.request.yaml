@@ -1,0 +1,63 @@
+$kind: http-request
+name: /api/staff
+description: ""
+url: "{{baseUrl}}/api/staff"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "string",
+      "lastName": "string",
+      "email": "string",
+      "phoneNumber": "string",
+      "address": "string",
+      "role": "string",
+      "password": "string",
+      "userName": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "firstName",
+        "lastName",
+        "email",
+        "phoneNumber",
+        "address",
+        "role",
+        "password",
+        "userName"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-staff.resources/examples
+order: 1000

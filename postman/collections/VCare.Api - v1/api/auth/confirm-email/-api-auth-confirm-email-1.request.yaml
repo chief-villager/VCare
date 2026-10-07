@@ -1,0 +1,44 @@
+$kind: http-request
+name: /api/auth/confirm-email
+description: ""
+url: "{{baseUrl}}/api/auth/confirm-email?email=string&token=string"
+method: GET
+queryParams:
+  - key: email
+    value: string
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+  - key: token
+    value: string
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-auth-confirm-email-1.resources/examples
+order: 2000

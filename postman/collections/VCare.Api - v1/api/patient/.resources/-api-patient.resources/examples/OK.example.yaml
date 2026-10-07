@@ -1,0 +1,28 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient"
+  method: POST
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "firstname": "string",
+        "lastname": "string",
+        "gender": "string",
+        "address": "string",
+        "dateOfBirth": "2001-02-17",
+        "phoneNumber": "string",
+        "email": "string",
+        "emergencyContactName": "string",
+        "emergencyContactPhoneNumber": "string",
+        "emergencyContactRelationship": "string"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

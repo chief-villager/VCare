@@ -1,0 +1,21 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient/:patientId/visit/check-in"
+  method: POST
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    patientId: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+  body:
+    type: json
+    content: |-
+      {
+        "checkedInAt": "1953-01-20T01:38:44.265Z"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

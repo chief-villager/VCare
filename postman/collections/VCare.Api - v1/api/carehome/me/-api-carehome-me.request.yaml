@@ -1,0 +1,47 @@
+$kind: http-request
+name: /api/carehome/me
+description: ""
+url: "{{baseUrl}}/api/carehome/me"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "string",
+      "address": null,
+      "email": null
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "address": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "email": {
+          "type": [
+            "null",
+            "string"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "address",
+        "email"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-carehome-me.resources/examples
+order: 1000

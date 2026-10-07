@@ -1,0 +1,92 @@
+$kind: http-request
+name: /api/patient/:patientId
+description: ""
+url: "{{baseUrl}}/api/patient/:patientId"
+method: PUT
+headers:
+  Content-Type: application/json
+pathVariables:
+  - key: patientId
+    value: ccc37880-2278-d7d1-5f3c-10f6f3e71607
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: json
+  content: |-
+    {
+      "firstname": "string",
+      "lastname": "string",
+      "gender": "string",
+      "address": "string",
+      "dateOfBirth": "1984-08-24",
+      "emergencyContactRelationship": "string",
+      "emergencyContactPhoneNumber": "string",
+      "emergencyContactName": "string",
+      "phoneNumber": "string",
+      "email": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "firstname": {
+          "type": "string"
+        },
+        "lastname": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "format": "date"
+        },
+        "emergencyContactRelationship": {
+          "type": "string"
+        },
+        "emergencyContactPhoneNumber": {
+          "type": "string"
+        },
+        "emergencyContactName": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "firstname",
+        "lastname",
+        "gender",
+        "address",
+        "dateOfBirth",
+        "emergencyContactRelationship",
+        "emergencyContactPhoneNumber",
+        "emergencyContactName",
+        "phoneNumber",
+        "email"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-1.resources/examples
+order: 2000
