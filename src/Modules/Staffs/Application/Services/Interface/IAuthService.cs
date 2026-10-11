@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Staffs.Application.Dto;
+using Staffs.Infrastructure;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Results;
 
@@ -12,7 +14,7 @@ namespace Staffs.Application.Services.Interface
         
         Task<Result> CreateApplicationUser (Guid staffId, string username, string email, 
         string password, string phonenumber, string roleName, Guid careHomeId);
-
+        Task<Result<ApplicationUserResponse>> GetApplicationUserByEmailAsync(string email, CancellationToken cancellationToken);
         Task<Result<(string AccessToken, string RefreshToken)>> LoginAsync (string userName, string password, CancellationToken cancellationToken);
 
         /// <summary>Exchanges a refresh token for a new pair, rotating the old one out.</summary>

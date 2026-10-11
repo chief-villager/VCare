@@ -18,4 +18,6 @@ namespace Staffs.Application.Dto
     public record EmailRequest(string Email);
 
     public record ResetPasswordRequest(string Email, string Token, string Password);
+
+    public record ApplicationUserResponse(Guid UserId, string UserName, string Email,Guid CareHomeId);
 }

@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
+using VCare.SharedKernel.Results;
 
 namespace Staffs.Domain.Entity
 {
@@ -18,6 +20,22 @@ namespace Staffs.Domain.Entity
         public string UserName {get; private set;} = null!;
         public string FullName => $"{FirstName} {LastName}";
         public CareHomeId CareHomeId {get; private set;}
+        public string? ProfilePictureUrl {get; private set;}
+        public DateTime ModifiedAt {get; private set;} = DateTime.Now;
+        public DateTime CreatedAt {get; private set;} = DateTime.Now;
+        public List<StaffDocument> StaffDocuments {get; private set;} = [];
+        public IReadOnlyList<StaffDocument> GetDocuments() => StaffDocuments.AsReadOnly();
+        public Result UpdateProfilePicture(string profilePictureUrl)
+        {
+            if (string.IsNullOrWhiteSpace(profilePictureUrl))
+            {
+               return Result.Failure(new Error("400", "Profile picture URL cannot be empty", ErrorKind.Validation));
+            }
+            ProfilePictureUrl = profilePictureUrl;
+            ModifiedAt = DateTime.Now;
+            return Result.Success();
+        }
+
 
         private Staff() { } // Required by EF Core
 
@@ -34,7 +52,8 @@ namespace Staffs.Domain.Entity
                 Role = role,
                 Address = address,
                 UserName = username,
-                CareHomeId = new CareHomeId(careHomeId)
+                CareHomeId = new CareHomeId(careHomeId),
+                CreatedAt = DateTime.Now,
             };
             newStaff.Raise(new StaffCreatedEvent(email,username));
             return newStaff;
@@ -54,11 +73,25 @@ namespace Staffs.Domain.Entity
                 Role = role;
             if (!string.IsNullOrWhiteSpace(address))
                 Address = address;
+            ModifiedAt = DateTime.Now;
         }
 
         public void RaisePassWordUpdatedEvent(string email, string username, string url)
         {
             Raise(new ResetPasswordEvent(email, username, url));
+        }
+
+        public  Result<StaffDocument> AddDocument(string fileName, string storageKeyName)
+        {
+
+            var documentResult = StaffDocument.Create(fileName, storageKeyName, Id);
+            if (documentResult.IsFailure)
+            {
+                return Result.Failure<StaffDocument>(documentResult.Error);
+            }
+            StaffDocuments.Add(documentResult.Value);
+            ModifiedAt = DateTime.Now;
+            return Result.Success(documentResult.Value);
         }
     
   

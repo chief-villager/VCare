@@ -38,6 +38,7 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // Walks an aggregate's raised events to their handlers. Scoped, so the
 // handlers it resolves share the request's DbContexts.
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 // Each module registers its own DbContext, repositories and services.
 // The host stays a thin composition root: it knows modules exist, nothing more.

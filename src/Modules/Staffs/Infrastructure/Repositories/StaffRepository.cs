@@ -28,6 +28,11 @@ namespace Staffs.Infrastructure.Repositories
             return await dbContext.Staffs.FirstOrDefaultAsync(s => s.Email == email, cancellationToken);
         }
 
+        async Task<Staff?> IStaffRepository.GetByEmailforPasswordResetAsync(string email, CancellationToken cancellationToken)
+        {
+            return await dbContext.Staffs.IgnoreQueryFilters().FirstOrDefaultAsync(s => s.Email == email, cancellationToken);
+        }
+
         void IStaffRepository.Update(Staff staff)
         {
             dbContext.Staffs.Update(staff);

@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Staffs.Infrastructure.Persistence;
 using System.Data.Common;
+using VCare.SharedKernel.Domain;
 
 namespace Staffs.Infrastructure
 {
@@ -34,6 +35,8 @@ namespace Staffs.Infrastructure
             services.AddScoped<Staffs.Application.Services.Interface.IRefreshTokenRepository, Staffs.Infrastructure.Repositories.RefreshTokenRepository>();
             services.AddScoped<VCare.SharedKernel.Abstractions.IRefreshToken, Staffs.Application.Services.RefreshTokenGenerator>();
             services.AddScoped<Staffs.Application.Services.Interface.IStaffPrincipalReader, StaffPrincipalReader>();
+            var storageConfiguration = configuration.GetSection("Storage");
+            services.AddOptions<StorageEntity>().Bind(storageConfiguration).ValidateOnStart().ValidateDataAnnotations();
 
             // Raised by the staff aggregate; the handler mints the confirmation
             // link and hands it to the outbox rather than sending it inline.

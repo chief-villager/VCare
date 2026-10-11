@@ -13,11 +13,93 @@ using VCare.SharedKernel.Abstractions;
 using Staffs.Domain.Errors;
 using VCare.SharedKernel.Results;
 using Staffs.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
+using VCare.SharedKernel.Domain;
 
 namespace Staffs.Application.Services
 {
-    internal class StaffService (IStaffRepository staffRepository, IAuthService authService, ICurrentUser currentUser) : IStaffService
+    internal class StaffService (
+        IStaffRepository staffRepository, 
+        IAuthService authService, 
+        ICurrentUser currentUser,
+        IDocumentService documentService, IOptions<StorageEntity> options) : IStaffService
     {
+        //move this to congiguration file later.
+
+        public  async Task<Result<string>> UploadStaffDocumentAsync(StaffId staffId, IFormFile formFile,string fileName, CancellationToken cancellationToken)
+        {
+            if(fileName == null || fileName.Trim().Length == 0)
+            {
+                return Result.Failure<string>(new Error("400", "File name is required", ErrorKind.Validation));
+            }
+            var staff = await staffRepository.GetByIdAsync(staffId, cancellationToken);
+            if (staff is null)
+            {
+                return Result.Failure<string>(new Error("404", "Staff not found", ErrorKind.NotFound));
+            }
+            if(currentUser.CareHomeId != staff.CareHomeId.Value)
+            {
+                return Result.Failure<string>(new Error("403", "You are not authorized to upload documents for this staff", ErrorKind.Forbidden));
+            }
+            if (formFile.Length <= 0)
+            {
+                return Result.Failure<string>(new Error("400", "The uploaded file is empty.", ErrorKind.Validation));
+            }
+            var filePath = Path.GetFullPath(formFile.FileName);
+            
+            var key = await documentService.WritingAnObjectAsync(options.Value.BucketName, filePath, currentUser.CareHomeId.ToString(), cancellationToken);
+            if (key.IsFailure)
+            {
+                return Result.Failure<string>(key.Error);
+            }
+            var documentResult = staff.AddDocument(fileName, key.Value);
+            if (documentResult.IsFailure)
+            {
+                return Result.Failure<string>(documentResult.Error);
+            }
+            await staffRepository.SaveChangesAsync(cancellationToken);
+            return Result.Success(key.Value);
+        }
+
+            
+        public Task<Result<string>> UploadProfileImageForStaffAsync(StaffId staffId, IFormFile formFile, CancellationToken cancellationToken)
+        {
+            if (formFile.Length <= 0)
+            {
+                return Task.FromResult(Result.Failure<string>(new Error("400", "The uploaded file is empty.", ErrorKind.Validation)));
+            }
+            var staff = staffRepository.GetByIdAsync(staffId, cancellationToken).Result;
+            if (staff is null)
+            {
+                return Task.FromResult(Result.Failure<string>(new Error("404", "Staff not found", ErrorKind.NotFound)));
+            }
+            if (currentUser.CareHomeId != staff.CareHomeId.Value)
+            {
+                return Task.FromResult(Result.Failure<string>(new Error("403", "You are not authorized to upload profile image for this staff", ErrorKind.Forbidden)));
+            }
+            var result = documentService.UploadProfileImageAsync(options.Value.BucketName, formFile.FileName, currentUser.CareHomeId.ToString(), cancellationToken);
+            staff.UpdateProfilePicture(result.Result.Value);
+            staffRepository.SaveChangesAsync(cancellationToken);
+            return result;
+        }
+
+        public async Task<Result<(Stream Content, string ContentType)>> GetStaffDocumentsAsync(StaffId staffId, string key, CancellationToken cancellationToken)
+        {
+            var staff = await staffRepository.GetByIdAsync(staffId, cancellationToken);
+
+            if (staff is null)
+            {
+                return Result.Failure<(Stream Content, string ContentType)>(new Error("404", "Staff not found", ErrorKind.NotFound));
+            }
+
+            if (currentUser.CareHomeId != staff.CareHomeId.Value)
+            {
+                return Result.Failure<(Stream Content, string ContentType)>(new Error("403", "You are not authorized to view documents for this staff", ErrorKind.Forbidden));
+            }
+            var document = await documentService.GetObjectAsync(options.Value.BucketName, key, cancellationToken);
+            return Result.Success(document);
+        }
         
         public async Task<Result<StaffResponse>> GetStaffByIdAsync(StaffId id, CancellationToken cancellationToken)
         {
@@ -135,7 +217,7 @@ namespace Staffs.Application.Services
             return await authService.ConfirmEmailAsync(email, token);
         }
 
-        public async Task<Result> RequestPasswordResetAsync(string email)
+        public async Task<Result> RequestPasswordResetAsync(string email, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -146,12 +228,13 @@ namespace Staffs.Application.Services
             {
                 return Result.Failure(callbackUrl.Error);
             }
-            var staff = await staffRepository.GetByEmailAsync(email, CancellationToken.None);
-            if (staff is null)
+            var staff = await staffRepository.GetByEmailforPasswordResetAsync(email, cancellationToken);
+            if (staff == null)
             {
                 return Result.Failure(new Error("404", "Staff not found", ErrorKind.NotFound));
             }
             staff.RaisePassWordUpdatedEvent(email, email, callbackUrl.Value);
+            await staffRepository.CommitandSaveAsync(cancellationToken);
             return Result.Success();
         }
 

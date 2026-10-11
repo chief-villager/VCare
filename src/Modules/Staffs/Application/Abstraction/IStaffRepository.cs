@@ -10,7 +10,11 @@ namespace Staffs.Application.Abstraction
     {
         Task<Staff?> GetByIdAsync(VCare.SharedKernel.Abstractions.StaffId id, CancellationToken cancellationToken = default);
         Task<Staff?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+        /// <summary>Gets a staff member by email, ignoring query filters. Used for password resets.</summary>
+        Task<Staff?> GetByEmailforPasswordResetAsync(string email, CancellationToken cancellationToken = default);
         Task AddAsync(Staff staff, CancellationToken cancellationToken = default);
+        
         void Update(Staff staff);
         Task<int> SaveChangesAsync( CancellationToken cancellationToken = default);
 

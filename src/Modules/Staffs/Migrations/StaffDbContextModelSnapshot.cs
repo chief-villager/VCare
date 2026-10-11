@@ -177,6 +177,9 @@ namespace VCare.Modules.Staffs.Migrations
                     b.Property<Guid>("CareHomeId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -192,10 +195,16 @@ namespace VCare.Modules.Staffs.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -214,6 +223,32 @@ namespace VCare.Modules.Staffs.Migrations
                         .IsUnique();
 
                     b.ToTable("Staffs", "Auth");
+                });
+
+            modelBuilder.Entity("Staffs.Domain.Entity.StaffDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StorageKeyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("StaffDocuments", "Auth");
                 });
 
             modelBuilder.Entity("Staffs.Infrastructure.ApplicationRole", b =>
@@ -378,6 +413,20 @@ namespace VCare.Modules.Staffs.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Staffs.Domain.Entity.StaffDocument", b =>
+                {
+                    b.HasOne("Staffs.Domain.Entity.Staff", null)
+                        .WithMany("StaffDocuments")
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Staffs.Domain.Entity.Staff", b =>
+                {
+                    b.Navigation("StaffDocuments");
                 });
 #pragma warning restore 612, 618
         }

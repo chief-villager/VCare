@@ -22,6 +22,26 @@ namespace Staffs.Presentation
             staff.MapPost("/",CreateStaff);
             staff.MapGet("/{staffId:Guid}",GetStaff);
             staff.MapPut("/{staffId:Guid}",UpdateStaff);
+            staff.MapPost("/{staffId:Guid}/document",UploadStaffDocument);
+            staff.MapPost("/{staffId:Guid}/profile-image",UploadProfileImageForStaff);
+            staff.MapGet("/{staffId:Guid}/document",GetStaffDocument);
+        }
+
+        public static async Task<IResult>UploadStaffDocument(Guid staffId, IFormFile formFile, string fileName, IStaffService staffService, CancellationToken cancellationToken)
+        {
+            var result = await staffService.UploadStaffDocumentAsync(new StaffId(staffId), formFile,fileName,cancellationToken);
+            return result.IsFailure ? result.ToProblem() : TypedResults.Ok(new { Key = result.Value });
+        }
+
+        public static async Task<IResult>UploadProfileImageForStaff(Guid staffId, IFormFile formFile, IStaffService staffService, CancellationToken cancellationToken)
+        {
+            var result = await staffService.UploadProfileImageForStaffAsync(new StaffId(staffId), formFile,cancellationToken);
+            return result.IsFailure ? result.ToProblem() : TypedResults.Ok(new { Key = result.Value });
+        }
+        public static async Task<IResult>GetStaffDocument(Guid staffId, string key, IStaffService staffService, CancellationToken cancellationToken)
+        {
+            var result = await staffService.GetStaffDocumentsAsync(new StaffId(staffId), key, cancellationToken);
+            return result.IsFailure ? result.ToProblem() : TypedResults.File(result.Value.Content, result.Value.ContentType);
         }
 
         public static async Task<IResult>CreateStaff(CreateStaffRequest request, 
