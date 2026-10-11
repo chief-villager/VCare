@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Staffs.Application.Dto;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Results;
@@ -10,6 +11,9 @@ namespace Staffs.Application.Services.Interface
 {
     public interface IStaffService 
     {
+        Task<Result<string>> UploadProfileImageForStaffAsync(StaffId staffId, IFormFile formFile, CancellationToken cancellationToken);
+        Task<Result<string>> UploadStaffDocumentAsync(StaffId staffId, IFormFile formFile,string fileName, CancellationToken cancellationToken);
+        Task<Result<(Stream Content, string ContentType)>> GetStaffDocumentsAsync(StaffId staffId, string key, CancellationToken cancellationToken);
         Task<Result<StaffResponse>> GetStaffByIdAsync(StaffId id, CancellationToken cancellationToken);
         Task<Result<Guid>> CreateStaffAsync(CreateStaffRequest staffRequest, CancellationToken cancellationToken);
 
@@ -38,7 +42,7 @@ namespace Staffs.Application.Services.Interface
         Task<Result<bool>> ConfirmEmailAsync(string email, string token);
 
         /// <summary>Builds the callback link a staff member follows to reset a forgotten password.</summary>
-        Task<Result> RequestPasswordResetAsync(string email);
+        Task<Result> RequestPasswordResetAsync(string email, CancellationToken cancellationToken);
 
         /// <summary>Sets a new password using the token issued by <see cref="RequestPasswordResetAsync"/>.</summary>
         Task<Result<bool>> ResetPasswordAsync(string email, string token, string password);

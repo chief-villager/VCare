@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Patients.Application.Dtos;
 using Patients.Application.Services.Interfaces;
 using VCare.Modules.Patients.Application.Dtos;
+using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Results;
 
 namespace Patients.Presenstation
@@ -23,8 +24,29 @@ namespace Patients.Presenstation
             patient.MapGet("/",ListPatients);
             patient.MapGet("/{patientId:Guid}",GetPatient);
             patient.MapPut("/{patientId:Guid}",UpdatePatient);
+            patient.MapPost("/{patientId:Guid}/document",UploadPatientDocument);
+            patient.MapPost("/{patientId:Guid}/profile-image",UploadProfileImageForPatient);
+            patient.MapGet("/{patientId:Guid}/document",GetPatientDocument);
 
         }
+
+        public async static Task<IResult>UploadPatientDocument(Guid patientId, IFormFile formFile, string fileName, IPatientService patientService, CancellationToken cancellationToken)
+        {
+             var result = await patientService.UploadPatientDocumentAsync(new PatientId(patientId), formFile,fileName,cancellationToken);
+             return result.IsFailure ? result.ToProblem() : TypedResults.Ok(new { Key = result.Value });
+        }
+        public async static Task<IResult>UploadProfileImageForPatient(Guid patientId, IFormFile formFile, IPatientService patientService, CancellationToken cancellationToken)
+        {
+             var result = await patientService.UploadProfileImageForPatientAsync(new PatientId(patientId), formFile,cancellationToken);
+             return result.IsFailure ? result.ToProblem() : TypedResults.Ok(new { Key = result.Value });
+        }
+
+        public async static Task<IResult>GetPatientDocument(Guid patientId, string key, IPatientService patientService, CancellationToken cancellationToken)
+        {
+            var result = await patientService.GetPatientDocumentsAsync(new PatientId(patientId), key, cancellationToken);
+            return result.IsFailure ? result.ToProblem() : TypedResults.File(result.Value.Content, result.Value.ContentType);
+        }
+
 
         public async static Task<IResult>RegisterPatient(RegisterPatientRequest request, IPatientService patientService, CancellationToken cancellationToken)
         {

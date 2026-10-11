@@ -26,9 +26,27 @@ namespace Staffs.Infrastructure.Persistence.Configurations
                 .IsRequired();
             builder.HasIndex(s => s.CareHomeId);
             builder.HasIndex(s => s.UserName).IsUnique();
+            builder.HasMany(s => s.StaffDocuments)
+                .WithOne()
+                .HasForeignKey(d => d.StaffId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
+        
 
        
+    }
+
+    internal class StaffDocumentConfiguration : IEntityTypeConfiguration<StaffDocument>
+    {
+        public void Configure(EntityTypeBuilder<StaffDocument> builder)
+        {
+            builder.HasKey(d => d.Id);
+            builder.Property(d => d.FileName).IsRequired().HasMaxLength(200);
+            builder.Property(d => d.StorageKeyName).IsRequired().HasMaxLength(200);
+            builder.Property(d => d.StaffId).IsRequired();
+            builder.HasIndex(d => d.StaffId);
+            builder.ToTable("StaffDocuments", StaffDbContext.schemaName);
+        }
     }
 
    internal class RoleConfiguration : IEntityTypeConfiguration<ApplicationRole>

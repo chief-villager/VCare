@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Azure.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Staffs.Application.Dto;
 using Staffs.Application.Services.Interface;
 using Staffs.Domain;
 using Staffs.Infrastructure;
@@ -212,8 +213,20 @@ namespace Staffs.Application.Services
                 return Result.Failure<bool>(string.Join("; ", result.Errors.Select(e => e.Description)));
             }
             return Result.Success(true);
-        } 
+        }
 
-       
+        public async Task<Result<ApplicationUserResponse>> GetApplicationUserByEmailAsync(string email, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Result.Failure<ApplicationUserResponse>(new Error("400", "Email is required", ErrorKind.Validation));
+            }
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Result.Failure<ApplicationUserResponse>(new Error("404", "User not found", ErrorKind.NotFound));
+            }
+            return Result.Success(new ApplicationUserResponse(user.Id, user.UserName!, user.Email!, user.CareHomeId));
+        }
     }
 }

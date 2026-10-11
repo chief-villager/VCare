@@ -69,9 +69,9 @@ namespace Staffs.Presentation
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
         }
 
-        public static async Task<IResult>RequestPasswordReset(EmailRequest request, IStaffService staffService)
+        public static async Task<IResult>RequestPasswordReset(EmailRequest request, IStaffService staffService, CancellationToken cancellationToken)
         {
-            var response = await staffService.RequestPasswordResetAsync(request.Email);
+            var response = await staffService.RequestPasswordResetAsync(request.Email, cancellationToken);
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
         }
 

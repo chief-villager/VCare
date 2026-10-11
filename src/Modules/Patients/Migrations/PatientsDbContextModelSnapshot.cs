@@ -23,6 +23,32 @@ namespace VCare.Modules.Patients.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Patients.Domain.Entities.PatientDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StorageKeyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("PatientDocuments", "patients");
+                });
+
             modelBuilder.Entity("VCare.Modules.Patients.Domain.Entities.Patient", b =>
                 {
                     b.Property<Guid>("Id")
@@ -78,11 +104,28 @@ namespace VCare.Modules.Patients.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CareHomeId");
 
                     b.ToTable("Patients", "patients");
+                });
+
+            modelBuilder.Entity("Patients.Domain.Entities.PatientDocument", b =>
+                {
+                    b.HasOne("VCare.Modules.Patients.Domain.Entities.Patient", null)
+                        .WithMany("Documents")
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VCare.Modules.Patients.Domain.Entities.Patient", b =>
+                {
+                    b.Navigation("Documents");
                 });
 #pragma warning restore 612, 618
         }

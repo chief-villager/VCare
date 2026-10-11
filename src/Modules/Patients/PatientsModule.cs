@@ -9,6 +9,7 @@ using VCare.Modules.Patients.Application.Services;
 using VCare.Modules.Patients.Infrastructure.Persistence;
 using VCare.Modules.Patients.Infrastructure.Repositories;
 using VCare.SharedKernel.Abstractions;
+using VCare.SharedKernel.Domain;
 
 namespace VCare.Modules.Patients;
 
@@ -25,6 +26,8 @@ public static class PatientsModule
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<PatientsDbContext>());
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IPatientService, PatientService>();
+        var storageConfiguration = configuration.GetSection("Storage");
+            services.AddOptions<StorageEntity>().Bind(storageConfiguration);
 
         return services;
     }
