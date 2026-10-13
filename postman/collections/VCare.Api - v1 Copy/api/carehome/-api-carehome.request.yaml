@@ -1,0 +1,28 @@
+$kind: http-request
+name: /api/carehome
+url: "{{baseUrl}}/api/carehome"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "careHome": {
+        "name": "string",
+        "address": "string",
+        "email": "string"
+      },
+      "admin": {
+        "firstName": "string",
+        "lastName": "string",
+        "email": "string",
+        "phoneNumber": "string",
+        "address": "string",
+        "userName": "string",
+        "password": "string"
+      }
+    }
+settings: {}
+examples: ./.resources/-api-carehome.resources/examples
+order: 2000

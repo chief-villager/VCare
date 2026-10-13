@@ -1,0 +1,10 @@
+$kind: http-request
+name: /api/patient/:patientId/visit/:visitId
+url: "{{baseUrl}}/api/patient/:patientId/visit/:visitId"
+method: GET
+pathVariables:
+  patientId: ""
+  visitId: 4f4c9880-0db7-199c-32ef-4c38a34c6bc2
+settings: {}
+examples: ./.resources/-api-patient-patientId-visit-visitId.resources/examples
+order: 3000

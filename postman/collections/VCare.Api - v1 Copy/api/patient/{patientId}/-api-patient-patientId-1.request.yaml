@@ -1,0 +1,26 @@
+$kind: http-request
+name: /api/patient/:patientId
+url: "{{baseUrl}}/api/patient/:patientId"
+method: PUT
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: 4f4c9880-0db7-199c-32ef-4c38a34c6bc2
+body:
+  type: json
+  content: |-
+    {
+      "firstname": "string",
+      "lastname": "string",
+      "gender": "string",
+      "address": "string",
+      "dateOfBirth": "1985-04-24",
+      "emergencyContactRelationship": "string",
+      "emergencyContactPhoneNumber": "string",
+      "emergencyContactName": "string",
+      "phoneNumber": "string",
+      "email": "string"
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-1.resources/examples
+order: 6000

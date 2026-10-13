@@ -18,7 +18,8 @@ namespace Outbox.Application.Services
         string eventType, CancellationToken cancellationToken) where TPayload:IOutboxPayload
         {
             var payloadName = typeof(TPayload).Name;
-            var message = OutboxMessage.Create(eventType, payload,payloadName);
+            var serializedPayload = JsonSerializer.Serialize(payload);
+            var message = OutboxMessage.Create(eventType, serializedPayload,payloadName);
             if (message.IsFailure)
             {
                 return Result.

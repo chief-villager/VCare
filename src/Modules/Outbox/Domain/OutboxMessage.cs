@@ -47,7 +47,7 @@ namespace Outbox.Domain
             
         }
 
-        public static Result<OutboxMessage>Create(string eventType, IOutboxPayload payload, string payloadName)
+        public static Result<OutboxMessage>Create(string eventType, string payload, string payloadName)
         {
             if (string.IsNullOrWhiteSpace(eventType))
             {
@@ -61,7 +61,7 @@ namespace Outbox.Domain
             {
                 Id = Guid.NewGuid(),
                 EventType =  eventType,
-                Payload = JsonSerializer.Serialize(payload),
+                Payload = payload,
                 CreatedAt = DateTime.UtcNow,
                 Status = OutboxStatus.Pending,
                 PayloadName = payloadName

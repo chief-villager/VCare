@@ -1,0 +1,10 @@
+$kind: http-request
+name: /api/auth/confirm-email
+url: "{{baseUrl}}/api/auth/confirm-email?email=string&token=string"
+method: GET
+queryParams:
+  email: string
+  token: string
+settings: {}
+examples: ./.resources/-api-auth-confirm-email-1.resources/examples
+order: 2000

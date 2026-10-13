@@ -1,0 +1,59 @@
+$kind: http-request
+name: /api/patient/:patientId/medication
+url: "{{baseUrl}}/api/patient/:patientId/medication"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: 4f4c9880-0db7-199c-32ef-4c38a34c6bc2
+body:
+  type: json
+  content: |-
+    {
+      "medicatioName": "string",
+      "route": 6443,
+      "instructions": "string",
+      "startDate": "1970-04-14",
+      "endDate": null,
+      "prescriber": "string",
+      "isPrn": false,
+      "prnIndication": "string",
+      "prnMinIntervalMinutes": "-49630530074",
+      "prnMaxDose24h": "string",
+      "isControlledDrug": false,
+      "schedules": [
+        {
+          "dose": "string",
+          "fType": 4123,
+          "times": [
+            "10:55:24.836Z",
+            "21:52:30.774Z"
+          ],
+          "intervalDays": "91",
+          "daysOfWeek": 4281,
+          "anchorDate": "2015-06-23",
+          "effectiveFrom": "2012-01-24",
+          "effectiveTo": "1986-08-01",
+          "sequence": "257"
+        },
+        {
+          "dose": "string",
+          "fType": 1207,
+          "times": [
+            "07:38:22.446Z",
+            "01:02:56.716Z"
+          ],
+          "intervalDays": "0",
+          "daysOfWeek": 3860,
+          "anchorDate": null,
+          "effectiveFrom": "1979-03-19",
+          "effectiveTo": null,
+          "sequence": "5405"
+        }
+      ],
+      "status": 5312,
+      "createdAt": "1968-02-27T08:43:24.533Z"
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-medication.resources/examples
+order: 4000

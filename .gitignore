@@ -6,6 +6,8 @@ obj/
 
 # Secrets / local config
 appsettings.json
+devcert.key
+devcert.pem
 
 # Logs & test output
 *.log

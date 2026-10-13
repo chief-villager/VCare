@@ -1,0 +1,19 @@
+$kind: http-request
+name: /api/staff/:staffId/document
+url: "{{baseUrl}}/api/staff/:staffId/document?fileName=string"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+queryParams:
+  fileName: string
+pathVariables:
+  staffId: 4f4c9880-0db7-199c-32ef-4c38a34c6bc2
+body:
+  type: formdata
+  content:
+    - type: file
+      key: formFile
+      src: []
+settings: {}
+examples: ./.resources/-api-staff-staffId-document.resources/examples
+order: 1000

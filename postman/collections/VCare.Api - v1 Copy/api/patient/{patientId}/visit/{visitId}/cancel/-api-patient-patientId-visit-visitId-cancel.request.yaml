@@ -1,0 +1,18 @@
+$kind: http-request
+name: /api/patient/:patientId/visit/:visitId/cancel
+url: "{{baseUrl}}/api/patient/:patientId/visit/:visitId/cancel"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: ""
+  visitId: 4f4c9880-0db7-199c-32ef-4c38a34c6bc2
+body:
+  type: json
+  content: |-
+    {
+      "reason": "string"
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-visit-visitId-cancel.resources/examples
+order: 1000
