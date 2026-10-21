@@ -1,0 +1,22 @@
+$kind: http-request
+name: /api/patient/:patientId/medication/:orderId/administrations/:scheduleId
+url: "{{baseUrl}}/api/patient/:patientId/medication/:orderId/administrations/:scheduleId"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+  orderId: 0cbe9b07-aef0-405d-84cb-dc3ca0941c1b
+  scheduleId: |
+    db5662a7-c921-4390-841f-5cc22b53e7bb
+body:
+  type: json
+  content: |-
+    {
+      "scheduledFor": "2026-10-19T08:00:00",
+      "outcome": "Taken",
+      "notes": "medication administered"
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-medication-orderId-administrations.resources/examples
+order: 1000

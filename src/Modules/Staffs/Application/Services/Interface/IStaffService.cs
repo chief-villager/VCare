@@ -15,14 +15,14 @@ namespace Staffs.Application.Services.Interface
         Task<Result<string>> UploadStaffDocumentAsync(StaffId staffId, IFormFile formFile,string fileName, CancellationToken cancellationToken);
         Task<Result<(Stream Content, string ContentType)>> GetStaffDocumentsAsync(StaffId staffId, string key, CancellationToken cancellationToken);
         Task<Result<StaffResponse>> GetStaffByIdAsync(StaffId id, CancellationToken cancellationToken);
-        Task<Result<Guid>> CreateStaffAsync(CreateStaffRequest staffRequest, CancellationToken cancellationToken);
+        Task<Result<CreateStaffResponse>> CreateStaffAsync(CreateStaffRequest staffRequest, CancellationToken cancellationToken);
 
         /// <summary>
         /// Creates staff in a care home named explicitly rather than taken from the
         /// caller's token. Registering a care home needs this: the caller creating
         /// the first admin has no care home of their own yet.
         /// </summary>
-        Task<Result<Guid>> CreateStaffForCareHomeAsync(Guid careHomeId, CreateStaffRequest staffRequest, CancellationToken cancellationToken);
+        Task<Result<CreateStaffResponse>> CreateStaffForCareHomeAsync(Guid careHomeId, CreateStaffRequest staffRequest, CancellationToken cancellationToken);
 
         /// <summary>Checks these staff details could be created, writing nothing.</summary>
         Task<Result> ValidateNewStaffAsync(CreateStaffRequest staffRequest);

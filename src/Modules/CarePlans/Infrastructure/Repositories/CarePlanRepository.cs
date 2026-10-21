@@ -11,16 +11,15 @@ internal sealed class CarePlanRepository(CarePlanDbContext context) : ICarePlanR
     public async Task<CarePlan?> GetByIdAsync(CarePlanId id, CancellationToken cancellationToken = default) =>
         await context.CarePlans
             .Include(c => c.Diagnoses)
-            .Include(c => c.Goals)
-            .Include(c => c.Intervention)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
     public async Task<CarePlan?> GetForPatientAsync(PatientId patientId, CancellationToken cancellationToken = default) =>
         await context.CarePlans
             .Include(c => c.Diagnoses)
-            .Include(c => c.Goals)
-            .Include(c => c.Intervention)
             .FirstOrDefaultAsync(c => c.PatientId == patientId, cancellationToken);
+
+    public async Task<bool> ExistsForPatientAsync(PatientId patientId, CancellationToken cancellationToken = default) =>
+        await context.CarePlans.AnyAsync(c => c.PatientId == patientId, cancellationToken);
 
     public async Task AddAsync(CarePlan carePlan, CancellationToken cancellationToken = default) =>
         await context.CarePlans.AddAsync(carePlan, cancellationToken);

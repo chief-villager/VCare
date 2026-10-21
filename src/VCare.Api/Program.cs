@@ -20,6 +20,7 @@ using Outbox.Infrastructure.Configuration;
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Scalar.AspNetCore;
+using CarePlans.Presentation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,7 +82,9 @@ app.AddStaffEndpoints();
 app.AddAuthEndpoints();
 app.AddVisitationEndpoints();
 app.AddMedicationEndpoint();
+app.AddMarchartEndpoint();
 app.AddCareHomeEndpoint();
+app.AddCarePlanEndpoint();
 app.AddCareHomeRegistrationEndpoint();
 
 if (app.Environment.IsDevelopment())

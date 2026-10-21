@@ -9,7 +9,7 @@ namespace Medications.Application.Services
 {
    public sealed record CreateMedicationOrderRequest
    (    string MedicatioName, 
-        MedicationRouteEnum Route,
+        string MedicationRoute,
         string? Instructions,
         DateOnly StartDate,
         DateOnly? EndDate,
@@ -20,11 +20,11 @@ namespace Medications.Application.Services
         string? PrnMaxDose24h,
         bool IsControlledDrug,
         List<ScheduleRequest> Schedules,
-        OrderStatus Status,
+        string Status,
         DateTime CreatedAt
     );
 
-    public record ScheduleRequest(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
+    public record ScheduleRequest(string Dose, string FType, List<TimeOnly> Times, int IntervalDays, string? DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
     public record DueSlot(Guid OrderId,string MedicationName,Guid ScheduleId, string Dose, DateTime DueAt);
 
     public sealed record CreateMedicationOrderResponse
@@ -52,7 +52,7 @@ namespace Medications.Application.Services
         DateTime CreatedAt
     );
 
-    public record ScheduleResponse(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
+    public record ScheduleResponse(Guid ScheduleId,string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
 
     public sealed record RecordAdministrationRequest
     (

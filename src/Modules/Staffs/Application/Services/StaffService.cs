@@ -120,24 +120,24 @@ namespace Staffs.Application.Services
         }
 
         // New staff belong to the care home of the caller creating them.
-        public Task<Result<Guid>> CreateStaffAsync(CreateStaffRequest staffRequest, CancellationToken cancellationToken) =>
+        public Task<Result<CreateStaffResponse>> CreateStaffAsync(CreateStaffRequest staffRequest, CancellationToken cancellationToken) =>
             CreateStaffForCareHomeAsync(currentUser.CareHomeId, staffRequest, cancellationToken);
 
         public Task<Result> ValidateNewStaffAsync(CreateStaffRequest staffRequest) =>
             authService.ValidateNewUserAsync(staffRequest.UserName, staffRequest.Email,
                 staffRequest.Password, staffRequest.Role);
 
-        public async Task<Result<Guid>> CreateStaffForCareHomeAsync(Guid careHomeId, CreateStaffRequest staffRequest, CancellationToken cancellationToken)
+        public async Task<Result<CreateStaffResponse>> CreateStaffForCareHomeAsync(Guid careHomeId, CreateStaffRequest staffRequest, CancellationToken cancellationToken)
         {
             if (careHomeId == Guid.Empty)
             {
-                return Result.Failure<Guid>(Error.Forbidden("Staffs.NoCareHome", "A care home is required to create staff"));
+                return Result.Failure<CreateStaffResponse>(Error.Forbidden("Staffs.NoCareHome", "A care home is required to create staff"));
             }
             var staff = Staff.Create(staffRequest.FirstName, staffRequest.LastName,
             staffRequest.Email, staffRequest.PhoneNumber, staffRequest.Role, staffRequest.Address, staffRequest.UserName, careHomeId);
             if (staff is null)
             {
-                return Result.Failure<Guid>("Failed to create staff");
+                return Result.Failure<CreateStaffResponse>("Failed to create staff");
             }
             
             // The Identity user goes first and commits on its own: the StaffCreated
@@ -149,11 +149,15 @@ namespace Staffs.Application.Services
             staffRequest.Email, staffRequest.Password, staffRequest.PhoneNumber, staffRequest.Role, careHomeId);
             if (result.IsFailure)
             {
-                return Result.Failure<Guid>(result.Error);
+                return Result.Failure<CreateStaffResponse>(result.Error);
             }
             await staffRepository.AddAsync(staff, cancellationToken);
             await staffRepository.CommitandSaveAsync(cancellationToken);
-            return Result.Success(staff.Id.Value);
+            return Result.Success(new CreateStaffResponse(
+                staff.Id.Value,
+                staff.Email,
+                staff.Role
+            ));
         }
 
         public async Task<Result> UpdateStaffAsync(StaffId staffId,UpdateStaffRequest staff, CancellationToken cancellationToken)

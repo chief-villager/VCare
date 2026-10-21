@@ -26,6 +26,7 @@ public static class MedicationsModule
         services.AddScoped<IMedicationOrderRepository, MedicationOrderRepository>();
         services.AddScoped<IMedicalAdministrationRepository, MedicationAdministrationRepository>();
         services.AddScoped<IOutcomeRepository, OutComeRepisitory>();
+        services.AddScoped<IMarChartService, MarChartService>();
 
         services.AddScoped<ScheduleExpander>();
         services.AddScoped<IMedicationService, MedicationService>();

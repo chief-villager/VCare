@@ -5,7 +5,7 @@ workspace:
 
 cloudResources:
   collections:
-    ../postman/collections/VCare.Api - v1 Copy: 13b551b3-2d5e-472d-afc0-fd3ee2196ca1
+    ../postman/collections/VCare.Api - v1: 9e6d8798-958a-4085-a963-a40a458bac75
   globals:
     ../postman/globals/workspace.globals.yaml: 0f76f7b0-bdbb-4bc7-8ed8-c1dcdd3bf5e3
 

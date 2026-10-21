@@ -34,5 +34,11 @@ namespace Staffs.Application.Dto
         string Address,
         string Role
     );
+
+    public record CreateStaffResponse(
+        Guid Id,
+        string Email,
+        string Role
+    );
     
 }

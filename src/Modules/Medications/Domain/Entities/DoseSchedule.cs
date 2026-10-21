@@ -62,7 +62,16 @@ namespace Medications.Domain.Entities
             {
                 return Result.Failure<DoseSchedule>("Dose is required");
             }
-            var doseSchedule = new DoseSchedule(medicationOrderId,dose,fType, times, intervalDays, dayOfWeek, anchorDate, effectiveFrom, effectiveTo, sequence);
+            // The expander divides by IntervalDays, so zero would crash every chart.
+            if (fType == FrequencyType.IntervalDays && intervalDays < 1)
+            {
+                return Result.Failure<DoseSchedule>("Interval days must be at least 1 for an IntervalDays schedule");
+            }
+            // The anchor only means something for interval schedules. Left out, the
+            // cycle starts on the phase's first day; given, it continues an existing
+            // cycle (e.g. a resident who had their alternate-day dose before admission).
+            var anchor = fType == FrequencyType.IntervalDays ? anchorDate ?? effectiveFrom : (DateOnly?)null;
+            var doseSchedule = new DoseSchedule(medicationOrderId,dose,fType, times, intervalDays, dayOfWeek, anchor, effectiveFrom, effectiveTo, sequence);
             return Result.Success(doseSchedule);
         }
         

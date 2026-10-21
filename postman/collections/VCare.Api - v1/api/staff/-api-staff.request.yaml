@@ -1,0 +1,22 @@
+$kind: http-request
+name: /api/staff
+url: "{{baseUrl}}/api/staff"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "Thomas",
+      "lastName": "Anderson",
+      "email": "thomas.anderson@example.com",
+      "phoneNumber": "+447700900567",
+      "address": "25 King Street, Nottingham, NG1 2AS, United Kingdom",
+      "role": "carer",
+      "password": "{{staffPassword}}",
+      "userName": "tanderson"
+    }
+settings: {}
+examples: ./.resources/-api-staff.resources/examples
+order: 2000

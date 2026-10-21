@@ -1,0 +1,47 @@
+$kind: collection
+name: VCare.Api | v1
+description: ""
+variables:
+  - key: baseUrl
+    value: https://localhost:7443/
+    disabled: false
+  - key: json_web_token_1d4w
+    secret: true
+    disabled: false
+  - key: json_web_token_05a8
+    secret: true
+    disabled: false
+  - key: json_web_token_17kq
+    secret: true
+    disabled: false
+  - key: json_web_token_03i9
+    secret: true
+    disabled: false
+  - key: json_web_token_0y6h
+    secret: true
+    disabled: false
+  - key: json_web_token_13ri
+    secret: true
+    disabled: false
+  - key: json_web_token_0wq5
+    secret: true
+    disabled: false
+  - key: json_web_token_0y3q
+    secret: true
+    disabled: false
+  - key: json_web_token_1agp
+    secret: true
+    disabled: false
+  - key: json_web_token_1033
+    secret: true
+    disabled: false
+  - key: adminPassword
+    secret: true
+    disabled: false
+  - key: staffPassword
+    secret: true
+    disabled: false
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_1033}}"

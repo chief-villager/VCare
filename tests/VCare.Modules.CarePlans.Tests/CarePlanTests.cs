@@ -13,29 +13,31 @@ public class CarePlanTests
     private static CarePlan CreatePlan(params string[] diagnoses) =>
         CarePlan.Create(
             patientId: PatientId,
+            goal: "Lower blood pressure",
             staffId: Guid.NewGuid(),
             careHomeId: CareHomeId,
-            diagnoses: diagnoses.Length == 0 ? null : diagnoses,
-            goals: ["Lower blood pressure"],
-            interventions: [("Daily monitoring", false)]).Value;
+            diagnoses: diagnoses.Length == 0 ? null : diagnoses.Select(d => (d, (string?)null, (string?)null))).Value;
 
     [Fact]
     public void Create_assigns_an_id_and_keeps_the_patient_and_care_home()
     {
         var result = CarePlan.Create(
             patientId: PatientId,
+            goal: "Lower blood pressure",
             staffId: Guid.NewGuid(),
             careHomeId: CareHomeId,
-            diagnoses: ["Hypertension"],
-            goals: ["Lower blood pressure"],
-            interventions: [("Daily monitoring", false)]);
+            diagnoses: [("Hypertension", "Below 140/90", "Daily monitoring")]);
 
         Assert.True(result.IsSuccess);
         var carePlan = result.Value;
         Assert.NotEqual(Guid.Empty, carePlan.Id.Value);
         Assert.Equal(PatientId, carePlan.PatientId.Value);
         Assert.Equal(CareHomeId, carePlan.CareHomeId.Value);
-        Assert.Equal("Hypertension", Assert.Single(carePlan.Diagnoses).Description);
+        Assert.Equal("Lower blood pressure", carePlan.Goal);
+        var diagnosis = Assert.Single(carePlan.Diagnoses);
+        Assert.Equal("Hypertension", diagnosis.Name);
+        Assert.Equal("Below 140/90", diagnosis.GoalDescription);
+        Assert.Equal("Daily monitoring", diagnosis.Intervention);
     }
 
     [Fact]
@@ -43,10 +45,12 @@ public class CarePlanTests
     {
         var carePlan = CreatePlan("Initial");
 
-        var result = carePlan.Update(diagnoses: ["Revised"]);
+        var result = carePlan.Update(diagnoses: [("Revised", null, "Weekly review")]);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("Revised", carePlan.Diagnoses.Single().Description);
+        var diagnosis = carePlan.Diagnoses.Single();
+        Assert.Equal("Revised", diagnosis.Name);
+        Assert.Equal("Weekly review", diagnosis.Intervention);
     }
 
     [Fact]
@@ -54,6 +58,7 @@ public class CarePlanTests
     {
         var result = CarePlan.Create(
             patientId: Guid.Empty,
+            goal: "Lower blood pressure",
             staffId: Guid.NewGuid(),
             careHomeId: CareHomeId);
 
@@ -65,6 +70,7 @@ public class CarePlanTests
     {
         var result = CarePlan.Create(
             patientId: PatientId,
+            goal: "Lower blood pressure",
             staffId: Guid.NewGuid(),
             careHomeId: Guid.Empty);
 

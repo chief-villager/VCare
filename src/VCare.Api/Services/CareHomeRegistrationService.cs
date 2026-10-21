@@ -52,7 +52,7 @@ namespace VCare.Api.Services
                 return Result.Failure<RegisterCareHomeResponse>(adminStaff.Error);
             }
 
-            return Result.Success(new RegisterCareHomeResponse(careHomeId, adminStaff.Value));
+            return Result.Success(new RegisterCareHomeResponse(careHomeId, adminStaff.Value.Id));
         }
     }
 }

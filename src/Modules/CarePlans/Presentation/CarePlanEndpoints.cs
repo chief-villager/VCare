@@ -32,20 +32,19 @@ namespace CarePlans.Presentation
         }
 
         public static async Task<IResult> CreateCarePlan(
-            ICarePlanService carePlanService, CreateCarePlanRequest request, 
+            Guid patientId, ICarePlanService carePlanService, CreateCarePlanRequest request, 
             CancellationToken cancellationToken)
         {
-           var response =  await carePlanService.CreateCarePlanAsync(request, cancellationToken);
+           var response =  await carePlanService.CreateCarePlanAsync(patientId, request, cancellationToken);
             return response.IsFailure ? response.ToProblem() : TypedResults.Created(response.Value.ToString());
         }
 
 
-        public static async Task<IResult> UpdateCarePlan( Guid carePlanId,
+        public static async Task<IResult> UpdateCarePlan(Guid patientId, Guid carePlanId,
             ICarePlanService carePlanService, UpdateCarePlanRequest request, 
-            CancellationToken cancellationToken, ICurrentUser currentUser)
+            CancellationToken cancellationToken)
         {
-            await carePlanService.GetForPatientAsync(carePlanId, cancellationToken);
-            var response =  await carePlanService.UpdateCarePlanAsync(carePlanId,request, cancellationToken);
+            var response =  await carePlanService.UpdateCarePlanAsync(patientId, carePlanId, request, cancellationToken);
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
         }
 

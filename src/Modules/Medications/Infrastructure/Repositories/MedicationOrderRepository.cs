@@ -53,8 +53,8 @@ namespace Medications.Infrastructure.Repositories
         // either way rather than confirming it exists elsewhere.
         public async Task<MedicationOrder?> GetAsync(Guid Id, CancellationToken cancellationToken)
         {
-            return await _medicationOrderDb.MedicationOrders
-                .FindAsync(new object?[] { new MedicationOrderId(Id) }, cancellationToken: cancellationToken);
+            var orderId = new MedicationOrderId(Id);
+            return await _medicationOrderDb.MedicationOrders.Include( x => x.Schedule).FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken: cancellationToken);
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

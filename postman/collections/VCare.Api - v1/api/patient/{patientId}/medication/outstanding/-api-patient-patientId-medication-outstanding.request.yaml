@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/patient/:patientId/medication/outstanding
+url: "{{baseUrl}}/api/patient/:patientId/medication/outstanding?day=2026-10-19"
+method: GET
+queryParams:
+  day: 2026-10-19
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+settings: {}
+examples: ./.resources/-api-patient-patientId-medication-outstanding.resources/examples
+order: 1000

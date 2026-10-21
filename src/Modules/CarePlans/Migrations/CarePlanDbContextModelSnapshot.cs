@@ -34,6 +34,10 @@ namespace VCare.Modules.CarePlans.Migrations
                     b.Property<DateOnly>("CreatedDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("Goal")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateOnly>("ModifiedDate")
                         .HasColumnType("date");
 
@@ -47,7 +51,8 @@ namespace VCare.Modules.CarePlans.Migrations
 
                     b.HasIndex("CareHomeId");
 
-                    b.HasIndex("PatientId");
+                    b.HasIndex("PatientId")
+                        .IsUnique();
 
                     b.ToTable("CarePlans", "CarePlan");
                 });
@@ -65,7 +70,13 @@ namespace VCare.Modules.CarePlans.Migrations
 
                             SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
 
-                            b1.Property<string>("Description")
+                            b1.Property<string>("GoalDescription")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Intervention")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasColumnType("nvarchar(max)");
 
@@ -77,60 +88,7 @@ namespace VCare.Modules.CarePlans.Migrations
                                 .HasForeignKey("CarePlanId");
                         });
 
-                    b.OwnsMany("VCare.Modules.CarePlans.Domain.Entities.Intervention", "Intervention", b1 =>
-                        {
-                            b1.Property<Guid>("CarePlanId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("int");
-
-                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
-
-                            b1.Property<string>("Description")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.Property<bool>("Implementation")
-                                .HasColumnType("bit");
-
-                            b1.HasKey("CarePlanId", "Id");
-
-                            b1.ToTable("CarePlanInterventions", "CarePlan");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CarePlanId");
-                        });
-
-                    b.OwnsMany("VCare.Modules.CarePlans.Domain.Entities.PatientGoals", "Goals", b1 =>
-                        {
-                            b1.Property<Guid>("CarePlanId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("int");
-
-                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
-
-                            b1.Property<string>("GoalDescription")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)");
-
-                            b1.HasKey("CarePlanId", "Id");
-
-                            b1.ToTable("CarePlanGoals", "CarePlan");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CarePlanId");
-                        });
-
                     b.Navigation("Diagnoses");
-
-                    b.Navigation("Goals");
-
-                    b.Navigation("Intervention");
                 });
 #pragma warning restore 612, 618
         }

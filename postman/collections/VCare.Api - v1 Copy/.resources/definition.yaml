@@ -1,5 +1,0 @@
-$kind: collection
-name: VCare.Api | v1 Copy
-description: ""
-variables:
-  baseUrl: https://localhost:7443/

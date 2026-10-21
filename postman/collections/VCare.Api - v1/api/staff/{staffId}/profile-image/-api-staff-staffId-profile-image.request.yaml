@@ -1,0 +1,17 @@
+$kind: http-request
+name: /api/staff/:staffId/profile-image
+url: "{{baseUrl}}/api/staff/:staffId/profile-image"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+pathVariables:
+  staffId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: formdata
+  content:
+    - type: file
+      key: formFile
+      src: []
+settings: {}
+examples: ./.resources/-api-staff-staffId-profile-image.resources/examples
+order: 1000

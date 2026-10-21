@@ -1,0 +1,19 @@
+$kind: http-request
+name: /api/patient/:patientId/document
+url: "{{baseUrl}}/api/patient/:patientId/document?fileName=string"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+queryParams:
+  fileName: string
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: formdata
+  content:
+    - type: file
+      key: formFile
+      src: []
+settings: {}
+examples: ./.resources/-api-patient-patientId-document.resources/examples
+order: 1000

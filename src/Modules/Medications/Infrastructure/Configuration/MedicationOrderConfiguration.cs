@@ -17,7 +17,9 @@ namespace Medications.Infrastructure.Configuration
             builder.ToTable("MedicationOrder", MedicationDbContext.Schema);
             builder.HasKey(x => x.Id);
             builder.Ignore(x => x.DomainEvents);
-
+            //converts every enum to string on the database
+            builder.Property(m => m.Route).HasConversion<string>().HasMaxLength(30);
+            builder.Property(m => m.Status).HasConversion<string>().HasMaxLength(30);
             // Every read is filtered by care home, so it leads the index.
             builder.HasIndex(x => x.CareHomeId);
             builder.HasMany(x => x.Administrations).WithOne().HasForeignKey(x => x.MedicationOrderId).OnDelete(DeleteBehavior.ClientNoAction);
@@ -42,6 +44,9 @@ namespace Medications.Infrastructure.Configuration
         {
             builder.ToTable("DoseSchedule", MedicationDbContext.Schema);
             builder.HasKey(x => x.Id);
+            builder.Property( x => x.FType).HasConversion<string>().HasMaxLength(30);
+            // Flags are stored by name, so all seven days ("Mon, Tue, ..., Sun") is 33 characters.
+            builder.Property( x => x.DaysOfWeek).HasConversion<string>().HasMaxLength(50);
             
         }
        
@@ -64,6 +69,11 @@ namespace Medications.Infrastructure.Configuration
                     Id = Guid.Parse("e2b8c0d4-5f67-4890-b234-c567d890e123"),
                     Name = "Taken",
                     DisplayLetter = "T",
+                },
+                new {
+                    Id = Guid.Parse("db5662a7-5f67-4890-841f-c567d890e123"),
+                    Name = "Missed",
+                    DisplayLetter = "M",
                 },
 
             ]);

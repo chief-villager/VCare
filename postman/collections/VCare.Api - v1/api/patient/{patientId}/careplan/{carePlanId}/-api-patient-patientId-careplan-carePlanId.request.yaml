@@ -1,0 +1,25 @@
+$kind: http-request
+name: /api/patient/:patientId/careplan/:carePlanId
+url: "{{baseUrl}}/api/patient/:patientId/careplan/:carePlanId"
+method: PUT
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: ""
+  carePlanId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "goal": "string",
+      "diagnoses": [
+        {
+          "name": "string",
+          "goalDescription": "string",
+          "intervention": "string"
+        }
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-careplan-carePlanId.resources/examples
+order: 1000
