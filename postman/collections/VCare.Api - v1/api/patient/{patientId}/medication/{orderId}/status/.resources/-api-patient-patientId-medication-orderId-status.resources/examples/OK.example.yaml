@@ -1,0 +1,21 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient/:patientId/medication/:orderId/status"
+  method: PUT
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    orderId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+  body:
+    type: json
+    content: |-
+      {
+        "status": "string"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

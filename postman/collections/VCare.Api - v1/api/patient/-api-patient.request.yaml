@@ -1,0 +1,24 @@
+$kind: http-request
+name: /api/patient
+url: "{{baseUrl}}/api/patient"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstname": "Arthur",
+      "lastname": "Williams",
+      "gender": "Male",
+      "address": "27 Meadow Close, Derby, DE1 2AB, United Kingdom",
+      "dateOfBirth": "1948-03-15",
+      "phoneNumber": "+447700900123",
+      "email": "arthur.williams@example.com",
+      "emergencyContactName": "Susan Williams",
+      "emergencyContactPhoneNumber": "+447700900456",
+      "emergencyContactRelationship": "Daughter"
+    }
+settings: {}
+examples: ./.resources/-api-patient.resources/examples
+order: 2000

@@ -1,0 +1,35 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient/:patientId/careplan/:carePlanId"
+  method: PUT
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    carePlanId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+  body:
+    type: json
+    content: |-
+      {
+        "diagnoses": null,
+        "goals": [
+          "string",
+          "string"
+        ],
+        "interventions": [
+          {
+            "description": "string",
+            "implemented": false
+          },
+          {
+            "description": "string",
+            "implemented": true
+          }
+        ]
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

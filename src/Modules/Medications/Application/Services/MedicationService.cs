@@ -19,10 +19,40 @@ namespace Medications.Application.Services
     {
         public async Task<Result<CreateMedicationOrderResponse>>CreateMedicationOrderAsync( Guid patientId, CreateMedicationOrderRequest request, CancellationToken token)
         {
-            var medicationOrder = MedicationOrder.Record(patientId,currentUser.CareHomeId,request.MedicatioName,request.Route,request.Instructions,
+            var route = RouteEnumChecker.MedicationRouteChecker(request.MedicationRoute);
+            if (route.IsFailure)
+            {
+                return Result.Failure<CreateMedicationOrderResponse>(route.Error);
+            }
+            var status = OrderStatusEnumCheker.OrderStatusCheker(request.Status);
+            if (status.IsFailure)
+            {
+                return Result.Failure<CreateMedicationOrderResponse>(status.Error);
+            }
+
+            // Every schedule is checked before any is used: reading Value on a failed
+            // result throws, which would turn a bad request into a 500.
+            var schedules = new List<(string, FrequencyType, List<TimeOnly>, int, DayOfWeekFlags, DateOnly?, DateOnly, DateOnly?, int)>();
+            foreach (var s in request.Schedules)
+            {
+                var frequency = FrequencyTypeEnumChecker.FrequencyTypeChecker(s.FType);
+                if (frequency.IsFailure)
+                {
+                    return Result.Failure<CreateMedicationOrderResponse>(frequency.Error);
+                }
+                var days = DaysOfWeekEnumChecker.DaysOfWeekChecker(s.DaysOfWeek);
+                if (days.IsFailure)
+                {
+                    return Result.Failure<CreateMedicationOrderResponse>(days.Error);
+                }
+                schedules.Add((s.Dose, frequency.Value, s.Times, s.IntervalDays, days.Value, s.AnchorDate, s.EffectiveFrom, s.EffectiveTo, s.Sequence));
+            }
+
+            var medicationOrder = MedicationOrder.Record(patientId,currentUser.CareHomeId,request.MedicatioName,route.Value,request.Instructions,
             request.StartDate,request.EndDate,request.Prescriber,request.IsPrn,request.PrnIndication,
-            request.IsControlledDrug, request.Status,
-            request.Schedules.Select(s => (s.Dose, s.FType, s.Times, s.IntervalDays, s.DaysOfWeek, s.AnchorDate, s.EffectiveFrom, s.EffectiveTo, s.Sequence)), 
+            request.PrnMinIntervalMinutes, request.PrnMaxDose24h,
+            request.IsControlledDrug, status.Value,
+            schedules,
             request.CreatedAt);
             if (medicationOrder.IsFailure)
             {
@@ -81,7 +111,7 @@ namespace Medications.Application.Services
 
 
         public async Task<Result<MedicationAdministrationResponse>> RecordAministration(Guid orderId,DateTime scheduledFor, string outcome,        
-        Guid staffId, CancellationToken token, string? notes = null)
+        Guid staffId, Guid scheduleId, CancellationToken token, string? notes = null)
         {
             var order = await _medicationOrder.GetAsync(orderId, token);
             if (order is null)
@@ -92,28 +122,41 @@ namespace Medications.Application.Services
             {
                 return Result.Failure<MedicationAdministrationResponse>(Error.Conflict("Medications.OrderNotActive", "Order is not active."));
             }
-
-            // Awaited: Find returns a task, and a task is never null, so testing the
-            // task itself let every duplicate through and rejected every first dose.
-            var alreadyRecorded = await _medicalAdministrationRepository.Find(orderId, scheduledFor);
-            if (alreadyRecorded is not null)
+            var day = DateOnly.FromDateTime(scheduledFor);
+            var isSlot = _expander.ExpandSchedule(order,day,day).Any( s => s.ScheduleId == scheduleId && s.DueAt == scheduledFor);
+            if (!isSlot)
             {
-                return Result.Failure<MedicationAdministrationResponse>(Error.Conflict("Medications.DoseAlreadyRecorded", "This dose is already recorded."));
+                return Result.Failure<MedicationAdministrationResponse>(MedicationErrors.NotAScheduledSlot);
             }
+            if (await _medicalAdministrationRepository.Find(orderId, scheduledFor) is not null)
+            {
+                return Result.Failure<MedicationAdministrationResponse>(MedicationErrors.DoseAlreadyRecorded);
+            }
+            var now = DateTime.Now;
+            var late = now > scheduledFor.AddHours(1);
 
-            var outcomeResult = await outcomeRepository.GetOutcomeByName(outcome, token);
+            // A late dose is signed off as missed rather than with the caller's outcome:
+            // nothing was administered, so there is no administration time, and the
+            // caller is told via a failure that their outcome was not recorded.
+            var outcomeName = late ? "missed" : outcome;
+            var outcomeResult = await outcomeRepository.GetOutcomeByName(outcomeName, token);
             if (outcomeResult == null)
             {
                 return Result.Failure<MedicationAdministrationResponse>("Outcome not Found");
             }
-            
-            var administration = MedicationAdministration.Create(orderId, order.PatientId.Value, order.CareHomeId.Value, scheduledFor,DateTime.Now, outcomeResult.Id, staffId,notes);
+            var administration = MedicationAdministration.Create(orderId, order.PatientId.Value, order.CareHomeId.Value, scheduledFor,
+                late ? null : now, outcomeResult.Id, staffId,
+                late ? "Did not make it in time to administer medication" : notes);
             if (administration.IsFailure)
             {
                 return Result.Failure<MedicationAdministrationResponse>(administration.Error);
             }
             await _medicalAdministrationRepository.AddAsync(administration.Value);
             await _medicalAdministrationRepository.SaveChangesAsync(token);
+            if (late)
+            {
+                return Result.Failure<MedicationAdministrationResponse>(MedicationErrors.AdministrationWindowElapsed);
+            }
             return Result.Success(new MedicationAdministrationResponse(
                 administration.Value.Id.Value,
                 administration.Value.MedicationOrderId.Value,
@@ -147,6 +190,7 @@ namespace Medications.Application.Services
                 order.PrnMaxDose24h,
                 order.IsControlledDrug,
                 order.Schedule.Select(s => new ScheduleResponse(
+                    s.Id,
                     s.Dose,
                     s.FType,
                     [.. s.Times],

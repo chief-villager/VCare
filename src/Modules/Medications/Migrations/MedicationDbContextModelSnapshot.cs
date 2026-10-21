@@ -32,8 +32,10 @@ namespace Vcare.Modules.Medications.Migrations
                     b.Property<DateOnly?>("AnchorDate")
                         .HasColumnType("date");
 
-                    b.Property<int>("DaysOfWeek")
-                        .HasColumnType("int");
+                    b.Property<string>("DaysOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Dose")
                         .IsRequired()
@@ -45,8 +47,10 @@ namespace Vcare.Modules.Medications.Migrations
                     b.Property<DateOnly?>("EffectiveTo")
                         .HasColumnType("date");
 
-                    b.Property<int>("FType")
-                        .HasColumnType("int");
+                    b.Property<string>("FType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int>("IntervalDays")
                         .HasColumnType("int");
@@ -158,14 +162,18 @@ namespace Vcare.Modules.Medications.Migrations
                     b.Property<int?>("PrnMinIntervalMinutes")
                         .HasColumnType("int");
 
-                    b.Property<int>("Route")
-                        .HasColumnType("int");
+                    b.Property<string>("Route")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 
@@ -204,6 +212,12 @@ namespace Vcare.Modules.Medications.Migrations
                             Id = new Guid("e2b8c0d4-5f67-4890-b234-c567d890e123"),
                             DisplayLetter = "T",
                             Name = "Taken"
+                        },
+                        new
+                        {
+                            Id = new Guid("db5662a7-5f67-4890-841f-c567d890e123"),
+                            DisplayLetter = "M",
+                            Name = "Missed"
                         });
                 });
 

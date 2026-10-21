@@ -1,9 +1,0 @@
-$kind: http-request
-name: /api/staff/:staffId
-url: "{{baseUrl}}/api/staff/:staffId"
-method: GET
-pathVariables:
-  staffId: 4f4c9880-0db7-199c-32ef-4c38a34c6bc2
-settings: {}
-examples: ./.resources/-api-staff-staffId.resources/examples
-order: 3000

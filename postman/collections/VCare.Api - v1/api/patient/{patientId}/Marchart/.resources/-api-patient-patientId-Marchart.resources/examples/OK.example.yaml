@@ -1,0 +1,16 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient/:patientId/Marchart?year=0&month=0"
+  method: GET
+  queryParams:
+    year: "0"
+    month: "0"
+  pathVariables:
+    patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

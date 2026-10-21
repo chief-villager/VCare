@@ -28,7 +28,7 @@ namespace Medications.Presentation
             medication.MapGet("/outstanding", GetOutstandingMedicationForDay);
             medication.MapGet("/{orderId:Guid}", GetMedicationOrder);
             medication.MapPut("/{orderId:Guid}/status", UpdateMedicationOrderStatus);
-            medication.MapPost("/{orderId:Guid}/administrations", RecordMedicationAministration);
+            medication.MapPost("/{orderId:Guid}/administrations/{scheduleId:Guid}", RecordMedicationAministration);
         }
 
         public static async Task<IResult> CreateMedicationOrder(
@@ -75,11 +75,11 @@ namespace Medications.Presentation
         // The staff member signing the dose off is the caller, never a value the
         // client gets to choose.
         public static async Task<IResult> RecordMedicationAministration(
-            Guid orderId, RecordAdministrationRequest request,
+            Guid orderId,Guid scheduleId, RecordAdministrationRequest request,
             IMedicationService medicationService, ICurrentUser currentUser, CancellationToken token)
         {
             var response = await medicationService.RecordAministration(
-                orderId, request.ScheduledFor, request.Outcome, currentUser.UserId, token, request.Notes);
+                orderId, request.ScheduledFor, request.Outcome, currentUser.UserId, scheduleId, token, request.Notes);
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
     }

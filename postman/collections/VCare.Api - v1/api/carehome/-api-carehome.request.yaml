@@ -1,0 +1,28 @@
+$kind: http-request
+name: /api/carehome
+url: "{{baseUrl}}/api/carehome"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "careHome": {
+        "name": "Cedar Grove Care Centre",
+        "address": "38 Kingsway Avenue, Manchester, M14 6PL, United Kingdom",
+        "email": "info@cedargrove.example"
+      },
+      "admin": {
+        "firstName": "Rebecca",
+        "lastName": "Mitchell",
+        "email": "rebecca.mitchell@example.com",
+        "phoneNumber": "+447700900214",
+        "address": "21 Rose Lane, Manchester, M20 4RT, United Kingdom",
+        "userName": "rmitchell",
+        "password": "{{adminPassword}}"
+      }
+    }
+settings: {}
+examples: ./.resources/-api-carehome.resources/examples
+order: 2000

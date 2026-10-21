@@ -1,0 +1,35 @@
+$kind: http-request
+name: /api/patient/:patientId/careplan
+url: "{{baseUrl}}/api/patient/:patientId/careplan"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: 668dbe7a-b809-40ea-bc1c-c31360901206
+body:
+  type: json
+  content: |-
+    {
+      "staffId": "08f43f97-0dd7-4359-ad66-fcd9174bc6ec",
+      "goal": "Improve mobility, maintain independence in daily activities, and reduce the risk of falls.",
+      "diagnoses": [
+        {
+          "name": "Osteoarthritis",
+          "goalDescription": "Reduce joint discomfort and help the patient maintain mobility and independence.",
+          "intervention": "Assist with prescribed mobility exercises, monitor pain levels, and support the patient with daily activities as required."
+        },
+        {
+          "name": "Hypertension",
+          "goalDescription": "Maintain blood pressure within the target range specified by the patient's clinician.",
+          "intervention": "Monitor blood pressure according to the care plan, support medication adherence, and report abnormal readings to the appropriate healthcare professional."
+        },
+        {
+          "name": "Increased Risk of Falls",
+          "goalDescription": "Reduce the likelihood of falls and enable the patient to move around safely.",
+          "intervention": "Keep walkways clear, ensure appropriate walking aids are accessible, assist with transfers when required, and report any falls or changes in mobility."
+        }
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-careplan-1.resources/examples
+order: 3000

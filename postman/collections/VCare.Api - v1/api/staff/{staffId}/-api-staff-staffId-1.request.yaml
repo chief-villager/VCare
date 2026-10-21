@@ -1,0 +1,22 @@
+$kind: http-request
+name: /api/staff/:staffId
+url: "{{baseUrl}}/api/staff/:staffId"
+method: PUT
+headers:
+  Content-Type: application/json
+pathVariables:
+  staffId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "string",
+      "lastName": "string",
+      "email": "string",
+      "phoneNumber": null,
+      "address": null,
+      "role": "string"
+    }
+settings: {}
+examples: ./.resources/-api-staff-staffId-1.resources/examples
+order: 4000

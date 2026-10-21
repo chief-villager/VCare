@@ -33,7 +33,8 @@ namespace Medications.Domain.Entities
             Guid patientId, Guid careHomeId, string medication, 
             MedicationRouteEnum route, string? instruction, DateOnly startDate,
             DateOnly? endDate, string prescriber, bool isPrn, string? prnIndication,
-            bool isControlledDrug, OrderStatus orderStatus,  
+            int? prnMinIntervalMinutes, string? prnMaxDose24h,
+            bool isControlledDrug, OrderStatus orderStatus,
             IEnumerable<(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, 
             DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, 
             DateOnly? EffectiveTo, int Sequence)> doseSchedule, DateTime createdAt, DateTime? modifiedAt = null)
@@ -68,6 +69,8 @@ namespace Medications.Domain.Entities
                 Prescriber = prescriber,
                 IsPrn = isPrn ,
                 PrnIndication = prnIndication,
+                PrnMinIntervalMinutes = prnMinIntervalMinutes,
+                PrnMaxDose24h = prnMaxDose24h,
                 IsControlledDrug = isControlledDrug,
                 Status = orderStatus,
                 CreatedAt = createdAt
@@ -77,7 +80,9 @@ namespace Medications.Domain.Entities
                 order.ModifiedAt = modifiedAt.Value;
             }
         
-           order.ReplaceDetails(doseSchedule);
+            var schedules = order.ReplaceDetails(doseSchedule);
+            if (schedules.IsFailure)
+                return Result.Failure<MedicationOrder>(schedules.Error);
             return Result.Success(order) ;
             
             
@@ -99,18 +104,26 @@ namespace Medications.Domain.Entities
            
         }
 
-        private void ReplaceDetails( IEnumerable<(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, 
-            DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, 
+        private Result ReplaceDetails( IEnumerable<(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays,
+            DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom,
             DateOnly? EffectiveTo, int Sequence)>? doseSchedule = null)
         {
-            if (doseSchedule != null)
-            {
-                Schedule = [..
-                    doseSchedule.Select(ds => DoseSchedule.Create(Id.Value, ds.Dose, ds.FType, ds.Times, ds.IntervalDays,
-                    ds.DaysOfWeek, ds.AnchorDate, ds.EffectiveFrom, ds.EffectiveTo, ds.Sequence).Value)
-                ];
-            }
+            if (doseSchedule == null)
+                return Result.Success();
 
+            // Built in full before assigning, so one invalid schedule leaves none half-applied;
+            // its failure is returned rather than read through .Value, which would throw.
+            var schedules = new List<DoseSchedule>();
+            foreach (var ds in doseSchedule)
+            {
+                var schedule = DoseSchedule.Create(Id.Value, ds.Dose, ds.FType, ds.Times, ds.IntervalDays,
+                    ds.DaysOfWeek, ds.AnchorDate, ds.EffectiveFrom, ds.EffectiveTo, ds.Sequence);
+                if (schedule.IsFailure)
+                    return schedule;
+                schedules.Add(schedule.Value);
+            }
+            Schedule = schedules;
+            return Result.Success();
         }
 
     }

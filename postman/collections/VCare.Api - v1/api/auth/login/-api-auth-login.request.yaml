@@ -1,0 +1,28 @@
+$kind: http-request
+name: /api/auth/login
+url: "{{baseUrl}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "userName": "rmitchell",
+      "password": "{{adminPassword}}"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_1033}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      const response = pm.response.json();
+
+      pm.environment.set("accessToken", response.accessToken);
+      pm.environment.set("refreshToken", response.refreshToken);
+    language: text/javascript
+settings: {}
+examples: ./.resources/-api-auth-login.resources/examples
+order: 1000

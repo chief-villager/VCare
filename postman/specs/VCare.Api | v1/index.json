@@ -630,7 +630,7 @@
         }
       }
     },
-    "/api/patient/{patientId}/medication/{orderId}/administrations": {
+    "/api/patient/{patientId}/medication/{orderId}/administrations/{scheduleId}": {
       "post": {
         "tags": [
           "MedicationOrder"
@@ -638,6 +638,15 @@
         "parameters": [
           {
             "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "scheduleId",
             "in": "path",
             "required": true,
             "schema": {

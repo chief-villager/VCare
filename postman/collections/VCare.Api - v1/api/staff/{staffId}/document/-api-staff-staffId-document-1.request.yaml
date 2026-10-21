@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/staff/:staffId/document
+url: "{{baseUrl}}/api/staff/:staffId/document?key=string"
+method: GET
+queryParams:
+  key: string
+pathVariables:
+  staffId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+settings: {}
+examples: ./.resources/-api-staff-staffId-document-1.resources/examples
+order: 2000

@@ -12,7 +12,7 @@ namespace Medications.Application.Services.Interfaces
         Task<Result<CreateMedicationOrderResponse>> CreateMedicationOrderAsync(Guid patientId, CreateMedicationOrderRequest request, CancellationToken token);
         Task<Result>UpdateMedicationOrderStatusAsync(Guid medicationOrderId, string status, CancellationToken token);
         Task<Result<MedicationAdministrationResponse>> RecordAministration(Guid orderId,DateTime scheduledFor, string outcome,        
-        Guid staffId, CancellationToken token, string? notes = null);
+        Guid staffId,Guid scheduleId, CancellationToken token, string? notes = null);
         Task<Result<MedicationOrderResponse>> GetMedicationOrder(Guid orderId, CancellationToken token);
         Task<Result<IEnumerable<DueSlot>>> GetDueForDay(Guid patientId, DateOnly day, CancellationToken token);
         Task<Result<IEnumerable<DueSlot>>> GetOutstandingForDay(Guid patientId, DateOnly day, CancellationToken token);

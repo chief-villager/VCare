@@ -42,7 +42,8 @@ namespace Medications.Application.Services
             return s.FType switch
             {
                 FrequencyType.DailyAtTimes => true,
-                FrequencyType.IntervalDays => (day.DayNumber - s.AnchorDate.GetValueOrDefault().DayNumber)
+                // New schedules always carry an anchor; the fallback matches the domain default.
+                FrequencyType.IntervalDays => (day.DayNumber - (s.AnchorDate ?? s.EffectiveFrom).DayNumber)
                                                     % s.IntervalDays == 0,
                 FrequencyType.SpecificWeekdays => s.DaysOfWeek.HasFlag(ToFlag(day.DayOfWeek)),
                 _ => false
