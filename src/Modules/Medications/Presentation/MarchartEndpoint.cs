@@ -15,7 +15,7 @@ namespace Medications.Presentation
     {
         public static void AddMarchartEndpoint(this IEndpointRouteBuilder app)
         {
-            var marchart = app.MapGroup("api/patient/{patientId:Guid}/Marchart").WithTags("Marchart");
+            var marchart = app.MapGroup("api/patient/{patientId:Guid}/Marchart").WithTags("Marchart").RequireAuthorization();
             marchart.MapGet("/", GetMarChart);
 
         }
