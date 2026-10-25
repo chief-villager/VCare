@@ -1,0 +1,18 @@
+$kind: http-request
+name: /api/patient/:patientId/visit/:visitId/assign
+url: "{{baseUrl}}/api/patient/:patientId/visit/:visitId/assign"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: ""
+  visitId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "staffId": "d2d0e4fb-b6fd-bde9-e96c-63e0da48a963"
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-visit-visitId-assign.resources/examples
+order: 1000

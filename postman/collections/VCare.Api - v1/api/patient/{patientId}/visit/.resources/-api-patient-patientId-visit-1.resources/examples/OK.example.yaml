@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/api/patient/:patientId/visit/check-in"
+  url: "{{baseUrl}}/api/patient/:patientId/visit"
   method: POST
   headers:
     Content-Type: application/json
@@ -10,7 +10,11 @@ request:
     type: json
     content: |-
       {
-        "checkedInAt": "2008-12-06T13:39:09.212Z"
+        "visitDays": [
+          "2026-10-23",
+          "2026-10-24"
+        ],
+        "visitTime": "09:00:00"
       }
 response:
   statusCode: 200

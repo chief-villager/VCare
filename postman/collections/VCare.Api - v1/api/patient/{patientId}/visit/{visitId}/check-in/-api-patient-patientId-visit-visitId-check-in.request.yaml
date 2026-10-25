@@ -1,0 +1,18 @@
+$kind: http-request
+name: /api/patient/:patientId/visit/:visitId/check-in
+url: "{{baseUrl}}/api/patient/:patientId/visit/:visitId/check-in"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: ""
+  visitId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "checkedInAt": "2008-12-06T13:39:09.212Z"
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-visit-visitId-check-in.resources/examples
+order: 1000

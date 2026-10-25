@@ -16,31 +16,33 @@ namespace Visitation.Presentation
         public static void AddVisitationEndpoints(this IEndpointRouteBuilder app)
         {
             // Nested under the patient, like careplan and medication: a visit is
-            // always a visit to someone. The visiting staff member and the care
-            // home come off the caller's token, so the group needs an identity.
+            // always a visit to someone. The staff member checking in or out and
+            // the care home come off the caller's token, so the group needs an identity.
             var visit = app.MapGroup("/api/patient/{patientId:Guid}/visit").WithTags("Visitation").RequireAuthorization();
             visit.MapGet("/",GetVisitsForPatient);
-            visit.MapPost("/check-in",CheckIn);
+            visit.MapPost("/",ScheduleVisits);
             visit.MapGet("/{visitId:Guid}",GetVisit);
+            visit.MapPost("/{visitId:Guid}/assign",AssignStaff);
+            visit.MapPost("/{visitId:Guid}/check-in",CheckIn);
             visit.MapPost("/{visitId:Guid}/check-out",CheckOut);
             visit.MapPost("/{visitId:Guid}/cancel",CancelVisit);
         }
 
-        public static async Task<IResult>GetVisitsForPatient(Guid patientId, 
+        public static async Task<IResult>GetVisitsForPatient(Guid patientId,
             IVisitationService visitationService, CancellationToken token)
         {
             var response = await visitationService.GetForPatientAsync(patientId,token);
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
 
-        public static async Task<IResult>CheckIn(Guid patientId, CheckInVisitRequest request, 
+        public static async Task<IResult>ScheduleVisits(Guid patientId, ScheduleVisitRequest request,
             IVisitationService visitationService, CancellationToken token)
         {
-            var response = await visitationService.CheckInAsync(patientId,request,token);
-            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
+            var response = await visitationService.ScheduleVisitsAsync(patientId,request,token);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
 
-        public static async Task<IResult>GetVisit(Guid visitId, 
+        public static async Task<IResult>GetVisit(Guid visitId,
             IVisitationService visitationService, CancellationToken token)
         {
             var response = await visitationService.GetByIdAsync(visitId,token);
@@ -49,14 +51,28 @@ namespace Visitation.Presentation
             return response.Value is null ? TypedResults.NotFound() : TypedResults.Ok(response.Value);
         }
 
-        public static async Task<IResult>CheckOut(Guid visitId, CheckOutVisitRequest request, 
+        public static async Task<IResult>AssignStaff(Guid visitId, AssignStaffRequest request,
+            IVisitationService visitationService, CancellationToken token)
+        {
+            var response = await visitationService.AssignStaffAsync(visitId,request,token);
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
+        }
+
+        public static async Task<IResult>CheckIn(Guid visitId, CheckInVisitRequest request,
+            IVisitationService visitationService, CancellationToken token)
+        {
+            var response = await visitationService.CheckInAsync(visitId,request,token);
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
+        }
+
+        public static async Task<IResult>CheckOut(Guid visitId, CheckOutVisitRequest request,
             IVisitationService visitationService, CancellationToken token)
         {
             var response = await visitationService.CheckOutAsync(visitId,request,token);
             return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
-        public static async Task<IResult>CancelVisit(Guid visitId, CancelVisitRequest request, 
+        public static async Task<IResult>CancelVisit(Guid visitId, CancelVisitRequest request,
             IVisitationService visitationService, CancellationToken token)
         {
             var response = await visitationService.CancelVisitAsync(visitId,request,token);
