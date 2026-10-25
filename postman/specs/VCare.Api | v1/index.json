@@ -353,9 +353,7 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/patient/{patientId}/visit/check-in": {
+      },
       "post": {
         "tags": [
           "Visitation"
@@ -363,6 +361,122 @@
         "parameters": [
           {
             "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleVisitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/patient/{patientId}/visit/{visitId}": {
+      "get": {
+        "tags": [
+          "Visitation"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "visitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/patient/{patientId}/visit/{visitId}/assign": {
+      "post": {
+        "tags": [
+          "Visitation"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "visitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignStaffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/patient/{patientId}/visit/{visitId}/check-in": {
+      "post": {
+        "tags": [
+          "Visitation"
+        ],
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "visitId",
             "in": "path",
             "required": true,
             "schema": {
@@ -388,35 +502,21 @@
         }
       }
     },
-    "/api/patient/{patientId}/visit/{visitId}": {
-      "get": {
-        "tags": [
-          "Visitation"
-        ],
-        "parameters": [
-          {
-            "name": "visitId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/patient/{patientId}/visit/{visitId}/check-out": {
       "post": {
         "tags": [
           "Visitation"
         ],
         "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "visitId",
             "in": "path",
@@ -450,6 +550,15 @@
           "Visitation"
         ],
         "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "visitId",
             "in": "path",
@@ -581,6 +690,15 @@
         ],
         "parameters": [
           {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "orderId",
             "in": "path",
             "required": true,
@@ -603,6 +721,15 @@
           "MedicationOrder"
         ],
         "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "orderId",
             "in": "path",
@@ -636,6 +763,15 @@
           "MedicationOrder"
         ],
         "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "orderId",
             "in": "path",
@@ -719,6 +855,18 @@
   },
   "components": {
     "schemas": {
+      "AssignStaffRequest": {
+        "required": [
+          "staffId"
+        ],
+        "type": "object",
+        "properties": {
+          "staffId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "CancelVisitRequest": {
         "required": [
           "reason"
@@ -1189,6 +1337,26 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "ScheduleVisitRequest": {
+        "required": [
+          "visitDays",
+          "visitTime"
+        ],
+        "type": "object",
+        "properties": {
+          "visitDays": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          "visitTime": {
+            "type": "string",
+            "format": "time"
           }
         }
       },

@@ -1,0 +1,21 @@
+$kind: http-request
+name: /api/patient/:patientId/visit
+url: "{{baseUrl}}/api/patient/:patientId/visit"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "visitDays": [
+        "2026-10-23",
+        "2026-10-24"
+      ],
+      "visitTime": "09:00:00"
+    }
+settings: {}
+examples: ./.resources/-api-patient-patientId-visit-1.resources/examples
+order: 2000

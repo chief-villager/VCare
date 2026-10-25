@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VCare.Modules.Visitation.Domain.Entities;
 using VCare.SharedKernel.Abstractions;
+using Visitation.Domain.Entities;
 
 namespace VCare.Modules.Visitation.Infrastructure.Persistence;
 
@@ -9,6 +10,7 @@ internal sealed class VisitationDbContext(DbContextOptions<VisitationDbContext> 
     public const string Schema = "Visitation";
 
     public DbSet<Visit> Visits => Set<Visit>();
+    public DbSet<VisitRecord> VisitsRecords => Set<VisitRecord>();
 
     // The caller's care home. Referenced by the query filter so EF re-evaluates
     // it per request; a DbContext is scoped, so the care home is fixed for its lifetime.

@@ -9,7 +9,7 @@ namespace Visitation.Domain.Entities
 {
     internal class MedicationTask
     {
-        public VisitId VisitId {get; private set;}
+        public Guid VisitRecordId {get; private set;}
         public bool IsMedicationCompleted {get; private set;}
         public string MedicationTaskNote {get; private set;} = null!;
 
@@ -18,11 +18,11 @@ namespace Visitation.Domain.Entities
             
         }
 
-        public static MedicationTask  Create(Guid visitId, bool isMedicationCompleted, string medicationTaskNote)
+        public static MedicationTask  Create(Guid visitRecordId, bool isMedicationCompleted, string medicationTaskNote)
         {
             var newTask = new MedicationTask
             {
-                VisitId = new VisitId(visitId),
+                VisitRecordId = visitRecordId,
                 IsMedicationCompleted = isMedicationCompleted,
                 MedicationTaskNote = medicationTaskNote,
             };

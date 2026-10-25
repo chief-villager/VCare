@@ -19,8 +19,8 @@ request:
         "feedingTaskNote": "string"
       }
 response:
-  statusCode: 200
-  statusText: OK
+  statusCode: 204
+  statusText: No Content
   body:
     type: text
     content: ""

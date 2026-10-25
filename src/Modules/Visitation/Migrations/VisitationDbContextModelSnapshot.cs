@@ -23,7 +23,41 @@ namespace VCare.Modules.Visitation.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("VCare.Modules.Visitation.Domain.Entities.Visit", b =>
+            modelBuilder.Entity("VCare.Modules.Visitation.Domain.Entities.VisitRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CheckedInAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CheckedOutAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("VisitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VisitationSummary")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffId");
+
+                    b.HasIndex("VisitId");
+
+                    b.ToTable("VisitRecords", "Visitation");
+                });
+
+            modelBuilder.Entity("Visitation.Domain.Entities.Visit", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -35,25 +69,18 @@ namespace VCare.Modules.Visitation.Migrations
                     b.Property<Guid>("CareHomeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CheckedInAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("CheckedOutAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("StaffId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Status")
+                    b.PrimitiveCollection<string>("StaffIds")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("VisitationSummary")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("VisitDay")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly>("VisitTime")
+                        .HasColumnType("time");
 
                     b.HasKey("Id");
 
@@ -64,11 +91,17 @@ namespace VCare.Modules.Visitation.Migrations
                     b.ToTable("Visits", "Visitation");
                 });
 
-            modelBuilder.Entity("VCare.Modules.Visitation.Domain.Entities.Visit", b =>
+            modelBuilder.Entity("VCare.Modules.Visitation.Domain.Entities.VisitRecord", b =>
                 {
+                    b.HasOne("Visitation.Domain.Entities.Visit", null)
+                        .WithMany("VisitRecords")
+                        .HasForeignKey("VisitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.OwnsOne("Visitation.Domain.Entities.FeedingTask", "FeedingTask", b1 =>
                         {
-                            b1.Property<Guid>("VisitId")
+                            b1.Property<Guid>("VisitRecordId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("FeedingTaskNote")
@@ -78,17 +111,17 @@ namespace VCare.Modules.Visitation.Migrations
                             b1.Property<bool>("IsFeedingCompleted")
                                 .HasColumnType("bit");
 
-                            b1.HasKey("VisitId");
+                            b1.HasKey("VisitRecordId");
 
-                            b1.ToTable("Visits", "Visitation");
+                            b1.ToTable("VisitRecords", "Visitation");
 
                             b1.WithOwner()
-                                .HasForeignKey("VisitId");
+                                .HasForeignKey("VisitRecordId");
                         });
 
                     b.OwnsOne("Visitation.Domain.Entities.MedicationTask", "MedicationTask", b1 =>
                         {
-                            b1.Property<Guid>("VisitId")
+                            b1.Property<Guid>("VisitRecordId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<bool>("IsMedicationCompleted")
@@ -98,17 +131,17 @@ namespace VCare.Modules.Visitation.Migrations
                                 .IsRequired()
                                 .HasColumnType("nvarchar(max)");
 
-                            b1.HasKey("VisitId");
+                            b1.HasKey("VisitRecordId");
 
-                            b1.ToTable("Visits", "Visitation");
+                            b1.ToTable("VisitRecords", "Visitation");
 
                             b1.WithOwner()
-                                .HasForeignKey("VisitId");
+                                .HasForeignKey("VisitRecordId");
                         });
 
                     b.OwnsOne("Visitation.Domain.Entities.PersonalcareTask", "PersonalcareTask", b1 =>
                         {
-                            b1.Property<Guid>("VisitId")
+                            b1.Property<Guid>("VisitRecordId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CareTaskNote")
@@ -118,12 +151,12 @@ namespace VCare.Modules.Visitation.Migrations
                             b1.Property<bool>("IsCareCompleted")
                                 .HasColumnType("bit");
 
-                            b1.HasKey("VisitId");
+                            b1.HasKey("VisitRecordId");
 
-                            b1.ToTable("Visits", "Visitation");
+                            b1.ToTable("VisitRecords", "Visitation");
 
                             b1.WithOwner()
-                                .HasForeignKey("VisitId");
+                                .HasForeignKey("VisitRecordId");
                         });
 
                     b.Navigation("FeedingTask");
@@ -131,6 +164,11 @@ namespace VCare.Modules.Visitation.Migrations
                     b.Navigation("MedicationTask");
 
                     b.Navigation("PersonalcareTask");
+                });
+
+            modelBuilder.Entity("Visitation.Domain.Entities.Visit", b =>
+                {
+                    b.Navigation("VisitRecords");
                 });
 #pragma warning restore 612, 618
         }

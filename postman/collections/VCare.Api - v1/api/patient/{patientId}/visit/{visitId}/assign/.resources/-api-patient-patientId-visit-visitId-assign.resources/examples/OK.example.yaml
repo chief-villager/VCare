@@ -1,0 +1,22 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/patient/:patientId/visit/:visitId/assign"
+  method: POST
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    patientId: ""
+    visitId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+  body:
+    type: json
+    content: |-
+      {
+        "staffId": "d2d0e4fb-b6fd-bde9-e96c-63e0da48a963"
+      }
+response:
+  statusCode: 204
+  statusText: No Content
+  body:
+    type: text
+    content: ""
+order: 1000
