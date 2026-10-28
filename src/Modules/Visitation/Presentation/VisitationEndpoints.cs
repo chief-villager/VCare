@@ -19,13 +19,13 @@ namespace Visitation.Presentation
             // always a visit to someone. The staff member checking in or out and
             // the care home come off the caller's token, so the group needs an identity.
             var visit = app.MapGroup("/api/patient/{patientId:Guid}/visit").WithTags("Visitation").RequireAuthorization();
-            visit.MapGet("/",GetVisitsForPatient);
-            visit.MapPost("/",ScheduleVisits);
-            visit.MapGet("/{visitId:Guid}",GetVisit);
-            visit.MapPost("/{visitId:Guid}/assign",AssignStaff);
-            visit.MapPost("/{visitId:Guid}/check-in",CheckIn);
-            visit.MapPost("/{visitId:Guid}/check-out",CheckOut);
-            visit.MapPost("/{visitId:Guid}/cancel",CancelVisit);
+            visit.MapGet("/",GetVisitsForPatient).RequireAuthorization("Admin_Or_Carer");
+            visit.MapPost("/",ScheduleVisits).RequireAuthorization("Admin_Role");
+            visit.MapGet("/{visitId:Guid}",GetVisit).RequireAuthorization("Admin_Or_Carer");
+            visit.MapPost("/{visitId:Guid}/assign",AssignStaff).RequireAuthorization("Admin_Role");
+            visit.MapPost("/{visitId:Guid}/check-in",CheckIn).RequireAuthorization("Carer_Role");
+            visit.MapPost("/{visitId:Guid}/check-out",CheckOut).RequireAuthorization("Carer_Role");
+            visit.MapPost("/{visitId:Guid}/cancel",CancelVisit).RequireAuthorization("Admin_Or_Carer");
         }
 
         public static async Task<IResult>GetVisitsForPatient(Guid patientId,

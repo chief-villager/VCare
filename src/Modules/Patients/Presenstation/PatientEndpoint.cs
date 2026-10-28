@@ -20,13 +20,13 @@ namespace Patients.Presenstation
             // The care home is taken from the caller's token, not the route, so
             // every read below is already scoped to it by the query filter.
             var patient = app.MapGroup("/api/patient").WithTags("Patients").RequireAuthorization();
-            patient.MapPost("/",RegisterPatient);
-            patient.MapGet("/",ListPatients);
-            patient.MapGet("/{patientId:Guid}",GetPatient);
-            patient.MapPut("/{patientId:Guid}",UpdatePatient);
-            patient.MapPost("/{patientId:Guid}/document",UploadPatientDocument);
-            patient.MapPost("/{patientId:Guid}/profile-image",UploadProfileImageForPatient);
-            patient.MapGet("/{patientId:Guid}/document",GetPatientDocument);
+            patient.MapPost("/",RegisterPatient).RequireAuthorization("Admin_Role");
+            patient.MapGet("/",ListPatients).RequireAuthorization("Admin_Or_Carer");
+            patient.MapGet("/{patientId:Guid}",GetPatient).RequireAuthorization("Admin_Or_Carer");
+            patient.MapPut("/{patientId:Guid}",UpdatePatient).RequireAuthorization("Admin_Role");
+            patient.MapPost("/{patientId:Guid}/document",UploadPatientDocument).RequireAuthorization("Admin_Role");
+            patient.MapPost("/{patientId:Guid}/profile-image",UploadProfileImageForPatient).RequireAuthorization("Admin_Role");
+            patient.MapGet("/{patientId:Guid}/document",GetPatientDocument).RequireAuthorization("Admin_Or_Carer");
 
         }
 

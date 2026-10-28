@@ -23,12 +23,12 @@ namespace Medications.Presentation
                 .WithTags("MedicationOrder")
                 .RequireAuthorization();
 
-            medication.MapPost("/", CreateMedicationOrder);
-            medication.MapGet("/due", GetDueMedicationForDay);
-            medication.MapGet("/outstanding", GetOutstandingMedicationForDay);
-            medication.MapGet("/{orderId:Guid}", GetMedicationOrder);
-            medication.MapPut("/{orderId:Guid}/status", UpdateMedicationOrderStatus);
-            medication.MapPost("/{orderId:Guid}/administrations/{scheduleId:Guid}", RecordMedicationAministration);
+            medication.MapPost("/", CreateMedicationOrder).RequireAuthorization("Admin_Role");
+            medication.MapGet("/due", GetDueMedicationForDay).RequireAuthorization("Admin_Or_Carer");
+            medication.MapGet("/outstanding", GetOutstandingMedicationForDay).RequireAuthorization("Admin_Or_Carer");
+            medication.MapGet("/{orderId:Guid}", GetMedicationOrder).RequireAuthorization("Admin_Role");
+            medication.MapPut("/{orderId:Guid}/status", UpdateMedicationOrderStatus).RequireAuthorization("Admin_Role");
+            medication.MapPost("/{orderId:Guid}/administrations/{scheduleId:Guid}", RecordMedicationAministration).RequireAuthorization("Admin_Or_Carer");
         }
 
         public static async Task<IResult> CreateMedicationOrder(

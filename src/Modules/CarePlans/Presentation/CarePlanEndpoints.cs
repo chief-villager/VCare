@@ -18,9 +18,9 @@ namespace CarePlans.Presentation
         public static void AddCarePlanEndpoint(this IEndpointRouteBuilder app)
         {
             var careplan = app.MapGroup("/api/patient/{patientId:Guid}/careplan").WithTags("CarePlan").RequireAuthorization();
-            careplan.MapGet("/", GetCarePlan);
-            careplan.MapPost("/",CreateCarePlan);
-            careplan.MapPut("/{carePlanId:Guid}",UpdateCarePlan);
+            careplan.MapGet("/", GetCarePlan).RequireAuthorization("Admin_Or_Carer");
+            careplan.MapPost("/",CreateCarePlan).RequireAuthorization("Admin_Role");
+            careplan.MapPut("/{carePlanId:Guid}",UpdateCarePlan).RequireAuthorization("Admin_Role");
         }
 
         public static async Task<IResult>GetCarePlan(

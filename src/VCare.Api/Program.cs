@@ -21,8 +21,10 @@ using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Scalar.AspNetCore;
 using CarePlans.Presentation;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddValidation();
 
 // Built-in OpenAPI document generation (ASP.NET Core 10).
 builder.Services.AddOpenApi();
@@ -66,9 +68,16 @@ builder.Services.AddScoped<DashboardService>();
 
 // Creates a care home and its first admin together, across CareHomes and Staffs.
 builder.Services.AddScoped<CareHomeRegistrationService>();
+var requireAuthPolicy = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser()
+    .Build();
 
-builder.Services.AddAuthorization();
-
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(requireAuthPolicy)
+    .AddPolicy("Admin_Role", p => p.Combine(requireAuthPolicy).RequireRole("Admin"))
+    .AddPolicy("Carer_Role", p => p.Combine(requireAuthPolicy).RequireRole("Carer"))
+    .AddPolicy("Admin_Or_Carer", policy => policy.RequireRole("Admin", "Carer"));
+    
 var app = builder.Build();
 
 app.UseHttpsRedirection();

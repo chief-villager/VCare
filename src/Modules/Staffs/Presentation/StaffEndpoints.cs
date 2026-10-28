@@ -19,12 +19,12 @@ namespace Staffs.Presentation
             // New staff join the care home on the caller's token, so every route
             // here needs an authenticated caller to be scoped correctly.
             var staff = app.MapGroup("/api/staff").WithTags("Staff").RequireAuthorization();
-            staff.MapPost("/",CreateStaff);
-            staff.MapGet("/{staffId:Guid}",GetStaff);
-            staff.MapPut("/{staffId:Guid}",UpdateStaff);
-            staff.MapPost("/{staffId:Guid}/document",UploadStaffDocument);
-            staff.MapPost("/{staffId:Guid}/profile-image",UploadProfileImageForStaff);
-            staff.MapGet("/{staffId:Guid}/document",GetStaffDocument);
+            staff.MapPost("/",CreateStaff).RequireAuthorization("Admin_Role");
+            staff.MapGet("/{staffId:Guid}",GetStaff).RequireAuthorization("Admin_Or_Carer");
+            staff.MapPut("/{staffId:Guid}",UpdateStaff).RequireAuthorization("Admin_Role");
+            staff.MapPost("/{staffId:Guid}/document",UploadStaffDocument).RequireAuthorization("Admin_Role");
+            staff.MapPost("/{staffId:Guid}/profile-image",UploadProfileImageForStaff).RequireAuthorization("Admin_Role");
+            staff.MapGet("/{staffId:Guid}/document",GetStaffDocument).RequireAuthorization("Admin_Role");
         }
 
         public static async Task<IResult>UploadStaffDocument(Guid staffId, IFormFile formFile, string fileName, IStaffService staffService, CancellationToken cancellationToken)

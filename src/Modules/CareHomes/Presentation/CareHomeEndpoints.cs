@@ -19,7 +19,7 @@ namespace src.Modules.CareHomes.Presentation
             // Registration lives in the host: a care home is created together with
             // its first admin, which needs the Staffs module too.
             var carehome = app.MapGroup("/api/carehome").WithTags("CareHome").RequireAuthorization();
-            carehome.MapPut("/me",UpdateCareHome);
+            carehome.MapPut("/me",UpdateCareHome).RequireAuthorization("Admin_Role");
         }
 
         public static async Task<IResult>UpdateCareHome(UpdateCareHomeRequest request, 
