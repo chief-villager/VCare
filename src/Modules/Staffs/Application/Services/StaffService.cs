@@ -14,6 +14,7 @@ using Staffs.Domain.Errors;
 using VCare.SharedKernel.Results;
 using Staffs.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using VCare.SharedKernel.Domain;
 
@@ -23,7 +24,9 @@ namespace Staffs.Application.Services
         IStaffRepository staffRepository, 
         IAuthService authService, 
         ICurrentUser currentUser,
-        IDocumentService documentService, IOptions<StorageEntity> options) : IStaffService
+        IDocumentService documentService, IOptions<StorageEntity> options,
+        INotification notification,
+        ILogger<StaffService> logger) : IStaffService
     {
         //move this to congiguration file later.
 
@@ -46,9 +49,9 @@ namespace Staffs.Application.Services
             {
                 return Result.Failure<string>(new Error("400", "The uploaded file is empty.", ErrorKind.Validation));
             }
-            var filePath = Path.GetFullPath(formFile.FileName);
-            
-            var key = await documentService.WritingAnObjectAsync(options.Value.BucketName, filePath, currentUser.CareHomeId.ToString(), cancellationToken);
+            await using var content = formFile.OpenReadStream();
+            var key = await documentService.WritingAnObjectAsync(options.Value.BucketName, content, formFile.FileName,
+                formFile.ContentType, currentUser.CareHomeId.ToString(), cancellationToken);
             if (key.IsFailure)
             {
                 return Result.Failure<string>(key.Error);
@@ -63,25 +66,35 @@ namespace Staffs.Application.Services
         }
 
             
-        public Task<Result<string>> UploadProfileImageForStaffAsync(StaffId staffId, IFormFile formFile, CancellationToken cancellationToken)
+        public async Task<Result<string>> UploadProfileImageForStaffAsync(StaffId staffId, IFormFile formFile, CancellationToken cancellationToken)
         {
             if (formFile.Length <= 0)
             {
-                return Task.FromResult(Result.Failure<string>(new Error("400", "The uploaded file is empty.", ErrorKind.Validation)));
+                return Result.Failure<string>(new Error("400", "The uploaded file is empty.", ErrorKind.Validation));
             }
-            var staff = staffRepository.GetByIdAsync(staffId, cancellationToken).Result;
+            var staff = await staffRepository.GetByIdAsync(staffId, cancellationToken);
             if (staff is null)
             {
-                return Task.FromResult(Result.Failure<string>(new Error("404", "Staff not found", ErrorKind.NotFound)));
+                return Result.Failure<string>(new Error("404", "Staff not found", ErrorKind.NotFound));
             }
             if (currentUser.CareHomeId != staff.CareHomeId.Value)
             {
-                return Task.FromResult(Result.Failure<string>(new Error("403", "You are not authorized to upload profile image for this staff", ErrorKind.Forbidden)));
+                return Result.Failure<string>(new Error("403", "You are not authorized to upload profile image for this staff", ErrorKind.Forbidden));
             }
-            var result = documentService.UploadProfileImageAsync(options.Value.BucketName, formFile.FileName, currentUser.CareHomeId.ToString(), cancellationToken);
-            staff.UpdateProfilePicture(result.Result.Value);
-            staffRepository.SaveChangesAsync(cancellationToken);
-            return result;
+            await using var content = formFile.OpenReadStream();
+            var key = await documentService.UploadProfileImageAsync(options.Value.BucketName, content, formFile.FileName,
+                formFile.ContentType, currentUser.CareHomeId.ToString(), cancellationToken);
+            if (key.IsFailure)
+            {
+                return key;
+            }
+            var updated = staff.UpdateProfilePicture(key.Value);
+            if (updated.IsFailure)
+            {
+                return Result.Failure<string>(updated.Error);
+            }
+            await staffRepository.SaveChangesAsync(cancellationToken);
+            return key;
         }
 
         public async Task<Result<(Stream Content, string ContentType)>> GetStaffDocumentsAsync(StaffId staffId, string key, CancellationToken cancellationToken)
@@ -97,7 +110,7 @@ namespace Staffs.Application.Services
             {
                 return Result.Failure<(Stream Content, string ContentType)>(new Error("403", "You are not authorized to view documents for this staff", ErrorKind.Forbidden));
             }
-            var document = await documentService.GetObjectAsync(options.Value.BucketName, key, cancellationToken);
+            var document = await documentService.GetObjectAsync(objectKey: key, sourceBucket: options.Value.BucketName, cancellationToken);
             return Result.Success(document);
         }
         
@@ -140,11 +153,9 @@ namespace Staffs.Application.Services
                 return Result.Failure<CreateStaffResponse>("Failed to create staff");
             }
             
-            // The Identity user goes first and commits on its own: the StaffCreated
-            // handler looks it up by email, and that is a database query, not a
-            // change-tracker hit. Tracking the Staff only afterwards also keeps its
-            // insert inside the transaction CommitandSaveAsync opens, alongside the
-            // outbox row -- Identity's save would otherwise have committed it early.
+            // The Identity user goes first and commits on its own. Tracking the Staff
+            // only afterwards keeps its insert inside the transaction
+            // CommitandSaveAsync opens; Identity's save would otherwise commit it early.
             var result = await authService.CreateApplicationUser( staff.Id.Value, staffRequest.UserName,
             staffRequest.Email, staffRequest.Password, staffRequest.PhoneNumber, staffRequest.Role, careHomeId);
             if (result.IsFailure)
@@ -153,6 +164,10 @@ namespace Staffs.Application.Services
             }
             await staffRepository.AddAsync(staff, cancellationToken);
             await staffRepository.CommitandSaveAsync(cancellationToken);
+
+            // Sent only once the staff member is saved, and outside the transaction,
+            // so a slow or failing mail server can't hold or roll back the insert.
+            await SendEmailVerificationLinkAsync(staffRequest.Email, staffRequest.UserName, cancellationToken);
             return Result.Success(new CreateStaffResponse(
                 staff.Id.Value,
                 staff.Email,
@@ -190,6 +205,9 @@ namespace Staffs.Application.Services
             // the caller is unauthenticated here, so that filter matches nothing and
             // turned every login into "invalid credentials". AuthService reads the
             // identity and care home off the stored user instead.
+            // An unverified email is refused with EmailNotConfirmed, which tells the
+            // staff member to use the link sent when their account was created or to
+            // request a new one. Nothing is sent from here.
             return await authService.LoginAsync(userName, password, token);
         }
 
@@ -203,22 +221,60 @@ namespace Staffs.Application.Services
             return await authService.LogoutAsync(refreshToken, token);
         }
 
-        public async Task<Result<string>> GenerateConfirmEmailLinkAsync(string email)
+        // Sends the same email as account creation. Always succeeds for a
+        // well-formed email, whether or not an account exists or is already
+        // verified, so the endpoint reveals nothing about which emails are
+        // registered. The link itself only ever goes by email.
+        public async Task<Result> ResendEmailVerificationLinkAsync(string email, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                return Result.Failure<string>("Email is required");
+                return Result.Failure(Error.Validation("Auth.EmailRequired", "Email is required"));
             }
-            return await authService.GenerateConfirmEmailLink(email);
+            if (!await authService.NeedsEmailVerificationAsync(email))
+            {
+                return Result.Success();
+            }
+            var user = await authService.GetApplicationUserByEmailAsync(email, cancellationToken);
+            if (user.IsSuccess)
+            {
+                await SendEmailVerificationLinkAsync(user.Value.Email, user.Value.UserName, cancellationToken);
+            }
+            return Result.Success();
         }
 
-        public async Task<Result<bool>> ConfirmEmailAsync(string email, string token)
+        // Sent straight to the notification service, not queued. A failure is
+        // logged rather than returned: the account already exists, and the staff
+        // member can ask for the link again through the resend endpoint.
+        private async Task SendEmailVerificationLinkAsync(string email, string userName, CancellationToken cancellationToken)
+        {
+            var link = await authService.GenerateEmailVerificationLinkAsync(email);
+            if (link.IsFailure)
+            {
+                logger.LogWarning("Could not build an email verification link for {Email}: {Error}", email, link.Error.Description);
+                return;
+            }
+            try
+            {
+                var sent = await notification.SendEmailVerificationLinkAsync(email, userName, link.Value, cancellationToken);
+                if (sent.IsFailure)
+                {
+                    logger.LogWarning("Email verification link to {Email} was not sent: {Error}", email, sent.Error.Description);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Sending the email verification link to {Email} failed.", email);
+            }
+        }
+
+        public async Task<Result> VerifyEmailAsync(string email, string token)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
             {
-                return Result.Failure<bool>("Invalid confirmation link");
+                return Result.Failure(StaffErrors.InvalidVerificationLink);
             }
-            return await authService.ConfirmEmailAsync(email, token);
+            return await authService.VerifyEmailAsync(email, token);
         }
 
         public async Task<Result> RequestPasswordResetAsync(string email, CancellationToken cancellationToken)
@@ -232,14 +288,20 @@ namespace Staffs.Application.Services
             {
                 return Result.Failure(callbackUrl.Error);
             }
-            var staff = await staffRepository.GetByEmailforPasswordResetAsync(email, cancellationToken);
-            if (staff == null)
+
+            // Sent straight to the notification service, not queued. Unlike the
+            // verification link, a failure is returned: nothing else was changed, so
+            // the caller can simply ask again.
+            try
             {
-                return Result.Failure(new Error("404", "Staff not found", ErrorKind.NotFound));
+                return await notification.SendPasswordResetLinkAsync(email, callbackUrl.Value, cancellationToken);
             }
-            staff.RaisePassWordUpdatedEvent(email, email, callbackUrl.Value);
-            await staffRepository.CommitandSaveAsync(cancellationToken);
-            return Result.Success();
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Sending the password reset link to {Email} failed.", email);
+                return Result.Failure(Error.Validation("Auth.ResetEmailFailed",
+                    "We couldn't send the password reset email. Please try again."));
+            }
         }
 
         public async Task<Result<bool>> ResetPasswordAsync(string email, string token, string password)

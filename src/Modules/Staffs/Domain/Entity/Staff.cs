@@ -41,8 +41,7 @@ namespace Staffs.Domain.Entity
 
         public static Staff Create(string firstName, string lastName, string email, string phoneNumber, string role, string address, string username, Guid careHomeId)
         {
-            var id = StaffId.New();
-            var newStaff =  new Staff
+            return new Staff
             {
                 Id = StaffId.New(),
                 FirstName = firstName,
@@ -55,8 +54,6 @@ namespace Staffs.Domain.Entity
                 CareHomeId = new CareHomeId(careHomeId),
                 CreatedAt = DateTime.Now,
             };
-            newStaff.Raise(new StaffCreatedEvent(email,username));
-            return newStaff;
         }
 
         public void Update(string? firstName = null, string? lastName = null, string? email = null, string? phoneNumber = null, string? role = null, string? address = null)
@@ -74,11 +71,6 @@ namespace Staffs.Domain.Entity
             if (!string.IsNullOrWhiteSpace(address))
                 Address = address;
             ModifiedAt = DateTime.Now;
-        }
-
-        public void RaisePassWordUpdatedEvent(string email, string username, string url)
-        {
-            Raise(new ResetPasswordEvent(email, username, url));
         }
 
         public  Result<StaffDocument> AddDocument(string fileName, string storageKeyName)

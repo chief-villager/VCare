@@ -5,161 +5,110 @@ using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using VCare.SharedKernel.Abstractions;
+using VCare.SharedKernel.Domain;
 using VCare.SharedKernel.Results;
 
 namespace VCare.Api.Services
 {
-    public class DocumentService(ILogger<DocumentService> logger) : IDocumentService
+    // The S3 client is a singleton registered in Program.cs: it is thread-safe and
+    // holds the HTTP connection pool and resolved credentials, so one is shared by
+    // every request rather than rebuilt (and leaked) per scope.
+    public class DocumentService(ILogger<DocumentService> logger, IAmazonS3 s3Client) : IDocumentService
     {
-        public async Task<(Stream Content, string ContentType)> GetObjectAsync(string objectKey, string sourceBucket, CancellationToken cancellationToken = default)
+        private readonly ILogger<DocumentService> _logger = logger;
+        private readonly IAmazonS3 _s3Client = s3Client;
+
+        public Task<(Stream Content, string ContentType)> GetObjectAsync(string objectKey, string sourceBucket, CancellationToken cancellationToken = default) =>
+            DownloadAsync(objectKey, sourceBucket, "application/octet-stream", cancellationToken);
+
+        public Task<(Stream Content, string ContentType)> GetProfileImageAsync(string objectKey, string sourceBucket, CancellationToken cancellationToken = default) =>
+            DownloadAsync(objectKey, sourceBucket, "image/jpeg", cancellationToken);
+
+        public Task<Result<string>> WritingAnObjectAsync(string bucketName, Stream content, string fileName, string contentType, string careHomeId, CancellationToken cancellationToken = default) =>
+            UploadAsync(bucketName, content, fileName, contentType, careHomeId, "documents", cancellationToken);
+
+        public Task<Result<string>> UploadProfileImageAsync(string bucketName, Stream content, string fileName, string contentType, string careHomeId, CancellationToken cancellationToken = default) =>
+            UploadAsync(bucketName, content, fileName, contentType, careHomeId, "profiles", cancellationToken);
+
+        private async Task<(Stream Content, string ContentType)> DownloadAsync(string objectKey, string sourceBucket, string fallbackContentType, CancellationToken cancellationToken)
         {
-            
-            using var client = new AmazonS3Client(Amazon.RegionEndpoint.USEast1);
-            
             var request = new GetObjectRequest
             {
                 BucketName = sourceBucket,
                 Key = objectKey
             };
             var memoryStream = new MemoryStream();
-    
+
             try
             {
-                using var response = await  client.GetObjectAsync(request, cancellationToken);
+                using var response = await _s3Client.GetObjectAsync(request, cancellationToken);
                 await response.ResponseStream.CopyToAsync(memoryStream, cancellationToken);
-                return (memoryStream, response.Headers.ContentType ?? "application/octet-stream");
-             
-                
-            }
-            catch (AmazonS3Exception ex)
-            {
-                await memoryStream.DisposeAsync(); // Dispose the memory stream in case of an exception
-                logger.LogError($"Error retrieving object from S3: {ex.Message}");
-                throw;
+
+                // CopyToAsync leaves the position at the end; without this the
+                // caller streams back an empty body.
+                memoryStream.Position = 0;
+                return (memoryStream, response.Headers.ContentType ?? fallbackContentType);
             }
             catch (Exception ex)
             {
-                logger.LogError($"General error retrieving object from S3: {ex.Message}");
+                await memoryStream.DisposeAsync();
+                _logger.LogError(ex, "Error retrieving {Key} from S3 bucket {Bucket}", objectKey, sourceBucket);
                 throw;
             }
         }
 
-        public async Task<(Stream Content, string ContentType)> GetProfileImageAsync(string objectKey, string sourceBucket, CancellationToken cancellationToken = default)
-        {
-             using var client = new AmazonS3Client(Amazon.RegionEndpoint.USEast1);
-            
-            var request = new GetObjectRequest
-            {
-                BucketName = sourceBucket,
-                Key = objectKey
-            };
-            var memoryStream = new MemoryStream();
-    
-            try
-            {
-                using var response = await  client.GetObjectAsync(request, cancellationToken);
-                
-                await response.ResponseStream.CopyToAsync(memoryStream, cancellationToken);
-                memoryStream.Position = 0; // Reset the position to the beginning of the stream
-                return (memoryStream, response.Headers.ContentType ?? "Image/jpeg");
-            }
-            catch (AmazonS3Exception ex)
-            {
-                await memoryStream.DisposeAsync(); // Dispose the memory stream in case of an exception
-                logger.LogError($"Error retrieving object from S3: {ex.Message}");
-                throw;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"General error retrieving object from S3: {ex.Message}");
-                throw;
-            }
-        }
-
-        public async Task<Result<string>> UploadProfileImageAsync(string bucketName, string filepath, string careHomeId, CancellationToken cancellationToken = default)
-        {
-             if (string.IsNullOrWhiteSpace(bucketName))
-            {
-                return Result.Failure<string>(new Error("BucketNameRequired", "Bucket name is required", ErrorKind.Validation));
-            }
-            if (string.IsNullOrWhiteSpace(filepath))
-            {
-                return Result.Failure<string>(new Error("FilePathRequired", "File path is required", ErrorKind.Validation));
-            }
-            if (string.IsNullOrWhiteSpace(careHomeId))
-            {
-                return Result.Failure<string>(new Error("CareHomeIdRequired", "Care home ID is required", ErrorKind.Validation));
-            }
-            using var client = new AmazonS3Client(Amazon.RegionEndpoint.USEast1);
-            Random random = new();
-            var randomSuffix = random.Next(1000, 9999);
-            var filename = System.IO.Path.GetFileName(filepath).Trim();
-            careHomeId = careHomeId.Substring(0, Math.Min(30, careHomeId.Length));
-            var keyName = $"{careHomeId}/profiles/{randomSuffix}_{filename}";
-            try
-            {
-                var putRequest = new PutObjectRequest
-                {
-                    BucketName = bucketName,
-                    FilePath = filepath,
-                    Key = keyName,
-                    ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256
-                };
-                await client.PutObjectAsync(putRequest, cancellationToken);
-                return Result.Success(keyName);
-            }
-            catch (AmazonS3Exception ex)
-            {
-                logger.LogError($"Error uploading file to S3: {ex.Message}");
-                throw;
-            }
-
-        }
-
-        public async Task<Result<string>> WritingAnObjectAsync(string bucketName, string filepath, string careHomeId, CancellationToken cancellationToken = default)
+        private async Task<Result<string>> UploadAsync(string bucketName, Stream content, string fileName, string contentType,
+            string careHomeId, string folder, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(bucketName))
             {
                 return Result.Failure<string>(new Error("BucketNameRequired", "Bucket name is required", ErrorKind.Validation));
             }
-            if (string.IsNullOrWhiteSpace(filepath))
+            if (content is null)
             {
-                return Result.Failure<string>(new Error("FilePathRequired", "File path is required", ErrorKind.Validation));
+                return Result.Failure<string>(new Error("FileContentRequired", "File content is required", ErrorKind.Validation));
+            }
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return Result.Failure<string>(new Error("FileNameRequired", "File name is required", ErrorKind.Validation));
             }
             if (string.IsNullOrWhiteSpace(careHomeId))
             {
                 return Result.Failure<string>(new Error("CareHomeIdRequired", "Care home ID is required", ErrorKind.Validation));
             }
-            // Create an Amazon S3 client using the default credentials and region
-            //the enterd region is not valid for the bucket, so we will use USEast1 as default region for now.
-            using var client = new AmazonS3Client(Amazon.RegionEndpoint.USEast1);
-            Random random = new();
-            var randomSuffix = random.Next(1000, 9999);
-            var filename = System.IO.Path.GetFileName(filepath).Trim();
-            careHomeId = careHomeId.Substring(0, Math.Min(30, careHomeId.Length));
-            var keyName = $"{careHomeId}/profiles/{randomSuffix}_{filename}";
 
+            // The name comes from the client: keep only its last segment so it
+            // cannot steer the key into another care home's prefix.
+            var safeName = Path.GetFileName(fileName).Trim();
+            if (safeName.Length == 0)
+            {
+                return Result.Failure<string>(new Error("FileNameRequired", "File name is required", ErrorKind.Validation));
+            }
+            var keyName = $"{careHomeId}/{folder}/{Guid.NewGuid():N}_{safeName}";
+
+           
             try
             {
                 var putRequest = new PutObjectRequest
                 {
                     BucketName = bucketName,
-                    FilePath = filepath,
                     Key = keyName,
+                    InputStream = content,
+                    // The caller owns the stream and disposes it.
+                    AutoCloseStream = false,
+                    ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType,
                     ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256
                 };
-                await client.PutObjectAsync(putRequest, cancellationToken);
+                await _s3Client.PutObjectAsync(putRequest, cancellationToken);
                 return Result.Success(keyName);
             }
             catch (AmazonS3Exception ex)
             {
-                logger.LogError($"Error uploading file to S3: {ex.Message}");
+                _logger.LogError(ex, "Error uploading {Key} to S3 bucket {Bucket}", keyName, bucketName);
                 throw;
             }
-            
-           
-            
         }
     }
 }

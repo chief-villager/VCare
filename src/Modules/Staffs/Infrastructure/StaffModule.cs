@@ -38,10 +38,6 @@ namespace Staffs.Infrastructure
             var storageConfiguration = configuration.GetSection("Storage");
             services.AddOptions<StorageEntity>().Bind(storageConfiguration).ValidateOnStart().ValidateDataAnnotations();
 
-            // Raised by the staff aggregate; the handler mints the confirmation
-            // link and hands it to the outbox rather than sending it inline.
-            services.AddScoped<VCare.SharedKernel.Abstractions.IDomainEventHandler<VCare.SharedKernel.Domain.StaffCreatedEvent>,
-                Staffs.Infrastructure.Repositories.StaffEventHandler>();
             services.AddIdentity<ApplicationUser, ApplicationRole>()
                 .AddEntityFrameworkStores<StaffDbContext>()
                 .AddDefaultTokenProviders();

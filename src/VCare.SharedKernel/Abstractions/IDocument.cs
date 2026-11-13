@@ -8,11 +8,11 @@ namespace VCare.SharedKernel.Abstractions
 {
     public interface IDocumentService
     {
-        Task<Result<string>> WritingAnObjectAsync(string bucketName, string filepath, string careHomeId, CancellationToken cancellationToken = default);
+        // Uploads take the request's file content as a stream. A path would be read
+        // from the API server's own disk, which never holds the uploaded file.
+        Task<Result<string>> WritingAnObjectAsync(string bucketName, Stream content, string fileName, string contentType, string careHomeId, CancellationToken cancellationToken = default);
         Task<(Stream Content, string ContentType)> GetObjectAsync(string objectKey, string sourceBucket, CancellationToken cancellationToken = default);
-        Task<Result<string>> UploadProfileImageAsync(string bucketName, string filepath, string careHomeId, CancellationToken cancellationToken = default);
+        Task<Result<string>> UploadProfileImageAsync(string bucketName, Stream content, string fileName, string contentType, string careHomeId, CancellationToken cancellationToken = default);
         Task<(Stream Content, string ContentType)> GetProfileImageAsync(string objectKey, string sourceBucket, CancellationToken cancellationToken = default);
-
-
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Outbox.Application.Contract;
 using Outbox.Domain;
 using VCare.SharedKernel.Abstractions;
+using VCare.SharedKernel.Results;
 
 namespace Outbox.Application.Services
 {
@@ -36,8 +37,24 @@ namespace Outbox.Application.Services
                         continue;
                     }
 
-                    var result = await notificationService.ProcessEmailNotificationAsync(
-                        message.Value.Payload, message.Value.PayloadName, stoppingToken);
+                    // A send that throws (SMTP down, bad address, bad payload) is a
+                    // failure of this message, so it is recorded as Failed and counts
+                    // toward MaxAttempts. Left to the outer catch, the status never
+                    // changed, RetryCount never moved, and the message was retried on
+                    // every lease expiry forever. Shutdown is not a failure: the lease
+                    // simply expires and the message is picked up again.
+                    Result result;
+                    try
+                    {
+                        result = await notificationService.ProcessEmailNotificationAsync(
+                            message.Value.Payload, message.Value.PayloadName, stoppingToken);
+                    }
+                    catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                    {
+                        logger.LogWarning(ex, "Sending outbox message {MessageId} ({PayloadName}) failed.",
+                            message.Value.Id, message.Value.PayloadName);
+                        result = Result.Failure(new Error("Outbox.SendFailed", ex.Message, ErrorKind.Validation));
+                    }
 
                     var status = result.IsSuccess ? nameof(OutboxStatus.Done) : nameof(OutboxStatus.Failed);
                     await outboxService.UpdateMessageStatus(status, message.Value.Id, stoppingToken);

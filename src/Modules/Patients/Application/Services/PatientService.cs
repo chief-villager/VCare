@@ -36,9 +36,9 @@ internal  class PatientService(
             {
                 return Result.Failure<string>(new Error("400", "The uploaded file is empty.", ErrorKind.Validation));
             }
-            var filePath = Path.GetFullPath(formFile.FileName);
-            
-            var key = await documentService.WritingAnObjectAsync(BucketName, filePath, currentUser.CareHomeId.ToString(), cancellationToken);
+            await using var content = formFile.OpenReadStream();
+            var key = await documentService.WritingAnObjectAsync(BucketName, content, formFile.FileName,
+                formFile.ContentType, currentUser.CareHomeId.ToString(), cancellationToken);
             if (key.IsFailure)
             {
                 return Result.Failure<string>(key.Error);
@@ -65,30 +65,39 @@ internal  class PatientService(
             {
                 return Result.Failure<(Stream Content, string ContentType)>(new Error("403", "You are not authorized to view documents for this patient", ErrorKind.Forbidden));
             }
-            var document = await documentService.GetObjectAsync(BucketName, key, cancellationToken);
+            var document = await documentService.GetObjectAsync(objectKey: key, sourceBucket: BucketName, cancellationToken);
             return Result.Success(document);
         }
 
-        public Task<Result<string>> UploadProfileImageForPatientAsync(PatientId patientId, IFormFile formFile, CancellationToken cancellationToken)
+        public async Task<Result<string>> UploadProfileImageForPatientAsync(PatientId patientId, IFormFile formFile, CancellationToken cancellationToken)
         {
             if (formFile.Length <= 0)
             {
-                return Task.FromResult(Result.Failure<string>(new Error("400", "The uploaded file is empty.", ErrorKind.Validation)));
+                return Result.Failure<string>(new Error("400", "The uploaded file is empty.", ErrorKind.Validation));
             }
-            var patient = repository.GetByIdAsync(patientId.Value, cancellationToken).Result;
+            var patient = await repository.GetByIdAsync(patientId.Value, cancellationToken);
             if (patient is null)
             {
-                return Task.FromResult(Result.Failure<string>(new Error("404", "Patient not found", ErrorKind.NotFound)));
+                return Result.Failure<string>(new Error("404", "Patient not found", ErrorKind.NotFound));
             }
             if (currentUser.CareHomeId != patient.CareHomeId.Value)
             {
-                return Task.FromResult(Result.Failure<string>(new Error("403", "You are not authorized to upload profile image for this patient", ErrorKind.Forbidden)));
+                return Result.Failure<string>(new Error("403", "You are not authorized to upload profile image for this patient", ErrorKind.Forbidden));
             }
-            var result = documentService.UploadProfileImageAsync(BucketName, formFile.FileName, currentUser.CareHomeId.ToString(), cancellationToken);
-            patient.UpdateProfilePicture(result.Result.Value);
-            repository.SaveChangesAsync(cancellationToken);
-            return result;
-            
+            await using var content = formFile.OpenReadStream();
+            var key = await documentService.UploadProfileImageAsync(BucketName, content, formFile.FileName,
+                formFile.ContentType, currentUser.CareHomeId.ToString(), cancellationToken);
+            if (key.IsFailure)
+            {
+                return key;
+            }
+            var updated = patient.UpdateProfilePicture(key.Value);
+            if (updated.IsFailure)
+            {
+                return Result.Failure<string>(updated.Error);
+            }
+            await repository.SaveChangesAsync(cancellationToken);
+            return key;
         }
 
 
