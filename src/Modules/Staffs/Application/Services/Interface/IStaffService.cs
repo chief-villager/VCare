@@ -35,11 +35,11 @@ namespace Staffs.Application.Services.Interface
         /// <summary>Ends a session by revoking every live token in its family.</summary>
         Task<Result> LogoutStaffAsync(string refreshToken, CancellationToken cancellationToken);
 
-        /// <summary>Builds the callback link a staff member follows to confirm their email address.</summary>
-        Task<Result<string>> GenerateConfirmEmailLinkAsync(string email);
+        /// <summary>Emails a new verification link if the account exists and is unverified. Succeeds either way.</summary>
+        Task<Result> ResendEmailVerificationLinkAsync(string email, CancellationToken cancellationToken);
 
-        /// <summary>Confirms a staff member's email using the token issued by <see cref="GenerateConfirmEmailLinkAsync"/>.</summary>
-        Task<Result<bool>> ConfirmEmailAsync(string email, string token);
+        /// <summary>Verifies a staff member's email using the token from the emailed link.</summary>
+        Task<Result> VerifyEmailAsync(string email, string token);
 
         /// <summary>Builds the callback link a staff member follows to reset a forgotten password.</summary>
         Task<Result> RequestPasswordResetAsync(string email, CancellationToken cancellationToken);

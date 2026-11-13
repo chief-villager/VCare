@@ -35,6 +35,12 @@ namespace Medications.Infrastructure.Configuration
             builder.ToTable("MedicationAdminstration", MedicationDbContext.Schema);
             builder.HasKey(x => x.Id);
             builder.HasIndex(x => x.CareHomeId);
+            // One record per scheduled slot. Sign-off and the missed-dose recorder
+            // can race for the same slot; the database, not a prior read, decides
+            // who wins. PRN doses have no slot, so they are left out.
+            builder.HasIndex(x => new { x.MedicationOrderId, x.ScheduledFor })
+                .IsUnique()
+                .HasFilter("[ScheduledFor] IS NOT NULL");
         }
     }
 
@@ -71,7 +77,7 @@ namespace Medications.Infrastructure.Configuration
                     DisplayLetter = "T",
                 },
                 new {
-                    Id = Guid.Parse("db5662a7-5f67-4890-841f-c567d890e123"),
+                    Id = OutcomeCode.MissedId,
                     Name = "Missed",
                     DisplayLetter = "M",
                 },

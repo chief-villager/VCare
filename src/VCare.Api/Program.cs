@@ -22,6 +22,9 @@ using Microsoft.Data.SqlClient;
 using Scalar.AspNetCore;
 using CarePlans.Presentation;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
+using Amazon;
+using Amazon.S3;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddValidation();
@@ -32,7 +35,8 @@ var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddOptions<JwtSettings>().Bind(jwt).
             ValidateOnStart().ValidateDataAnnotations();
 var hosting = builder.Configuration.GetSection("Hosting");
-builder.Services.AddOptions<Hosting>().Bind(hosting);
+builder.Services.AddOptions<Hosting>().Bind(hosting).
+            ValidateOnStart().ValidateDataAnnotations();
 
 // The caller's identity + care home, resolved from the JWT per request.
 builder.Services.AddHttpContextAccessor();
@@ -41,6 +45,11 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // Walks an aggregate's raised events to their handlers. Scoped, so the
 // handlers it resolves share the request's DbContexts.
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+// One S3 client for the app's lifetime. It is thread-safe and keeps the connection
+// pool and credentials; the container disposes it on shutdown.
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+    new AmazonS3Client(RegionEndpoint.GetBySystemName(
+        sp.GetRequiredService<IOptions<StorageEntity>>().Value.Region)));
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 // Each module registers its own DbContext, repositories and services.
@@ -57,6 +66,8 @@ builder.Services.AddVisitationModule(builder.Configuration);
 // connection, which is what lets a staff write and its outbox row commit as one.
 builder.Services.AddScoped<DbConnection>(_ =>
     new SqlConnection(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddOptions<StorageEntity>().Bind(builder.Configuration.GetSection("Storage")).ValidateDataAnnotations();
 
 // Outbox owns the queue and the background drain; Notifications owns delivery.
 // Both must be registered for a domain event to end up as an email.

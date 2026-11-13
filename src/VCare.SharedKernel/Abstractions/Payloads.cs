@@ -9,26 +9,4 @@ namespace VCare.SharedKernel.Abstractions
     {
         
     }
-    public sealed class StaffCreatedEventPayload(
-        string email,
-        string userName,
-        string url) : IOutboxPayload
-    {
-        
-        public string Email { get; } = email;
-        public string UserName { get; } = userName;
-        public string Url { get; } = url;
-    }
-
-     public sealed class PassWordResetEventPayload(
-        string email,
-        string userName,
-        string url) : IOutboxPayload
-    {
-        
-        public string Email { get; } = email;
-        public string UserName { get; } = userName;
-        public string Url { get; } = url;
-    }
-
 }

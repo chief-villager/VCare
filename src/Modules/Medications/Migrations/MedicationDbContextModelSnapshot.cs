@@ -111,7 +111,9 @@ namespace Vcare.Modules.Medications.Migrations
 
                     b.HasIndex("CareHomeId");
 
-                    b.HasIndex("MedicationOrderId");
+                    b.HasIndex("MedicationOrderId", "ScheduledFor")
+                        .IsUnique()
+                        .HasFilter("[ScheduledFor] IS NOT NULL");
 
                     b.ToTable("MedicationAdminstration", "Medication");
                 });

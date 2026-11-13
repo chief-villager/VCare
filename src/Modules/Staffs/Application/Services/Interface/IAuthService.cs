@@ -29,9 +29,14 @@ namespace Staffs.Application.Services.Interface
         /// <summary>Ends a session by revoking every live token in its family.</summary>
         Task<Result> LogoutAsync (string refreshToken, CancellationToken cancellationToken);
 
-        Task<Result<string>> GenerateConfirmEmailLink( string email);
+        /// <summary>Builds the link a user follows to verify their email address.</summary>
+        Task<Result<string>> GenerateEmailVerificationLinkAsync(string email);
 
-        Task<Result<bool>> ConfirmEmailAsync(string email, string code);
+        /// <summary>True only when a user with this email exists and has not verified it.</summary>
+        Task<bool> NeedsEmailVerificationAsync(string email);
+
+        /// <summary>Verifies the user's email with the token from a <see cref="GenerateEmailVerificationLinkAsync"/> link.</summary>
+        Task<Result> VerifyEmailAsync(string email, string token);
 
         Task<Result<string>> GetPasswordResetcode(string email);
 

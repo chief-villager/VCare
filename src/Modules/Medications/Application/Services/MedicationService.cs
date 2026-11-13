@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Medications.Application.Abstracts;
 using Medications.Application.Services.Interfaces;
+using Medications.Domain;
 using Medications.Domain.Entities;
 using Medications.Domain.Enum;
 using VCare.SharedKernel.Abstractions;
@@ -128,35 +129,43 @@ namespace Medications.Application.Services
             {
                 return Result.Failure<MedicationAdministrationResponse>(MedicationErrors.NotAScheduledSlot);
             }
-            if (await _medicalAdministrationRepository.Find(orderId, scheduledFor) is not null)
+            var existing = await _medicalAdministrationRepository.Find(orderId, scheduledFor);
+            if (existing is not null)
             {
-                return Result.Failure<MedicationAdministrationResponse>(MedicationErrors.DoseAlreadyRecorded);
+                // Already recorded missed (by the recorder, or an earlier late try):
+                // say why, rather than a bare "already recorded".
+                return Result.Failure<MedicationAdministrationResponse>(existing.IsMissed
+                    ? MedicationErrors.AdministrationWindowElapsed
+                    : MedicationErrors.DoseAlreadyRecorded);
             }
-            var now = DateTime.Now;
-            var late = now > scheduledFor.AddHours(1);
 
-            // A late dose is signed off as missed rather than with the caller's outcome:
-            // nothing was administered, so there is no administration time, and the
-            // caller is told via a failure that their outcome was not recorded.
-            var outcomeName = late ? "missed" : outcome;
-            var outcomeResult = await outcomeRepository.GetOutcomeByName(outcomeName, token);
+            // Same rule as the MAR chart and the missed-dose recorder: one hour of grace.
+            var now = DateTime.Now;
+            if (DoseWindow.HasClosed(scheduledFor, now))
+            {
+                // Too late, and the recorder has not got to this slot yet. Record it
+                // missed now, attributed to the carer who tried, and refuse their
+                // outcome: nothing was given in the window.
+                var missed = MedicationAdministration.RecordMissed(order, scheduledFor, staffId,
+                    "Did not make it in time to administer medication");
+                await _medicalAdministrationRepository.AddAsync(missed);
+                await _medicalAdministrationRepository.SaveChangesAsync(token);
+                return Result.Failure<MedicationAdministrationResponse>(MedicationErrors.AdministrationWindowElapsed);
+            }
+
+            var outcomeResult = await outcomeRepository.GetOutcomeByName(outcome, token);
             if (outcomeResult == null)
             {
                 return Result.Failure<MedicationAdministrationResponse>("Outcome not Found");
             }
             var administration = MedicationAdministration.Create(orderId, order.PatientId.Value, order.CareHomeId.Value, scheduledFor,
-                late ? null : now, outcomeResult.Id, staffId,
-                late ? "Did not make it in time to administer medication" : notes);
+                now, outcomeResult.Id, staffId, notes);
             if (administration.IsFailure)
             {
                 return Result.Failure<MedicationAdministrationResponse>(administration.Error);
             }
             await _medicalAdministrationRepository.AddAsync(administration.Value);
             await _medicalAdministrationRepository.SaveChangesAsync(token);
-            if (late)
-            {
-                return Result.Failure<MedicationAdministrationResponse>(MedicationErrors.AdministrationWindowElapsed);
-            }
             return Result.Success(new MedicationAdministrationResponse(
                 administration.Value.Id.Value,
                 administration.Value.MedicationOrderId.Value,

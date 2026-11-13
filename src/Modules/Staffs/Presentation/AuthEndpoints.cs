@@ -21,8 +21,8 @@ namespace Staffs.Presentation
             auth.MapPost("/login",Login);
             auth.MapPost("/refresh",Refresh);
             auth.MapPost("/logout",Logout);
-            auth.MapPost("/confirm-email",RequestEmailConfirmation);
-            auth.MapGet("/confirm-email",ConfirmEmail);
+            auth.MapGet("/verify-email",VerifyEmail);
+            auth.MapPost("/verify-email/resend",ResendVerificationLink);
             auth.MapPost("/forgot-password",RequestPasswordReset);
             auth.MapPost("/Reset_password",ResetPassword);
         }
@@ -55,18 +55,21 @@ namespace Staffs.Presentation
             return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
-        // Hands back the callback link for the staff member to follow.
-        public static async Task<IResult>RequestEmailConfirmation(EmailRequest request, IStaffService staffService)
+        // The target of the emailed link: a GET, because the staff member arrives by browser.
+        public static async Task<IResult>VerifyEmail(string email, string token, IStaffService staffService)
         {
-            var response = await staffService.GenerateConfirmEmailLinkAsync(request.Email);
-            return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
+            var response = await staffService.VerifyEmailAsync(email, token);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok("Email verified. You can now sign in.");
         }
 
-        // The target of that link: a GET, because the staff member arrives by browser.
-        public static async Task<IResult>ConfirmEmail(string email, string token, IStaffService staffService)
+        // For a staff member who never got the link, or whose link expired. 202
+        // whether or not a link was sent, so the response gives nothing away about
+        // which emails are registered.
+        public static async Task<IResult>ResendVerificationLink(EmailRequest request,
+            IStaffService staffService, CancellationToken cancellationToken)
         {
-            var response = await staffService.ConfirmEmailAsync(email,token);
-            return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
+            var response = await staffService.ResendEmailVerificationLinkAsync(request.Email, cancellationToken);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Accepted((string?)null);
         }
 
         public static async Task<IResult>RequestPasswordReset(EmailRequest request, IStaffService staffService, CancellationToken cancellationToken)

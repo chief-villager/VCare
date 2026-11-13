@@ -57,6 +57,20 @@ namespace Medications.Infrastructure.Repositories
             return await _medicationOrderDb.MedicationOrders.Include( x => x.Schedule).FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken: cancellationToken);
         }
 
+        public async Task<List<MedicationOrder>> ActiveScheduledForAllCareHomesAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
+        {
+            // Read-only: the recorder writes administrations, never orders.
+            return await _medicationOrderDb.MedicationOrders
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Include(o => o.Schedule)
+                .Where(o => o.Status == Domain.Enum.OrderStatus.Active
+                         && !o.IsPrn
+                         && o.StartDate <= to
+                         && (o.EndDate == null || o.EndDate >= from))
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             return await _medicationOrderDb.SaveChangesAsync(cancellationToken);

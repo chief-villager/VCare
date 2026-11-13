@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Staffs.Application.Dto;
 using Staffs.Application.Services.Interface;
 using Staffs.Domain;
+using Staffs.Domain.Errors;
 using Staffs.Infrastructure;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
@@ -115,6 +116,16 @@ namespace Staffs.Application.Services
             {
                return Result.Failure<(string, string)>(Error.Unauthorized("Auth.InvalidCredentials", "invalid login credentials"));
             }
+
+            // New staff must confirm their email before they can sign in. Checked
+            // after the password, so only someone who already holds the password
+            // learns that the account exists but is unconfirmed. CheckPasswordAsync
+            // ignores Identity's SignIn.RequireConfirmedEmail option, so the check
+            // has to be made here.
+            if (!user.EmailConfirmed)
+            {
+                return Result.Failure<(string, string)>(Staffs.Domain.Errors.StaffErrors.EmailNotConfirmed);
+            }
             var role = await userManager.GetRolesAsync(user);
 
             // Identity and care home are read off the stored user, never taken from
@@ -151,31 +162,39 @@ namespace Staffs.Application.Services
             return await refreshTokenService.RevokeFamilyAsync(refreshToken, cancellationToken);
         }
 
-        public async Task<Result<string>>GenerateConfirmEmailLink(string email)
-        {   
-            var user = await userManager.FindByEmailAsync(email);
-            if (user == null)
-            {
-                return Result.Failure<string>("Invalid user");
-            }
-            string code = await userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackurl = $"{options.Value.BaseUrl}/api/auth/confirm-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(code)}";
-            return Result.Success<string>(callbackurl);
-        }
-
-        public async Task<Result<bool>> ConfirmEmailAsync(string email, string code)
+        // The link points at the GET /api/auth/verify-email endpoint.
+        public async Task<Result<string>> GenerateEmailVerificationLinkAsync(string email)
         {
             var user = await userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Result.Failure<bool>("Invalid user");
+                return Result.Failure<string>(StaffErrors.InvalidVerificationLink);
             }
-            var result = await userManager.ConfirmEmailAsync(user, code);
-            if (!result.Succeeded)
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = $"{options.Value.BaseUrl}/api/auth/verify-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
+            return Result.Success(link);
+        }
+
+        public async Task<bool> NeedsEmailVerificationAsync(string email)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            return user is not null && !user.EmailConfirmed;
+        }
+
+        public async Task<Result> VerifyEmailAsync(string email, string token)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
             {
-                return Result.Failure<bool>(string.Join("; ", result.Errors.Select(e => e.Description)));
+                return Result.Failure(StaffErrors.InvalidVerificationLink);
             }
-            return Result.Success(true);
+            // Following an old link after verifying is harmless; don't report it as an error.
+            if (user.EmailConfirmed)
+            {
+                return Result.Success();
+            }
+            var result = await userManager.ConfirmEmailAsync(user, token);
+            return result.Succeeded ? Result.Success() : Result.Failure(StaffErrors.InvalidVerificationLink);
         }
 
         public async Task<Result<string>> GetPasswordResetcode(string email)
@@ -196,7 +215,11 @@ namespace Staffs.Application.Services
              }
             
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackurl = $"{options.Value.BaseUrl}/api/auth/Reset_password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
+            // Points at the front-end page, not the API: following a link can't
+            // supply the new password, so the page collects it and posts it on.
+            var page = options.Value.ResetPasswordPageUrl;
+            var separator = page.Contains('?') ? '&' : '?';
+            var callbackurl = $"{page}{separator}email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
             return Result.Success<string>(callbackurl);
         }
 

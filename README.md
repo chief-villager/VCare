@@ -121,7 +121,8 @@ keys:
 |---|---|
 | `ConnectionStrings:Default` | SQL Server connection string |
 | `Jwt:Key`, `Jwt:Issuer`, `Jwt:Audience`, `Jwt:DurationInMinutes` | Signing and lifetime of login tokens |
-| `Hosting:BaseUrl` | Public URL of the API, used in links sent by email |
+| `Hosting:BaseUrl` | Public URL of the API, including `https://`. Used in email verification links |
+| `Hosting:ResetPasswordPageUrl` | Front-end page that asks for a new password. Password reset emails link here with `email` and `token` in the query string |
 | `Smtp:Host`, `Smtp:Port`, `Smtp:User`, `Smtp:Password`, `Smtp:FromAddress`, `Smtp:FromName`, `Smtp:UseSsl` | Outgoing email |
 | `Storage:BaseUrl`, `Storage:BucketName` | S3 storage for documents and images |
 
@@ -165,7 +166,7 @@ which comes from their login token.
 | Area | Routes |
 |---|---|
 | Registration | `POST /api/carehome` (register a care home and its admin) |
-| Auth | `/api/auth/login`, `/logout`, `/refresh`, `/confirm-email`, `/forgot-password`, `/Reset_password` |
+| Auth | `/api/auth/login`, `/logout`, `/refresh`, `/verify-email`, `/verify-email/resend`, `/forgot-password`, `/Reset_password` |
 | Care home | `PUT /api/carehome/me` |
 | Staff | `/api/staff`, plus `/{staffId}/document` and `/{staffId}/profile-image` |
 | Patients | `/api/patient`, plus `/{patientId}/document` and `/{patientId}/profile-image` |

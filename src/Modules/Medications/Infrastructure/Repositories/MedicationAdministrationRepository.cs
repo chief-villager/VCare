@@ -24,6 +24,24 @@ namespace Medications.Infrastructure.Repositories
             return await medicationDbContext.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task<HashSet<(Guid OrderId, DateTime ScheduledFor)>> RecordedSlotsForAllCareHomesAsync(
+            IReadOnlyCollection<Guid> orderIds, DateTime from, DateTime to, CancellationToken cancellationToken)
+        {
+            var ids = orderIds.Select(id => new MedicationOrderId(id)).ToList();
+            var rows = await medicationDbContext.MedicationAdministrations
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(a => ids.Contains(a.MedicationOrderId)
+                         && a.ScheduledFor != null
+                         && a.ScheduledFor >= from
+                         && a.ScheduledFor <= to)
+                .Select(a => new { a.MedicationOrderId, a.ScheduledFor })
+                .ToListAsync(cancellationToken);
+            return rows.Select(r => (r.MedicationOrderId.Value, r.ScheduledFor!.Value)).ToHashSet();
+        }
+
+        public void DiscardPendingChanges() => medicationDbContext.ChangeTracker.Clear();
+
         public async Task<MedicationAdministration?> Find(Guid orderId, DateTime scheduledFor)
         {
             var medicationOrderId = new MedicationOrderId(orderId);

@@ -69,8 +69,36 @@ namespace Medications.Domain.Entities
                 administration.ModifiedAt = modifiedAt.Value;
             }
             return Result.Success(administration);
-            
+
         }
+
+        /// <summary>Stands in for a staff member on records nobody signed: the
+        /// missed-dose recorder writes them, not a person.</summary>
+        public static readonly Guid SystemStaffId = Guid.Empty;
+
+        /// <summary>
+        /// A scheduled dose whose window closed unsigned. Nothing was given, so
+        /// there is no administration time. <paramref name="recordedByStaffId"/>
+        /// is the carer who tried to sign late, or <see cref="SystemStaffId"/>
+        /// when the background recorder found it.
+        /// </summary>
+        public static MedicationAdministration RecordMissed(MedicationOrder order, DateTime scheduledFor,
+            Guid recordedByStaffId, string notes) =>
+            new()
+            {
+                Id = MedicationAdministrationId.New(),
+                MedicationOrderId = order.Id,
+                PatientId = order.PatientId,
+                CareHomeId = order.CareHomeId,
+                ScheduledFor = scheduledFor,
+                AdministeredAt = null,
+                OutcomeCodeId = OutcomeCode.MissedId,
+                AdministeredByStaffId = recordedByStaffId,
+                Notes = notes,
+                CreatedAt = DateTime.Now
+            };
+
+        public bool IsMissed => OutcomeCodeId == OutcomeCode.MissedId;
 
 
        
