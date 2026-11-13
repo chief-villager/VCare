@@ -32,6 +32,7 @@ namespace Medications.Application.Services
             
                                 
             // Build each row: expand the plan, then match each slot to a signature.
+            var now = DateTime.Now;
             var rows = orders.Select(order =>
             {
                 var cells = _expander.ExpandSchedule(order, from, to)     // expected slots
@@ -39,9 +40,10 @@ namespace Medications.Application.Services
                     {
                         DueAt = slot.DueAt,
                         Dose = slot.Dose,
+                        Now = now,
                         // look in the index under (this order, this slot):
                         //   found    → attach the signature   → IsSigned true
-                        //   not found→ FirstOrDefault() = null → blank or missed
+                        //   not found→ FirstOrDefault() = null → not due, due or missed
                         Administration = scheduledLookup[(order.Id.Value, slot.DueAt)].FirstOrDefault()
                         
                     })
@@ -64,14 +66,15 @@ namespace Medications.Application.Services
             //
             //     slot 1 Aug 08:00 → index HIT (SA)  → IsSigned=true   → shows "SA"
             //     slot 1 Aug 20:00 → index HIT (JT)  → IsSigned=true   → shows "JT"
-            //     slot 2 Aug 08:00 → miss → null → past & unsigned      → IsMissed=true (red gap)
+            //     slot 2 Aug 08:00 → HIT ("Missed", recorder)          → IsMissed=true (red gap)
+            //     slot 2 Aug 12:00 → miss → null → inside the grace hour→ IsDue=true (amber)
             //     slot 2 Aug 20:00 → miss → null → FUTURE (8pm not here)→ blank, not due yet
             //     slot 3 Aug 08:00 → miss → null → future               → blank
             //       ... etc.
             //
-            //   Notice: nobody ever stored "missed" or "blank". Those states are
-            //   COMPUTED from whether a signature exists + whether the time has passed.
-            //   The chart is the match between plan and events — nothing more.
+            //   "Missed" is stored by MissedDoseRecorder once the grace hour is up.
+            //   Until it runs, the cell still reads missed: DoseWindow computes it
+            //   from the same rule, so the chart never waits on the recorder.
     
 
         }
@@ -116,6 +119,7 @@ namespace Medications.Application.Services
                 cell.Dose,
                 cell.IsSigned ? MarCellState.Signed
                     : cell.IsMissed ? MarCellState.Missed
+                    : cell.IsDue ? MarCellState.Due
                     : MarCellState.NotDue,
                 cell.Administration?.Id.Value,
                 // TODO: an administration carries only OutcomeCodeId. Filling the

@@ -31,6 +31,10 @@ public static class MedicationsModule
         services.AddScoped<ScheduleExpander>();
         services.AddScoped<IMedicationService, MedicationService>();
 
+        // Stores "Missed" for doses whose grace hour ran out unsigned (DoseWindow).
+        services.AddScoped<MissedDoseRecorder>();
+        services.AddHostedService<MissedDoseBackgroundService>();
+
         return services;
     }
 }

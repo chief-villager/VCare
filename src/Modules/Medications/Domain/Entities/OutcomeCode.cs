@@ -10,6 +10,10 @@ namespace Medications.Domain.Entities
 {
     internal class OutcomeCode
     {
+        // Seeded reference row (see OutcomeCodeConfiguration). Code that records or
+        // recognises a missed dose uses this id rather than looking it up by name.
+        public static readonly Guid MissedId = Guid.Parse("db5662a7-5f67-4890-841f-c567d890e123");
+
         public  Guid Id {get; private set;}
         public string Name {get; private set;} = null!; //Refused
         public string DisplayLetter { get; private set; }  = null!;// "R"

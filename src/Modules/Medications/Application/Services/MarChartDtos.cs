@@ -54,13 +54,15 @@ namespace Medications.Application.Services
     );
 
     /// <summary>
-    /// The three states a square can be in. One enum rather than the entity's
-    /// IsSigned/IsMissed pair, so the wire cannot carry "signed and missed".
+    /// The states a square can be in. One enum rather than the entity's
+    /// IsSigned/IsMissed/IsDue flags, so the wire cannot carry "signed and missed".
+    /// The window is DoseWindow's: due from DueAt, missed one hour after.
     /// </summary>
     public enum MarCellState
     {
-        NotDue = 0,   // unsigned, still in the future — blank square
-        Missed,       // unsigned, the time has passed — red gap
-        Signed        // an administration exists, whatever its outcome
+        NotDue = 0,   // nothing recorded, still in the future — blank square
+        Missed = 1,   // the window closed unsigned, stored or not yet — red gap
+        Signed = 2,   // a carer recorded an outcome (Taken, Refused...)
+        Due = 3       // time has come, still inside the grace hour — amber, signable
     }
 }
