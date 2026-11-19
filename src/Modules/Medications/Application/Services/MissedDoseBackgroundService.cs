@@ -11,6 +11,7 @@ namespace Medications.Application.Services
     /// </summary>
     internal sealed class MissedDoseBackgroundService(
         IServiceScopeFactory scopeFactory,
+        TimeProvider clock,
         ILogger<MissedDoseBackgroundService> logger) : BackgroundService
     {
         internal static readonly TimeSpan Interval = TimeSpan.FromMinutes(5);
@@ -25,7 +26,8 @@ namespace Medications.Application.Services
                     // A scope per pass: its DbContext must not outlive the pass.
                     await using var scope = scopeFactory.CreateAsyncScope();
                     var recorder = scope.ServiceProvider.GetRequiredService<MissedDoseRecorder>();
-                    await recorder.RecordMissedDosesAsync(DateTime.Now, stoppingToken);
+                    // Dose times are wall-clock times in the home, so "now" is too.
+                    await recorder.RecordMissedDosesAsync(clock.GetLocalNow().DateTime, stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {

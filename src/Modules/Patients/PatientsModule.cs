@@ -26,6 +26,10 @@ public static class PatientsModule
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<PatientsDbContext>());
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IPatientService, PatientService>();
+
+        // Other modules check a patient exists in the caller's home through this,
+        // not by reaching into this module's tables.
+        services.AddScoped<IPatientDirectory, PatientDirectory>();
         var storageConfiguration = configuration.GetSection("Storage");
             services.AddOptions<StorageEntity>().Bind(storageConfiguration);
 

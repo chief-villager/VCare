@@ -26,4 +26,13 @@ internal sealed class PatientRepository(PatientsDbContext context) : IPatientRep
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default) =>
         await context.SaveChangesAsync(cancellationToken);
+
+    public async Task<bool> OwnsStorageKeyAsync(Guid patientId, string storageKey, CancellationToken cancellationToken = default)
+    {
+        var id = new PatientId(patientId);
+        return await context.Patients
+            .Where(p => p.Id == id)
+            .AnyAsync(p => p.ProfilePictureUrl == storageKey
+                        || p.Documents.Any(d => d.StorageKeyName == storageKey), cancellationToken);
+    }
 }

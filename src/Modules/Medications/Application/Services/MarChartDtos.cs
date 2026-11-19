@@ -50,19 +50,24 @@ namespace Medications.Application.Services
         string? OutcomeName,
         DateTime? AdministeredAt,
         Guid? AdministeredByStaffId,
-        string? Notes
+        string? Notes,
+        // Signed after the on-time window closed, and why.
+        bool IsLate = false,
+        string? Reason = null
     );
 
     /// <summary>
     /// The states a square can be in. One enum rather than the entity's
     /// IsSigned/IsMissed/IsDue flags, so the wire cannot carry "signed and missed".
-    /// The window is DoseWindow's: due from DueAt, missed one hour after.
+    /// The window is DoseWindow's: due from an hour before DueAt, missed an hour after.
     /// </summary>
     public enum MarCellState
     {
         NotDue = 0,   // nothing recorded, still in the future — blank square
         Missed = 1,   // the window closed unsigned, stored or not yet — red gap
         Signed = 2,   // a carer recorded an outcome (Taken, Refused...)
-        Due = 3       // time has come, still inside the grace hour — amber, signable
+        Due = 3,      // inside the window around DueAt — amber, signable
+        NotRecorded = 4 // its window closed before this order was entered into VCare:
+                        // nothing was expected here, so it is not a missed dose
     }
 }

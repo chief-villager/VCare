@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
 using Medications.Application.Abstracts;
 using Medications.Domain.Entities;
 using Medications.Infrastructure.Persistence;
@@ -13,7 +8,7 @@ namespace Medications.Infrastructure.Repositories
 {
     internal class MedicationAdministrationRepository(MedicationDbContext medicationDbContext) : IMedicalAdministrationRepository
     {
-       
+
         public async Task AddAsync(MedicationAdministration administration)
         {
             await medicationDbContext.MedicationAdministrations.AddAsync(administration);
@@ -49,25 +44,33 @@ namespace Medications.Infrastructure.Repositories
             ( x => x.MedicationOrderId == medicationOrderId && x.ScheduledFor == scheduledFor);
         }
 
-        /// <summary>
-        /// returns an enumerable of medicationadministered already within the entered time frame
-        /// </summary>
-        /// <param name="patientId"></param>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        /// <returns></returns>
-        public IEnumerable<MedicationAdministration> ForResidentBetween(Guid patientId, DateOnly from, DateOnly to)
+        // Scheduled doses are found by their slot. PRN doses have no slot, so they
+        // are found by when they were given; without this branch they never reached
+        // the MAR chart at all.
+        public async Task<List<MedicationAdministration>> ForResidentBetweenAsync(Guid patientId, DateOnly from, DateOnly to,
+            CancellationToken cancellationToken)
         {
             var patient = new PatientId(patientId);
-            var result = medicationDbContext.MedicationAdministrations
-                        .Where(a => a.PatientId == patient
-                                && a.ScheduledFor >= from.ToDateTime(TimeOnly.MinValue)
-                                && a.ScheduledFor <= to.ToDateTime(TimeOnly.MaxValue)).ToList();
-            return result;
-            
+            var start = from.ToDateTime(TimeOnly.MinValue);
+            var end = to.ToDateTime(TimeOnly.MaxValue);
+            return await medicationDbContext.MedicationAdministrations
+                .Where(a => a.PatientId == patient
+                         && ((a.ScheduledFor != null && a.ScheduledFor >= start && a.ScheduledFor <= end)
+                          || (a.ScheduledFor == null && a.AdministeredAt >= start && a.AdministeredAt <= end)))
+                .ToListAsync(cancellationToken);
         }
 
-
-        
+        public async Task<List<DateTime>> PrnGivenTimesAsync(Guid orderId, DateTime from, DateTime to, CancellationToken cancellationToken)
+        {
+            var medicationOrderId = new MedicationOrderId(orderId);
+            return await medicationDbContext.MedicationAdministrations
+                .Where(a => a.MedicationOrderId == medicationOrderId
+                         && a.ScheduledFor == null
+                         && a.OutcomeCodeId == OutcomeCode.TakenId
+                         && a.AdministeredAt >= from
+                         && a.AdministeredAt <= to)
+                .Select(a => a.AdministeredAt!.Value)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

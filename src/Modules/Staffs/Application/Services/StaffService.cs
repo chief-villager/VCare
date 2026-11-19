@@ -110,6 +110,15 @@ namespace Staffs.Application.Services
             {
                 return Result.Failure<(Stream Content, string ContentType)>(new Error("403", "You are not authorized to view documents for this staff", ErrorKind.Forbidden));
             }
+
+            // The key comes from the client. Checking only that the staff member is
+            // ours and then fetching any key handed over other homes' files, or
+            // residents' records, to anyone holding a key. Only this staff member's
+            // own documents and profile image may come back.
+            if (string.IsNullOrWhiteSpace(key) || !await staffRepository.OwnsStorageKeyAsync(staffId, key, cancellationToken))
+            {
+                return Result.Failure<(Stream Content, string ContentType)>(Error.NotFound("Staffs.DocumentNotFound", "Document not found."));
+            }
             var document = await documentService.GetObjectAsync(objectKey: key, sourceBucket: options.Value.BucketName, cancellationToken);
             return Result.Success(document);
         }

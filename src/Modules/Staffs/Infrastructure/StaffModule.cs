@@ -35,6 +35,10 @@ namespace Staffs.Infrastructure
             services.AddScoped<Staffs.Application.Services.Interface.IRefreshTokenRepository, Staffs.Infrastructure.Repositories.RefreshTokenRepository>();
             services.AddScoped<VCare.SharedKernel.Abstractions.IRefreshToken, Staffs.Application.Services.RefreshTokenGenerator>();
             services.AddScoped<Staffs.Application.Services.Interface.IStaffPrincipalReader, StaffPrincipalReader>();
+
+            // Other modules check a staff member exists in the caller's home
+            // through this, not by reaching into this module's tables.
+            services.AddScoped<VCare.SharedKernel.Abstractions.IStaffDirectory, Staffs.Infrastructure.Repositories.StaffDirectory>();
             var storageConfiguration = configuration.GetSection("Storage");
             services.AddOptions<StorageEntity>().Bind(storageConfiguration).ValidateOnStart().ValidateDataAnnotations();
 

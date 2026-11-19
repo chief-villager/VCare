@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Medications.Application.Abstracts;
 using Medications.Domain.Entities;
 using Medications.Infrastructure.Persistence;
@@ -18,5 +14,8 @@ namespace Medications.Infrastructure.Repositories
            var target = name.ToLower();
            return await dbContext.Outcomes.FirstOrDefaultAsync(o => o.Name.ToLower() == target, cancellationToken);
         }
+
+        public async Task<IReadOnlyList<OutcomeCode>> GetAllAsync(CancellationToken cancellationToken) =>
+            await dbContext.Outcomes.AsNoTracking().ToListAsync(cancellationToken);
     }
 }

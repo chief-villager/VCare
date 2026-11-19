@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Medications.Application.Services;
 using Medications.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using VCare.SharedKernel.Results;
 
 namespace Medications.Presentation
 {
@@ -20,13 +16,11 @@ namespace Medications.Presentation
 
         }
 
-        public static async Task<IResult> GetMarChart(Guid patientId,IMarChartService marChartService,[FromQuery] int year, [FromQuery]  int month)
+        public static async Task<IResult> GetMarChart(Guid patientId, IMarChartService marChartService,
+            [FromQuery] int year, [FromQuery] int month, CancellationToken token)
         {
-            var marChart = await marChartService.BuildChart(patientId,year,month);
-            return marChart == null ? TypedResults.Ok("There is no recorded medication for this month")
-                : TypedResults.Ok(marChart);
-            
-            
+            var marChart = await marChartService.BuildChart(patientId, year, month, token);
+            return marChart.IsFailure ? marChart.ToProblem() : TypedResults.Ok(marChart.Value);
         }
     }
 }

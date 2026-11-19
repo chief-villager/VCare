@@ -43,9 +43,13 @@ namespace Medications.Application.Services
             var missed = live
                 .SelectMany(order => expander.ExpandSchedule(order, from, to)
                     .Where(slot => DoseWindow.HasClosed(slot.DueAt, now)
+                                // A dose whose window closed before the order was entered
+                                // belongs to the home's earlier record, not to VCare: a
+                                // backdated admission order must not fill the MAR with misses.
+                                && !DoseWindow.ClosedBeforeOrderEntered(slot.DueAt, order.CreatedAt)
                                 && !recorded.Contains((slot.OrderId, slot.DueAt)))
                     .Select(slot => MedicationAdministration.RecordMissed(
-                        order, slot.DueAt, MedicationAdministration.SystemStaffId, Note)))
+                        order, slot.DueAt, MedicationAdministration.SystemStaffId, Note, now)))
                 .ToList();
 
             if (missed.Count == 0)

@@ -6,6 +6,7 @@ using Medications.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Medications;
 
@@ -27,6 +28,10 @@ public static class MedicationsModule
         services.AddScoped<IMedicalAdministrationRepository, MedicationAdministrationRepository>();
         services.AddScoped<IOutcomeRepository, OutComeRepisitory>();
         services.AddScoped<IMarChartService, MarChartService>();
+
+        // One clock for sign-off, the MAR chart and the missed-dose recorder, so
+        // they agree on whether a dose is due, and tests can set the time.
+        services.TryAddSingleton(TimeProvider.System);
 
         services.AddScoped<ScheduleExpander>();
         services.AddScoped<IMedicationService, MedicationService>();

@@ -89,6 +89,13 @@ namespace Vcare.Modules.Medications.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DoseGiven")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsLate")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("MedicationOrderId")
                         .HasColumnType("uniqueidentifier");
 
@@ -103,6 +110,10 @@ namespace Vcare.Modules.Medications.Migrations
 
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime?>("ScheduledFor")
                         .HasColumnType("datetime2");
@@ -161,6 +172,9 @@ namespace Vcare.Modules.Medications.Migrations
                     b.Property<string>("PrnMaxDose24h")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("PrnMaxDosesPer24h")
+                        .HasColumnType("int");
+
                     b.Property<int?>("PrnMinIntervalMinutes")
                         .HasColumnType("int");
 
@@ -176,6 +190,9 @@ namespace Vcare.Modules.Medications.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("StatusChangedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

@@ -42,5 +42,13 @@ namespace Staffs.Infrastructure.Repositories
         {
             return await dbContext.CommitandSaveAsync(cancellationToken);
         }
+
+        public async Task<bool> OwnsStorageKeyAsync(StaffId staffId, string storageKey, CancellationToken cancellationToken = default)
+        {
+            return await dbContext.Staffs
+                .Where(s => s.Id == staffId)
+                .AnyAsync(s => s.ProfilePictureUrl == storageKey
+                            || s.StaffDocuments.Any(d => d.StorageKeyName == storageKey), cancellationToken);
+        }
     }
 }

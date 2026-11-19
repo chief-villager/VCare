@@ -6,10 +6,17 @@ using VCare.SharedKernel.Results;
 
 namespace VCare.Modules.CarePlans.Application.Services;
 
-internal sealed class CarePlanService(ICarePlanRepository carePlanRepository, ICurrentUser currentUser) : ICarePlanService
+internal sealed class CarePlanService(ICarePlanRepository carePlanRepository, ICurrentUser currentUser, IPatientDirectory patients) : ICarePlanService
 {
     public async Task<Result<Guid>> CreateCarePlanAsync(Guid patientId, CreateCarePlanRequest request, CancellationToken token)
     {
+        // The patient comes from the URL and Patients owns it. Without this a plan
+        // could be filed against a mistyped id, or against another home's resident;
+        // and since the plan index is unique per patient, that would also block the
+        // real home from ever creating theirs.
+        if (!await patients.ExistsAsync(patientId, token))
+            return Result.Failure<Guid>(Error.NotFound("CarePlans.PatientNotFound", "Resident not found."));
+
         // One care plan per patient; the unique index on PatientId enforces it in the
         // database, this turns it into a 409 instead of a DbUpdateException.
         if (await carePlanRepository.ExistsForPatientAsync(new PatientId(patientId), token))

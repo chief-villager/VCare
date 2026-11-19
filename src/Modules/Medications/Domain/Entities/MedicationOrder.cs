@@ -19,12 +19,20 @@ namespace Medications.Domain.Entities
         public string? PrnIndication { get; private set; }   // "for pain"
         public int? PrnMinIntervalMinutes { get; private set; }
         public string? PrnMaxDose24h { get; private set; }
+
+        // How many PRN doses may be given in any 24 hours. PrnMaxDose24h is the
+        // prescriber's wording ("max 8 tablets"); this is the number the system enforces.
+        public int? PrnMaxDosesPer24h { get; private set; }
         public bool IsControlledDrug { get; private set; }
         public OrderStatus Status { get; private set; } 
         public ICollection<MedicationAdministration> Administrations { get; private set; } = [];
         public ICollection<DoseSchedule> Schedule { get; private set; }= [];
         public DateTime CreatedAt { get; private set; } = DateTime.Now;
         public DateTime? ModifiedAt { get; private set; } = null;
+
+        // When the order last left Active. The MAR chart keeps showing the doses
+        // that were due before this, so stopping an order never erases its history.
+        public DateTime? StatusChangedAt { get; private set; }
 
 
         private MedicationOrder(){}
@@ -37,7 +45,8 @@ namespace Medications.Domain.Entities
             bool isControlledDrug, OrderStatus orderStatus,
             IEnumerable<(string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, 
             DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, 
-            DateOnly? EffectiveTo, int Sequence)> doseSchedule, DateTime createdAt, DateTime? modifiedAt = null)
+            DateOnly? EffectiveTo, int Sequence)> doseSchedule, DateTime createdAt, DateTime? modifiedAt = null,
+            int? prnMaxDosesPer24h = null)
 
         {
              if (patientId == Guid.Empty)
@@ -56,6 +65,14 @@ namespace Medications.Domain.Entities
             if (isPrn && string.IsNullOrWhiteSpace(prnIndication))
                 return Result.Failure<MedicationOrder>(
                     "PRN indication is required for PRN medication.");
+
+            // Zero or negative limits would read as "no limit" to nobody and as a
+            // block on every dose to the code; refuse them rather than guess.
+            if (prnMinIntervalMinutes is < 1)
+                return Result.Failure<MedicationOrder>("The minimum interval between PRN doses must be at least one minute.");
+            if (prnMaxDosesPer24h is < 1)
+                return Result.Failure<MedicationOrder>("The maximum number of PRN doses in 24 hours must be at least one.");
+
             var order = new MedicationOrder
             {
                 Id = MedicationOrderId.New(),
@@ -71,6 +88,7 @@ namespace Medications.Domain.Entities
                 PrnIndication = prnIndication,
                 PrnMinIntervalMinutes = prnMinIntervalMinutes,
                 PrnMaxDose24h = prnMaxDose24h,
+                PrnMaxDosesPer24h = prnMaxDosesPer24h,
                 IsControlledDrug = isControlledDrug,
                 Status = orderStatus,
                 CreatedAt = createdAt
@@ -83,21 +101,36 @@ namespace Medications.Domain.Entities
             var schedules = order.ReplaceDetails(doseSchedule);
             if (schedules.IsFailure)
                 return Result.Failure<MedicationOrder>(schedules.Error);
+
+            // A regular order with nothing scheduled never falls due: the medicine
+            // would silently never be given. A PRN order's doses are never
+            // expanded, so a timed schedule on one would never fall due either.
+            if (!isPrn && order.Schedule.Count == 0)
+                return Result.Failure<MedicationOrder>("A regular order needs at least one dose schedule.");
+            if (!isPrn && order.Schedule.Any(s => s.FType == FrequencyType.Prn))
+                return Result.Failure<MedicationOrder>("The Prn frequency is only for as-required orders.");
+            if (isPrn && order.Schedule.Any(s => s.FType != FrequencyType.Prn))
+                return Result.Failure<MedicationOrder>("An as-required order cannot have timed doses. Record a separate regular order.");
+
             return Result.Success(order) ;
             
             
         }
 
-        public Result UpdateStatus(string status)
+        public Result UpdateStatus(string status, DateTime changedAt)
         {
             if( status == nameof(OrderStatus.Suspended) )
             {
                 Status = OrderStatus.Suspended;
+                StatusChangedAt = changedAt;
+                ModifiedAt = changedAt;
                 return Result.Success();
             }
             if ( status == nameof(OrderStatus.Discontinued))
             {
                 Status = OrderStatus.Discontinued;
+                StatusChangedAt = changedAt;
+                ModifiedAt = changedAt;
                 return Result.Success();
             }
             return Result.Failure("Invalid OrderStatus");

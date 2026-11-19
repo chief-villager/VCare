@@ -65,6 +65,15 @@ internal  class PatientService(
             {
                 return Result.Failure<(Stream Content, string ContentType)>(new Error("403", "You are not authorized to view documents for this patient", ErrorKind.Forbidden));
             }
+
+            // The key comes from the client. Checking only that the patient is ours
+            // and then fetching any key handed over another home's files, or this
+            // home's staff HR files, to anyone holding a key. Only this patient's
+            // own documents and profile image may come back.
+            if (string.IsNullOrWhiteSpace(key) || !await repository.OwnsStorageKeyAsync(patientId.Value, key, cancellationToken))
+            {
+                return Result.Failure<(Stream Content, string ContentType)>(Error.NotFound("Patients.DocumentNotFound", "Document not found."));
+            }
             var document = await documentService.GetObjectAsync(objectKey: key, sourceBucket: BucketName, cancellationToken);
             return Result.Success(document);
         }

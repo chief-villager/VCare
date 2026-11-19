@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Medications.Domain.Entities;
 using Medications.Domain.Enum;
 
 namespace Medications.Application.Services
 {
+   // CreatedAt is no longer taken from the client: when an order entered VCare is
+   // what decides which earlier doses the system can call missed, so the server
+   // stamps it. An old client still sending it is ignored, not rejected.
    public sealed record CreateMedicationOrderRequest
-   (    string MedicatioName, 
+   (    string MedicatioName,
         string MedicationRoute,
         string? Instructions,
         DateOnly StartDate,
@@ -21,7 +19,8 @@ namespace Medications.Application.Services
         bool IsControlledDrug,
         List<ScheduleRequest> Schedules,
         string Status,
-        DateTime CreatedAt
+        // The number of PRN doses allowed in any 24 hours; enforced at sign-off.
+        int? PrnMaxDosesPer24h = null
     );
 
     public record ScheduleRequest(string Dose, string FType, List<TimeOnly> Times, int IntervalDays, string? DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
@@ -29,13 +28,13 @@ namespace Medications.Application.Services
 
     public sealed record CreateMedicationOrderResponse
     (
-        Guid OrderId, 
+        Guid OrderId,
         string MedicationName
     );
 
     public sealed record MedicationOrderResponse
     (
-        Guid OrderId, 
+        Guid OrderId,
         string MedicationName,
         MedicationRouteEnum Route,
         string? Instructions,
@@ -49,16 +48,38 @@ namespace Medications.Application.Services
         bool IsControlledDrug,
         List<ScheduleResponse> Schedules,
         OrderStatus Status,
-        DateTime CreatedAt
+        DateTime CreatedAt,
+        int? PrnMaxDosesPer24h = null
     );
 
     public record ScheduleResponse(Guid ScheduleId,string Dose, FrequencyType FType, List<TimeOnly> Times, int IntervalDays, DayOfWeekFlags DaysOfWeek, DateOnly? AnchorDate, DateOnly EffectiveFrom, DateOnly? EffectiveTo, int Sequence);
 
+    /// <summary>
+    /// Signing off one scheduled dose. <see cref="AdministeredAt"/> is when it was
+    /// actually given, for a carer signing a few minutes after the round; it
+    /// defaults to now. <see cref="Reason"/> is required once the on-time window
+    /// has closed: why the dose was late.
+    /// </summary>
     public sealed record RecordAdministrationRequest
     (
         DateTime ScheduledFor,
         string Outcome,
-        string? Notes
+        string? Notes,
+        DateTime? AdministeredAt = null,
+        string? Reason = null
+    );
+
+    /// <summary>
+    /// Recording one as-required dose. PRN doses have no slot, so the dose given
+    /// and the reason for giving it are both required.
+    /// </summary>
+    public sealed record RecordPrnAdministrationRequest
+    (
+        string Outcome,
+        string DoseGiven,
+        string Reason,
+        DateTime? AdministeredAt = null,
+        string? Notes = null
     );
 
     public sealed record UpdateMedicationOrderStatusRequest(string Status);
@@ -71,8 +92,11 @@ namespace Medications.Application.Services
         DateTime? AdministeredAt,
         Guid OutcomeCodeId,
         Guid AdministeredByStaffId,
-        string? Notes
+        string? Notes,
+        bool IsLate = false,
+        string? Reason = null,
+        string? DoseGiven = null
     );
 
-  
+
 }

@@ -34,6 +34,8 @@ namespace Medications.Infrastructure.Configuration
         {
             builder.ToTable("MedicationAdminstration", MedicationDbContext.Schema);
             builder.HasKey(x => x.Id);
+            builder.Property(x => x.Reason).HasMaxLength(MedicationAdministration.ReasonMaxLength);
+            builder.Property(x => x.DoseGiven).HasMaxLength(MedicationAdministration.DoseGivenMaxLength);
             builder.HasIndex(x => x.CareHomeId);
             // One record per scheduled slot. Sign-off and the missed-dose recorder
             // can race for the same slot; the database, not a prior read, decides
@@ -64,25 +66,9 @@ namespace Medications.Infrastructure.Configuration
         {
             builder.ToTable("OutcomeCode", MedicationDbContext.Schema);
             builder.HasKey( x => x.Id);
-            builder.HasData([
-                new{
-                    Id = Guid.Parse("f3c9d1e5-6078-4901-c345-d678e901f234"),
-                    Name = "Refused",
-                    DisplayLetter = "R"
-
-                },
-                new {
-                    Id = Guid.Parse("e2b8c0d4-5f67-4890-b234-c567d890e123"),
-                    Name = "Taken",
-                    DisplayLetter = "T",
-                },
-                new {
-                    Id = OutcomeCode.MissedId,
-                    Name = "Missed",
-                    DisplayLetter = "M",
-                },
-
-            ]);
+            // The ids are fixed: sign-off and the MAR chart recognise Taken and
+            // Missed by id, so the rows must never be reseeded under new ones.
+            builder.HasData(OutcomeCode.Seeded);
         }
     }
 

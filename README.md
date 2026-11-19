@@ -19,10 +19,15 @@ A care home signs up and gets an admin account. From there it can:
 - **Keep a care plan for each resident:** their diagnoses, and for each one the goal and the
   intervention the staff should carry out.
 - **Run medication rounds:** record each prescription with its dose and schedule (times of day, days
-  of the week, every N days, or as needed). VCare works out which doses are due today and which are
-  still outstanding. Staff sign each dose off as taken or refused. A dose not signed off within an
-  hour of its slot is recorded as missed. The result is a MAR chart (Medication Administration
-  Record) for each resident.
+  of the week, every N days, a single one-off dose, or as needed). VCare works out which doses are
+  due today and which are still outstanding. Staff sign each dose off as taken or refused, from an
+  hour before it is due. A dose not signed within an hour after its slot is recorded as missed.
+  Until 12 hours after the slot, a carer can still record what really happened, with a reason, and
+  the entry is flagged late. As-required (PRN) doses are recorded with the dose given and why, and
+  the order's minimum interval and 24-hour limit are enforced. Doses that fell due before an order
+  was entered into VCare are not counted as missed. The result is a MAR chart (Medication
+  Administration Record) for each resident, showing each dose's outcome. Stopped orders keep their
+  history.
 - **Schedule and record care visits:** book visits for a resident and assign staff to them. Each
   assigned carer checks in when they arrive and checks out when they leave, recording whether
   medication, personal care and feeding were done, with a note for each.
@@ -171,7 +176,7 @@ which comes from their login token.
 | Staff | `/api/staff`, plus `/{staffId}/document` and `/{staffId}/profile-image` |
 | Patients | `/api/patient`, plus `/{patientId}/document` and `/{patientId}/profile-image` |
 | Care plans | `/api/patient/{patientId}/careplan` |
-| Medications | `/api/patient/{patientId}/medication`: orders, `/{orderId}/status`, `/due`, `/outstanding`, `/{orderId}/administrations/{scheduleId}` |
+| Medications | `/api/patient/{patientId}/medication`: orders, `/{orderId}/status`, `/due`, `/outstanding`, `/{orderId}/administrations/{scheduleId}`, `/{orderId}/prn-administrations` |
 | MAR chart | `/api/patient/{patientId}/Marchart` |
 | Visits | `/api/patient/{patientId}/visit`: schedule, `/{visitId}/assign`, `/check-in`, `/check-out`, `/cancel` |
 

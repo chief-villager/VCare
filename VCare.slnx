@@ -18,5 +18,8 @@
   <Folder Name="/tests/">
     <Project Path="tests/VCare.Modules.Patients.Tests/VCare.Modules.Patients.Tests.csproj" />
     <Project Path="tests/VCare.Modules.CarePlans.Tests/VCare.Modules.CarePlans.Tests.csproj" />
+    <Project Path="tests/VCare.Modules.Medications.Tests/VCare.Modules.Medications.Tests.csproj" />
+    <Project Path="tests/VCare.Modules.Visitation.Tests/VCare.Modules.Visitation.Tests.csproj" />
+    <Project Path="tests/VCare.Modules.Staffs.Tests/VCare.Modules.Staffs.Tests.csproj" />
   </Folder>
 </Solution>
