@@ -5,9 +5,10 @@ public sealed record ScheduleVisitRequest(List<DateOnly> VisitDays, TimeOnly Vis
 
 public sealed record AssignStaffRequest(Guid StaffId);
 
-public sealed record CheckInVisitRequest(DateTime CheckedInAt);
-
-public sealed record CheckOutVisitRequest(DateTime? CheckedOutAt, bool IsMedicationCompleted, bool IsPersonalCareCompleted, bool IsFeedingTaskCompleted,
+// Check-in and check-out are timed by the server when the carer taps, never by a
+// time the client sends: a visit record is evidence that someone was there, and
+// a client-chosen time made it say whatever the client liked. Check-in has no body.
+public sealed record CheckOutVisitRequest(bool IsMedicationCompleted, bool IsPersonalCareCompleted, bool IsFeedingTaskCompleted,
     string MedicationTaskNote, string PersonalCareTaskNote, string FeedingTaskNote);
 
 public sealed record CancelVisitRequest(string Reason);

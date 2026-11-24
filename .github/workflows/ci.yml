@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore VCare.slnx
+
+      # Warnings are errors (Directory.Build.props), so this is also the lint step.
+      - name: Build
+        run: dotnet build VCare.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test VCare.slnx --no-build --configuration Release
+
+      # A model change without its migration builds and passes the tests, then
+      # fails on the first deploy. No database is needed for this check.
+      - name: Check migrations match the model
+        env:
+          ConnectionStrings__Default: "Server=localhost;Database=VCare;User Id=ci;Password=ci;TrustServerCertificate=True"
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.0.5
+          scripts/migrations.sh check --no-build --configuration Release
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build --tag vcare-api:ci .

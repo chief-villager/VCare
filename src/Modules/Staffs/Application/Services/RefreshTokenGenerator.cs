@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using Staffs.Application.Services.Interface;
 using Staffs.Domain.Entity;
 using VCare.SharedKernel.Abstractions;
+using Microsoft.Extensions.Options;
 using VCare.SharedKernel.Results;
 
 namespace Staffs.Application.Services
 {
     public class RefreshTokenGenerator( IJwtTokenService tokenService, 
-    IRefreshTokenRepository refreshTokenRepository, IStaffPrincipalReader principalReader) : IRefreshToken
+    IRefreshTokenRepository refreshTokenRepository, IStaffPrincipalReader principalReader,
+    IOptions<JwtSettings> jwtOptions, TimeProvider clock) : IRefreshToken
     {
         private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromHours(1);
         private const int SecretBytes = 32;
@@ -22,9 +24,10 @@ namespace Staffs.Application.Services
         private static readonly Error InvalidToken = Error.Unauthorized("Auth.InvalidToken", "Invalid Token");
 
         public async Task<Result<(string AccessToken, string RefreshToken)>> CreateTokensAsync(string name, Guid tokenFamily,
-        StaffId staffId, Guid careHomeId, IEnumerable<string> roles, CancellationToken cancellationToken)
+        StaffId staffId, Guid careHomeId, IEnumerable<string> roles, string securityStamp, CancellationToken cancellationToken,
+        DateTime? sessionStartedAt = null)
         {
-            var accessToken = tokenService.CreateToken(name, staffId, careHomeId, roles);
+            var accessToken = tokenService.CreateToken(name, staffId, careHomeId, roles, securityStamp);
             if (accessToken.IsFailure)
                 return Result.Failure<(string, string)>(accessToken.Error);
 
@@ -32,14 +35,15 @@ namespace Staffs.Application.Services
             // would hand the same refresh token to every caller for the lifetime
             // of the process, and any staff member could refresh as any other.
             var secret = RandomNumberGenerator.GetBytes(SecretBytes);
-            var issuedAt = DateTime.UtcNow;
+            var issuedAt = clock.GetUtcNow().UtcDateTime;
 
             var refreshToken = RefreshToken.Create(
                 tokenHash: SHA256.HashData(secret),
                 tokenFamily: tokenFamily,
                 staffId: staffId.Value,
                 createdTime: issuedAt,
-                expirationDate: issuedAt.Add(RefreshTokenLifetime));
+                expirationDate: issuedAt.Add(RefreshTokenLifetime),
+                sessionStartedAt: sessionStartedAt ?? issuedAt);
 
             if (refreshToken.IsFailure)
                 return Result.Failure<(string, string)>(refreshToken.Error);
@@ -65,7 +69,7 @@ namespace Staffs.Application.Services
             if (token is null)
                 return Result.Failure<(string, string)>(InvalidToken);
 
-            var now = DateTime.UtcNow;
+            var now = clock.GetUtcNow().UtcDateTime;
 
             // A revoked token coming back means it was captured: the legitimate
             // holder already rotated it. Nothing in the family can be trusted.
@@ -77,6 +81,12 @@ namespace Staffs.Application.Services
 
             if (token.IsExpired(now))
                 return Result.Failure<(string, string)>(InvalidToken);
+
+            if (HasOutlivedSession(token, now))
+            {
+                await RevokeFamilyAsync(token.TokenFamily, now, cancellationToken);
+                return Result.Failure<(string, string)>(InvalidToken);
+            }
 
             // Who the replacement is for is settled by the stored row, so a caller
             // cannot rotate someone else's session into a token of their choosing.
@@ -92,7 +102,8 @@ namespace Staffs.Application.Services
             // The replacement stays in the family it came from, so a later reuse
             // of any token in the chain revokes the whole chain.
             return await CreateTokensAsync(principal.Value.UserName, token.TokenFamily, staffId,
-                principal.Value.CareHomeId, principal.Value.Roles, cancellationToken);
+                principal.Value.CareHomeId, principal.Value.Roles, principal.Value.SecurityStamp, cancellationToken,
+                token.SessionStartedAt);
         }
 
         public async Task<Result> RevokeFamilyAsync(string currentRefreshToken, CancellationToken cancellationToken)
@@ -106,9 +117,23 @@ namespace Staffs.Application.Services
 
             // An already-revoked token still names its family, so logging out with
             // a stale token finishes the job rather than failing.
-            await RevokeFamilyAsync(token.TokenFamily, DateTime.UtcNow, cancellationToken);
+            await RevokeFamilyAsync(token.TokenFamily, clock.GetUtcNow().UtcDateTime, cancellationToken);
             return Result.Success();
         }
+
+        public async Task RevokeAllForStaffAsync(StaffId staffId, CancellationToken cancellationToken)
+        {
+            var now = clock.GetUtcNow().UtcDateTime;
+            foreach (var item in await refreshTokenRepository.GetAllActiveForStaffAsync(staffId.Value, cancellationToken))
+            {
+                item.RevokeToken(now);
+            }
+            await refreshTokenRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        // Refreshing keeps a session going one hour at a time; this is where it stops.
+        private bool HasOutlivedSession(RefreshToken token, DateTime utcNow) =>
+            utcNow - token.SessionStartedAt > TimeSpan.FromHours(Math.Max(1, jwtOptions.Value.MaxSessionHours));
 
         private async Task RevokeFamilyAsync(Guid tokenFamily, DateTime utcNow, CancellationToken cancellationToken)
         {

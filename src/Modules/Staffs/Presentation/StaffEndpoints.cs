@@ -22,9 +22,13 @@ namespace Staffs.Presentation
             staff.MapPost("/",CreateStaff).RequireAuthorization("Admin_Role");
             staff.MapGet("/{staffId:Guid}",GetStaff).RequireAuthorization("Admin_Or_Carer");
             staff.MapPut("/{staffId:Guid}",UpdateStaff).RequireAuthorization("Admin_Role");
-            staff.MapPost("/{staffId:Guid}/document",UploadStaffDocument).RequireAuthorization("Admin_Role");
-            staff.MapPost("/{staffId:Guid}/profile-image",UploadProfileImageForStaff).RequireAuthorization("Admin_Role");
+            // Bearer-token callers only, so no antiforgery token (see PatientEndpoint).
+            staff.MapPost("/{staffId:Guid}/document",UploadStaffDocument).RequireAuthorization("Admin_Role").DisableAntiforgery();
+            staff.MapPost("/{staffId:Guid}/profile-image",UploadProfileImageForStaff).RequireAuthorization("Admin_Role").DisableAntiforgery();
             staff.MapGet("/{staffId:Guid}/document",GetStaffDocument).RequireAuthorization("Admin_Role");
+            // For someone who leaves or is suspended. Their records keep their name.
+            staff.MapPost("/{staffId:Guid}/deactivate",DeactivateStaff).RequireAuthorization("Admin_Role");
+            staff.MapPost("/{staffId:Guid}/reactivate",ReactivateStaff).RequireAuthorization("Admin_Role");
         }
 
         public static async Task<IResult>UploadStaffDocument(Guid staffId, IFormFile formFile, string fileName, IStaffService staffService, CancellationToken cancellationToken)
@@ -41,7 +45,22 @@ namespace Staffs.Presentation
         public static async Task<IResult>GetStaffDocument(Guid staffId, string key, IStaffService staffService, CancellationToken cancellationToken)
         {
             var result = await staffService.GetStaffDocumentsAsync(new StaffId(staffId), key, cancellationToken);
-            return result.IsFailure ? result.ToProblem() : TypedResults.File(result.Value.Content, result.Value.ContentType);
+            return result.IsFailure ? result.ToProblem() : TypedResults.File(result.Value.Content, result.Value.ContentType,
+                // A download, never shown inline, under the name it was uploaded with.
+                fileDownloadName: VCare.SharedKernel.Domain.StorageKeys.DownloadName(key));
+        }
+
+        public static async Task<IResult>DeactivateStaff(Guid staffId, DeactivateStaffRequest request,
+            IStaffService staffService, CancellationToken cancellationToken)
+        {
+            var response = await staffService.DeactivateStaffAsync(new StaffId(staffId), request, cancellationToken);
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
+        }
+
+        public static async Task<IResult>ReactivateStaff(Guid staffId, IStaffService staffService, CancellationToken cancellationToken)
+        {
+            var response = await staffService.ReactivateStaffAsync(new StaffId(staffId), cancellationToken);
+            return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
         public static async Task<IResult>CreateStaff(CreateStaffRequest request, 

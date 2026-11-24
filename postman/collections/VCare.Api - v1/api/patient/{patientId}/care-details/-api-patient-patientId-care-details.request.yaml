@@ -1,0 +1,23 @@
+$kind: http-request
+name: /api/patient/:patientId/care-details
+url: "{{baseUrl}}/api/patient/:patientId/care-details"
+method: PUT
+description: >-
+  Admission details. Every field is set by each call; one left empty (null) clears it. The NHS number may be written with spaces and must pass its check digit. 409 Patients.NhsNumberInUse if another resident in the home has it. Admins only.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "nhsNumber": "943 476 5919",
+      "gpName": "Dr Okafor",
+      "gpPractice": "Riverside Surgery",
+      "gpPhone": "020 7946 0000",
+      "room": "12",
+      "admittedOn": "2026-01-05"
+    }
+settings: {}
+order: 1000

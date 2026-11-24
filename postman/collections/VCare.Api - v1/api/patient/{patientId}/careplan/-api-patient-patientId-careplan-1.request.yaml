@@ -10,7 +10,6 @@ body:
   type: json
   content: |-
     {
-      "staffId": "08f43f97-0dd7-4359-ad66-fcd9174bc6ec",
       "goal": "Improve mobility, maintain independence in daily activities, and reduce the risk of falls.",
       "diagnoses": [
         {

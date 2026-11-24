@@ -1,3 +1,5 @@
+using VCare.SharedKernel.Persistence;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,14 +20,17 @@ namespace src.Modules.CareHomes.Infrastructure.Configuration
     {
         public static IServiceCollection  AddCareHomeModule(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<CareHomeDbContext>(Options =>
-            {
-                Options.
-                    UseSqlServer(configuration.GetConnectionString("Default"), sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", CareHomeDbContext.SchemaName));
-            });
+            services.AddDbContext<CareHomeDbContext>((sp, options) =>
+                options.UseSqlServer(configuration.GetConnectionString("Default"), sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", CareHomeDbContext.SchemaName))
+                    .UseVCareInterceptors(sp));
 
             services.AddScoped<ICareHomeRepository, CareHomeRepository>();
             services.AddScoped<ICareHomeService, CareHomeService>();
+
+            // The wall clock in each home, for every module that asks whether a dose
+            // or an absence time has come. TimeProvider so tests can set the time.
+            services.TryAddSingleton(TimeProvider.System);
+            services.AddScoped<ICareHomeClock, CareHomeClock>();
 
             return services;
         }

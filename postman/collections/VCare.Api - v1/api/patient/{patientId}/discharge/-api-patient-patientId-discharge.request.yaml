@@ -1,0 +1,19 @@
+$kind: http-request
+name: /api/patient/:patientId/discharge
+url: "{{baseUrl}}/api/patient/:patientId/discharge"
+method: POST
+description: >-
+  The resident leaves the home for good. At is the time in the home and defaults to now. No dose is expected or can be recorded after it. Admins only.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "at": null,
+      "destination": "Home with family"
+    }
+settings: {}
+order: 1000

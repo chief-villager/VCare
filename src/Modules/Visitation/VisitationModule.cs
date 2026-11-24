@@ -1,3 +1,5 @@
+using VCare.SharedKernel.Persistence;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,15 +17,18 @@ public static class VisitationModule
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<VisitationDbContext>(options =>
+        services.AddDbContext<VisitationDbContext>((sp, options) =>
             options.UseSqlServer(
                 configuration.GetConnectionString("Default"),
-                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", VisitationDbContext.Schema)));
+                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", VisitationDbContext.Schema))
+                .UseVCareInterceptors(sp));
 
         // The repository owns the save. IUnitOfWork is registered unkeyed by
         // PatientsModule, so registering it here would win for every consumer.
         services.AddScoped<IVisitRepository, VisitRepository>();
         services.AddScoped<IVisitationService, VisitationService>();
+        // Check-in and check-out are timed here, not by the client.
+        services.TryAddSingleton(TimeProvider.System);
 
         return services;
     }

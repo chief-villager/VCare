@@ -8,7 +8,7 @@ using VCare.SharedKernel.Results;
 namespace Staffs.Application.Services.Interface
 {
     /// <summary>What an access token needs to say about a staff member.</summary>
-    public sealed record StaffPrincipal(string UserName, Guid CareHomeId, IReadOnlyList<string> Roles);
+    public sealed record StaffPrincipal(string UserName, Guid CareHomeId, IReadOnlyList<string> Roles, string SecurityStamp);
 
     /// <summary>
     /// Reads a staff member's current identity by id. Rotation needs it to reissue

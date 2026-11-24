@@ -15,7 +15,8 @@ body:
   type: json
   content: |-
     {
-      "status": "string"
+      "status": "Suspended",
+      "reason": "INR 5.2; GP asked to hold warfarin for two days"
     }
 settings: {}
 examples: ./.resources/-api-patient-patientId-medication-orderId-status.resources/examples

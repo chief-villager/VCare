@@ -1,0 +1,18 @@
+$kind: http-request
+name: /api/patient/:patientId/readmit
+url: "{{baseUrl}}/api/patient/:patientId/readmit"
+method: POST
+description: >-
+  A discharged resident comes back, or a discharge is undone. `at` is when they came back, as the time in the home, and becomes their admission date; it defaults to now and cannot be before the discharge or in the future. Not for a resident whose death is recorded. Admins only.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "at": "2026-11-25T10:00:00"
+    }
+settings: {}
+order: 1000

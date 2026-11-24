@@ -1,0 +1,19 @@
+$kind: http-request
+name: /api/patient/:patientId/attorneys/:attorneyId/remove
+url: "{{baseUrl}}/api/patient/:patientId/attorneys/:attorneyId/remove"
+method: POST
+description: >-
+  Marks an attorney recorded in error, or no longer acting, as removed, with the reason. It stays on the record. Admins only.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+  attorneyId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Registered in error"
+    }
+settings: {}
+order: 1000

@@ -1,0 +1,10 @@
+$kind: http-request
+name: /api/patient/:patientId/weights
+url: "{{baseUrl}}/api/patient/:patientId/weights"
+method: GET
+description: >-
+  Every weight recorded for the resident, oldest first. The patient summary shows the latest.
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+settings: {}
+order: 1000

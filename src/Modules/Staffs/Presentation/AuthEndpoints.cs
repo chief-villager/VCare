@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Staffs.Application.Dto;
 using Staffs.Application.Services.Interface;
+using Staffs.Infrastructure;
 using VCare.SharedKernel.Results;
 
 namespace Staffs.Presentation
@@ -18,13 +19,13 @@ namespace Staffs.Presentation
             // A caller with no usable token is the normal case here: this group is
             // how they get one. The paths match the callback links AuthService builds.
             var auth = app.MapGroup("/api/auth").WithTags("Auth").AllowAnonymous();
-            auth.MapPost("/login",Login);
-            auth.MapPost("/refresh",Refresh);
-            auth.MapPost("/logout",Logout);
-            auth.MapGet("/verify-email",VerifyEmail);
-            auth.MapPost("/verify-email/resend",ResendVerificationLink);
-            auth.MapPost("/forgot-password",RequestPasswordReset);
-            auth.MapPost("/Reset_password",ResetPassword);
+            auth.MapPost("/login",Login).RequireRateLimiting(AuthRateLimits.SignIn);
+            auth.MapPost("/refresh",Refresh).RequireRateLimiting(AuthRateLimits.SignIn);
+            auth.MapPost("/logout",Logout).RequireRateLimiting(AuthRateLimits.SignIn);
+            auth.MapGet("/verify-email",VerifyEmail).RequireRateLimiting(AuthRateLimits.SignIn);
+            auth.MapPost("/verify-email/resend",ResendVerificationLink).RequireRateLimiting(AuthRateLimits.SendsEmail);
+            auth.MapPost("/forgot-password",RequestPasswordReset).RequireRateLimiting(AuthRateLimits.SendsEmail);
+            auth.MapPost("/Reset_password",ResetPassword).RequireRateLimiting(AuthRateLimits.SignIn);
         }
 
         public static async Task<IResult>Login(LoginRequest request, 
@@ -72,10 +73,11 @@ namespace Staffs.Presentation
             return response.IsFailure ? response.ToProblem() : TypedResults.Accepted((string?)null);
         }
 
+        // 202 whether or not an account exists, like the verification resend.
         public static async Task<IResult>RequestPasswordReset(EmailRequest request, IStaffService staffService, CancellationToken cancellationToken)
         {
             var response = await staffService.RequestPasswordResetAsync(request.Email, cancellationToken);
-            return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
+            return response.IsFailure ? response.ToProblem() : TypedResults.Accepted((string?)null);
         }
 
         public static async Task<IResult>ResetPassword(ResetPasswordRequest request, IStaffService staffService)

@@ -21,6 +21,10 @@ namespace Staffs.Domain.Entity
         public Guid StaffId {get; private set;}
         public DateTime ExpirationDate {get; private set;}
         public DateTime CreatedTime {get; private set;}
+
+        // When the sign-in this token descends from happened. Carried from token to
+        // token on rotation, so refreshing cannot stretch a session past its limit.
+        public DateTime SessionStartedAt {get; private set;}
         public bool IsRevoked {get; private set;}
         public DateTime? RevokedAt {get; private set;}
 
@@ -30,7 +34,7 @@ namespace Staffs.Domain.Entity
         }
 
         public static Result<RefreshToken> Create(byte[] tokenHash, Guid tokenFamily, Guid staffId,
-             DateTime createdTime,DateTime expirationDate)
+             DateTime createdTime,DateTime expirationDate, DateTime? sessionStartedAt = null)
         {
             if (tokenHash is null || tokenHash.Length == 0)
                 return Result.Failure<RefreshToken>("A refresh token hash is required.");
@@ -49,6 +53,7 @@ namespace Staffs.Domain.Entity
                 StaffId = staffId,
                 CreatedTime = createdTime,
                 ExpirationDate = expirationDate,
+                SessionStartedAt = sessionStartedAt ?? createdTime,
                 IsRevoked = false
                 
             };

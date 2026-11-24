@@ -1,0 +1,8 @@
+$kind: http-request
+name: /health/ready
+url: "{{baseUrl}}/health/ready"
+method: GET
+description: >-
+  Open. 200 when the database can be reached, 503 when it cannot.
+settings: {}
+order: 1000

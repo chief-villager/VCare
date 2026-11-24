@@ -1,0 +1,8 @@
+$kind: http-request
+name: /health/live
+url: "{{baseUrl}}/health/live"
+method: GET
+description: >-
+  Open. 200 while the process is running.
+settings: {}
+order: 1000

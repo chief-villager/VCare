@@ -1,0 +1,20 @@
+$kind: http-request
+name: /api/patient/:patientId/allergies
+url: "{{baseUrl}}/api/patient/:patientId/allergies"
+method: POST
+description: >-
+  Records an allergy. Severity is Unknown, Mild, Moderate or Severe. New medication orders are checked against it.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "substance": "Penicillin",
+      "reaction": "Rash and facial swelling",
+      "severity": "Severe"
+    }
+settings: {}
+order: 2000

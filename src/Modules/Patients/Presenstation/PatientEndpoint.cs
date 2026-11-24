@@ -24,9 +24,16 @@ namespace Patients.Presenstation
             patient.MapGet("/",ListPatients).RequireAuthorization("Admin_Or_Carer");
             patient.MapGet("/{patientId:Guid}",GetPatient).RequireAuthorization("Admin_Or_Carer");
             patient.MapPut("/{patientId:Guid}",UpdatePatient).RequireAuthorization("Admin_Role");
-            patient.MapPost("/{patientId:Guid}/document",UploadPatientDocument).RequireAuthorization("Admin_Role");
-            patient.MapPost("/{patientId:Guid}/profile-image",UploadProfileImageForPatient).RequireAuthorization("Admin_Role");
+            // A file upload is a form post, which minimal APIs guard with an antiforgery
+            // token by default. Callers sign in with a bearer token, not a cookie, so a
+            // forged cross-site request has nothing to ride on; and with no antiforgery
+            // middleware the default made every upload fail with a 500.
+            patient.MapPost("/{patientId:Guid}/document",UploadPatientDocument).RequireAuthorization("Admin_Role").DisableAntiforgery();
+            patient.MapPost("/{patientId:Guid}/profile-image",UploadProfileImageForPatient).RequireAuthorization("Admin_Role").DisableAntiforgery();
             patient.MapGet("/{patientId:Guid}/document",GetPatientDocument).RequireAuthorization("Admin_Or_Carer");
+
+            // Allergies and absences, which Medications acts on.
+            app.AddResidentRecordEndpoints();
 
         }
 
@@ -44,7 +51,9 @@ namespace Patients.Presenstation
         public async static Task<IResult>GetPatientDocument(Guid patientId, string key, IPatientService patientService, CancellationToken cancellationToken)
         {
             var result = await patientService.GetPatientDocumentsAsync(new PatientId(patientId), key, cancellationToken);
-            return result.IsFailure ? result.ToProblem() : TypedResults.File(result.Value.Content, result.Value.ContentType);
+            return result.IsFailure ? result.ToProblem() : TypedResults.File(result.Value.Content, result.Value.ContentType,
+                // A download, never shown inline, under the name it was uploaded with.
+                fileDownloadName: VCare.SharedKernel.Domain.StorageKeys.DownloadName(key));
         }
 
 

@@ -1,0 +1,10 @@
+$kind: http-request
+name: /api/patient/:patientId/attorneys
+url: "{{baseUrl}}/api/patient/:patientId/attorneys"
+method: GET
+description: >-
+  Everyone recorded as holding a lasting power of attorney for the resident, including removed ones.
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+settings: {}
+order: 1000

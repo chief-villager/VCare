@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using VCare.SharedKernel.Abstractions;
 
 namespace Visitation.Domain.Entities
 {
-    internal class FeedingTask
+    internal class FeedingTask : IAudited
     {
         public Guid VisitRecordId {get; private set;}
 

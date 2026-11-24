@@ -11,7 +11,8 @@ body:
       "careHome": {
         "name": "Cedar Grove Care Centre",
         "address": "38 Kingsway Avenue, Manchester, M14 6PL, United Kingdom",
-        "email": "info@cedargrove.example"
+        "email": "info@cedargrove.example",
+        "timeZoneId": "Europe/London"
       },
       "admin": {
         "firstName": "Rebecca",

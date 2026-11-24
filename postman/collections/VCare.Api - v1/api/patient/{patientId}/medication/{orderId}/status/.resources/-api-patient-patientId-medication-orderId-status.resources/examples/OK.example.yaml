@@ -10,7 +10,8 @@ request:
     type: json
     content: |-
       {
-        "status": "string"
+        "status": "Suspended",
+        "reason": "INR 5.2; GP asked to hold warfarin for two days"
       }
 response:
   statusCode: 200

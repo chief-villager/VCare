@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ using VCare.SharedKernel.Services;
 namespace Staffs.Infrastructure.Persistence
 {
     internal class StaffDbContext(DbContextOptions<StaffDbContext> options, ICurrentUser currentUser,
-     IDomainEventDispatcher domainEventDispatcher, IOutboxParticipant outboxParticipant)
+     IDomainEventDispatcher domainEventDispatcher)
         : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IUnitOfWork
     {
         public static string schemaName = "Auth";
@@ -35,7 +36,6 @@ namespace Staffs.Infrastructure.Persistence
                  // acceptAllChangesOnSuccess: false -- the transaction can still roll back
                  // below, and the tracker must not pretend these rows already landed.
                 var written = await SaveChangesAsync(acceptAllChangesOnSuccess: false, cancellationToken);
-                await outboxParticipant.FlushAsync(transaction.GetDbTransaction(), cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
                 // Only now does the tracked state match the database.
@@ -61,6 +61,8 @@ namespace Staffs.Infrastructure.Persistence
             modelBuilder.HasDefaultSchema(schemaName);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(StaffDbContext).Assembly);
 
+            // Audit rows are written in the same save as the change (see AuditSaveChangesInterceptor).
+            modelBuilder.MapAuditEntries();
             // Care home isolation: a caller can only ever read staff from their own care home,
             // regardless of role. Writes are stamped with the care home at creation time.
             modelBuilder.Entity<Staff>().HasQueryFilter(s => s.CareHomeId == CurrentCareHome);

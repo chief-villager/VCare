@@ -38,9 +38,20 @@ namespace Staffs.Infrastructure.Repositories
             return await dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        public Task<int> CountActiveAdminsAsync(CancellationToken cancellationToken = default) =>
+            dbContext.Staffs.CountAsync(s => s.Role == "Admin" && s.DeactivatedAt == null, cancellationToken);
+
         public async Task<int> CommitandSaveAsync(CancellationToken cancellationToken = default)
         {
             return await dbContext.CommitandSaveAsync(cancellationToken);
+        }
+
+        public async Task<bool> OwnsStorageKeyAsync(StaffId staffId, string storageKey, CancellationToken cancellationToken = default)
+        {
+            return await dbContext.Staffs
+                .Where(s => s.Id == staffId)
+                .AnyAsync(s => s.ProfilePictureUrl == storageKey
+                            || s.StaffDocuments.Any(d => d.StorageKeyName == storageKey), cancellationToken);
         }
     }
 }

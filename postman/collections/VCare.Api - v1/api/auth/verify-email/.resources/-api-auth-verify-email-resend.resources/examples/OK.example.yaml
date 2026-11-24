@@ -1,0 +1,19 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/auth/verify-email/resend"
+  method: POST
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "email": "string"
+      }
+response:
+  statusCode: 202
+  statusText: Accepted
+  body:
+    type: text
+    content: ""
+order: 1000

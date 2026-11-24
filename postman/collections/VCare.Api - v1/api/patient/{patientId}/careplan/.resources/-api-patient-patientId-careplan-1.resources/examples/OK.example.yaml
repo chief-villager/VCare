@@ -10,30 +10,18 @@ request:
     type: json
     content: |-
       {
-        "patientId": "5922b945-604f-19da-6cc1-9e1cd56577e0",
-        "staffId": "3635689e-b991-2ff5-08bf-01d812df51bd",
+        "goal": "string",
         "diagnoses": [
-          "string",
-          "string"
-        ],
-        "goals": [
-          "string",
-          "string"
-        ],
-        "interventions": [
           {
-            "description": "string",
-            "implemented": false
-          },
-          {
-            "description": "string",
-            "implemented": false
+            "name": "string",
+            "goalDescription": "string",
+            "intervention": "string"
           }
         ]
       }
 response:
-  statusCode: 200
-  statusText: OK
+  statusCode: 201
+  statusText: Created
   body:
     type: text
     content: ""

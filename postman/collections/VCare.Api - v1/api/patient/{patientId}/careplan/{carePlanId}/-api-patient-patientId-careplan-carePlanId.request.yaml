@@ -2,6 +2,8 @@ $kind: http-request
 name: /api/patient/:patientId/careplan/:carePlanId
 url: "{{baseUrl}}/api/patient/:patientId/careplan/:carePlanId"
 method: PUT
+description: >-
+  Version is the version the edit was made to, as read with the plan. If someone has saved an edit since, the update is refused with 409 CarePlans.EditConflict: reload the plan and make the change again.
 headers:
   Content-Type: application/json
 pathVariables:
@@ -18,7 +20,8 @@ body:
           "goalDescription": "string",
           "intervention": "string"
         }
-      ]
+      ],
+      "version": 1
     }
 settings: {}
 examples: ./.resources/-api-patient-patientId-careplan-carePlanId.resources/examples

@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -19,13 +20,21 @@ public static class PatientsModule
         this IServiceCollection services,
         IConfiguration configuration) 
     {
-        services.AddDbContext<PatientsDbContext>(options =>
+        services.AddDbContext<PatientsDbContext>((sp, options) =>
             options.UseSqlServer(
                 configuration.GetConnectionString("Default"),
-                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", PatientsDbContext.Schema)));
+                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", PatientsDbContext.Schema))
+                .UseVCareInterceptors(sp));
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<PatientsDbContext>());
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IPatientService, PatientService>();
+
+        // Other modules check a patient exists in the caller's home through this,
+        // not by reaching into this module's tables.
+        services.AddScoped<IPatientDirectory, PatientDirectory>();
+        services.AddScoped<IResidentAllergies, ResidentAllergies>();
+        services.AddScoped<IResidentAbsences, ResidentAbsences>();
+        services.AddScoped<ResidentRecordService>();
         var storageConfiguration = configuration.GetSection("Storage");
             services.AddOptions<StorageEntity>().Bind(storageConfiguration);
 

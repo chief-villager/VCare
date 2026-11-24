@@ -1,8 +1,9 @@
+using VCare.SharedKernel.Auditing;
 using VCare.SharedKernel.Abstractions;
 
 namespace VCare.Modules.CarePlans.Domain.Entities;
 
-internal sealed class Diagnosis
+internal sealed class Diagnosis : IAudited
 {
     public CarePlanId CarePlanId { get; private set; }
     public string Name { get; private set; } = default!;

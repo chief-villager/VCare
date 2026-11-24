@@ -15,7 +15,10 @@ body:
     {
       "scheduledFor": "2026-10-19T08:00:00",
       "outcome": "Taken",
-      "notes": "medication administered"
+      "notes": "medication administered",
+      "administeredAt": null,
+      "reason": null,
+      "witnessStaffId": null
     }
 settings: {}
 examples: ./.resources/-api-patient-patientId-medication-orderId-administrations.resources/examples

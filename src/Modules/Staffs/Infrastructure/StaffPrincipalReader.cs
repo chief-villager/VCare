@@ -17,11 +17,13 @@ namespace Staffs.Infrastructure
         public async Task<Result<StaffPrincipal>> GetByStaffIdAsync(StaffId staffId, CancellationToken cancellationToken)
         {
             var user = await userManager.FindByIdAsync(staffId.Value.ToString());
-            if (user is null)
+            // A deactivated staff member's refresh tokens are revoked when they are
+            // deactivated; this catches one that slipped through.
+            if (user is null || user.DeactivatedAt is not null)
                 return Result.Failure<StaffPrincipal>(Error.Unauthorized("Auth.InvalidToken", "Invalid Token"));
 
             var roles = await userManager.GetRolesAsync(user);
-            return Result.Success(new StaffPrincipal(user.UserName!, user.CareHomeId, [.. roles]));
+            return Result.Success(new StaffPrincipal(user.UserName!, user.CareHomeId, [.. roles], user.SecurityStamp ?? string.Empty));
         }
     }
 }

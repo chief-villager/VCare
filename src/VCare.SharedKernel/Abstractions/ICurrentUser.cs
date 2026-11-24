@@ -14,6 +14,10 @@ namespace VCare.SharedKernel.Abstractions
         /// <summary>The business the caller belongs to.</summary>
         Guid CareHomeId { get; }
 
+        /// <summary>
+        /// False on a route open to anyone, even when a token was sent with it:
+        /// those routes never act as the caller.
+        /// </summary>
         bool IsAuthenticated { get; }
 
         bool IsInRole(string role);

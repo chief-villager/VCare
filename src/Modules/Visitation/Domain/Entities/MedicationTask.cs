@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using VCare.SharedKernel.Abstractions;
 
 namespace Visitation.Domain.Entities
 {
-    internal class MedicationTask
+    internal class MedicationTask : IAudited
     {
         public Guid VisitRecordId {get; private set;}
         public bool IsMedicationCompleted {get; private set;}

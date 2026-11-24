@@ -12,7 +12,8 @@ namespace VCare.Api.Endpoints
             // comes into existence, so there is nobody to authenticate as yet.
             // It lives in the host, not in CareHomes, because it drives two modules.
             var registration = app.MapGroup("/api/carehome").WithTags("CareHome").AllowAnonymous();
-            registration.MapPost("/",RegisterCareHome);
+            // Creates an account and sends an email, so it shares that rate limit.
+            registration.MapPost("/",RegisterCareHome).RequireRateLimiting(Staffs.Infrastructure.AuthRateLimits.SendsEmail);
         }
 
         public static async Task<IResult> RegisterCareHome(

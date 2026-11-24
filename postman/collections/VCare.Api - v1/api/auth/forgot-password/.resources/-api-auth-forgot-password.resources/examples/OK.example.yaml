@@ -11,8 +11,8 @@ request:
         "email": "string"
       }
 response:
-  statusCode: 200
-  statusText: OK
+  statusCode: 202
+  statusText: Accepted
   body:
     type: text
     content: ""

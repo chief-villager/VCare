@@ -52,7 +52,7 @@ request:
           }
         ],
         "status": 2909,
-        "createdAt": "1958-10-09T05:09:47.812Z"
+        "allergyOverrideReason": null
       }
 response:
   statusCode: 200

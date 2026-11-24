@@ -1,0 +1,10 @@
+$kind: http-request
+name: /api/patient/:patientId/careplan/versions
+url: "{{baseUrl}}/api/patient/:patientId/careplan/versions"
+method: GET
+description: >-
+  Every version the care plan has had: its number, who made the edit and when (UTC).
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+settings: {}
+order: 1000

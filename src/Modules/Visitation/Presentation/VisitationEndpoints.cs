@@ -42,40 +42,41 @@ namespace Visitation.Presentation
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
 
-        public static async Task<IResult>GetVisit(Guid visitId,
+        public static async Task<IResult>GetVisit(Guid patientId, Guid visitId,
             IVisitationService visitationService, CancellationToken token)
         {
-            var response = await visitationService.GetByIdAsync(visitId,token);
+            var response = await visitationService.GetByIdAsync(patientId,visitId,token);
             if (response.IsFailure)
                 return response.ToProblem();
             return response.Value is null ? TypedResults.NotFound() : TypedResults.Ok(response.Value);
         }
 
-        public static async Task<IResult>AssignStaff(Guid visitId, AssignStaffRequest request,
+        public static async Task<IResult>AssignStaff(Guid patientId, Guid visitId, AssignStaffRequest request,
             IVisitationService visitationService, CancellationToken token)
         {
-            var response = await visitationService.AssignStaffAsync(visitId,request,token);
+            var response = await visitationService.AssignStaffAsync(patientId,visitId,request,token);
             return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
-        public static async Task<IResult>CheckIn(Guid visitId, CheckInVisitRequest request,
+        // No body: the time is the server's and the staff member is the caller.
+        public static async Task<IResult>CheckIn(Guid patientId, Guid visitId,
             IVisitationService visitationService, CancellationToken token)
         {
-            var response = await visitationService.CheckInAsync(visitId,request,token);
+            var response = await visitationService.CheckInAsync(patientId,visitId,token);
             return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
-        public static async Task<IResult>CheckOut(Guid visitId, CheckOutVisitRequest request,
+        public static async Task<IResult>CheckOut(Guid patientId, Guid visitId, CheckOutVisitRequest request,
             IVisitationService visitationService, CancellationToken token)
         {
-            var response = await visitationService.CheckOutAsync(visitId,request,token);
+            var response = await visitationService.CheckOutAsync(patientId,visitId,request,token);
             return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
 
-        public static async Task<IResult>CancelVisit(Guid visitId, CancelVisitRequest request,
+        public static async Task<IResult>CancelVisit(Guid patientId, Guid visitId, CancelVisitRequest request,
             IVisitationService visitationService, CancellationToken token)
         {
-            var response = await visitationService.CancelVisitAsync(visitId,request,token);
+            var response = await visitationService.CancelVisitAsync(patientId,visitId,request,token);
             return response.IsFailure ? response.ToProblem() : TypedResults.NoContent();
         }
     }

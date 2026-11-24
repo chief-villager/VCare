@@ -22,6 +22,11 @@ namespace Staffs.Infrastructure.Repositories
            return await dbContext.RefreshTokens.Where(r => r.TokenFamily == TokenFamilyId && r.IsRevoked == false).ToListAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<RefreshToken>> GetAllActiveForStaffAsync(Guid staffId, CancellationToken cancellationToken)
+        {
+           return await dbContext.RefreshTokens.Where(r => r.StaffId == staffId && r.IsRevoked == false).ToListAsync(cancellationToken);
+        }
+
         public async Task AddAsync(RefreshToken refreshToken, CancellationToken cancellationToken)
         {
             await dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken);

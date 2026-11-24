@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using VCare.SharedKernel.Results;
 namespace Staffs.Domain.Entity
 {
 
-    internal class StaffDocument
+    internal class StaffDocument : IAudited
     {
         public Guid Id { get; private set; } = Guid.NewGuid();
         public StaffId StaffId { get; private set; }

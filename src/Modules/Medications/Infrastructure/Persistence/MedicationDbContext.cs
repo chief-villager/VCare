@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +40,8 @@ namespace Medications.Infrastructure.Persistence
         {
             modelBuilder.HasDefaultSchema(Schema);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MedicationDbContext).Assembly);
+            // Audit rows are written in the same save as the change (see AuditSaveChangesInterceptor).
+            modelBuilder.MapAuditEntries();
             base.OnModelCreating(modelBuilder);
 
             // Care home isolation: a caller can only ever read medication orders and

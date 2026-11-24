@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using VCare.Modules.Visitation.Domain.Entities;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Domain;
@@ -8,7 +9,7 @@ namespace Visitation.Domain.Entities
     // A visit booked for one patient on one day. Staff are assigned to it ahead of
     // time, and each assigned staff member who turns up gets a VisitRecord of their
     // own covering their check-in, check-out and the care they gave.
-    internal class Visit : AggregateRoot<VisitId>
+    internal class Visit : AggregateRoot<VisitId>, IAudited
     {
         public PatientId PatientId { get; private set; }
         public DateOnly VisitDay {get; private set;}
@@ -76,7 +77,7 @@ namespace Visitation.Domain.Entities
         }
 
         public Result CheckOut( StaffId staffId ,bool isMedicationCompleted, bool isPersonalCareCompleted, bool isFeedingTaskCompleted,
-        string medicationTaskNote, string personalCareTaskNote, string feedingTaskNote, DateTime? checkedOutAt = null)
+        string medicationTaskNote, string personalCareTaskNote, string feedingTaskNote, DateTime checkedOutAt)
         {
             var record = VisitRecords.FirstOrDefault(r => r.StaffId == staffId);
             if (record is null)

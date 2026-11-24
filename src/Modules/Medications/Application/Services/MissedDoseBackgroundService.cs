@@ -24,8 +24,9 @@ namespace Medications.Application.Services
                 {
                     // A scope per pass: its DbContext must not outlive the pass.
                     await using var scope = scopeFactory.CreateAsyncScope();
-                    var recorder = scope.ServiceProvider.GetRequiredService<MissedDoseRecorder>();
-                    await recorder.RecordMissedDosesAsync(DateTime.Now, stoppingToken);
+                    // Skips the pass when another instance holds the job's lock.
+                    // Each care home is judged by its own clock (ICareHomeClock).
+                    await scope.ServiceProvider.GetRequiredService<MissedDoseJob>().RunOnceAsync(stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {

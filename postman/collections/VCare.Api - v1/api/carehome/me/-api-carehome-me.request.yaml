@@ -9,8 +9,9 @@ body:
   content: |-
     {
       "name": null,
-      "address": "string",
-      "email": null
+      "address": null,
+      "email": null,
+      "timeZoneId": "Europe/London"
     }
 settings: {}
 examples: ./.resources/-api-carehome-me.resources/examples

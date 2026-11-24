@@ -11,4 +11,6 @@ public interface ICarePlanService
     // The patient's care plan, or null when they have none yet. An absent plan
     // is not a failure.
     Task<Result<CarePlanResponse?>> GetForPatientAsync(Guid patientId, CancellationToken token);
+    Task<Result<IReadOnlyList<CarePlanVersionSummary>>> GetVersionsAsync(Guid patientId, CancellationToken token);
+    Task<Result<CarePlanVersionResponse>> GetVersionAsync(Guid patientId, int number, CancellationToken token);
 }

@@ -16,7 +16,7 @@ namespace Patients.Application.Services.Interfaces
         Task<Result<string>> UploadProfileImageForPatientAsync(PatientId patientId, IFormFile formFile, CancellationToken cancellationToken);
         Task<Result<string>> UploadPatientDocumentAsync(PatientId patientId, IFormFile formFile, string fileName, CancellationToken cancellationToken);
         Task<PatientResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        Task<IReadOnlyList<PatientResponse>> ListAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<PatientListItem>> ListAsync(CancellationToken cancellationToken = default);
         Task<Result<PatientResponse>> RegisterAsync(RegisterPatientRequest request, CancellationToken cancellationToken = default);
         Task<Result> UpdateAsync(Guid id, UpdatePatientRequest request, CancellationToken cancellationToken = default);
     }

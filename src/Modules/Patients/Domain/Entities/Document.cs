@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using VCare.SharedKernel.Results;
 
 namespace Patients.Domain.Entities
 {
-    internal class PatientDocument
+    internal class PatientDocument : IAudited
     {
         public Guid Id { get; private set; } = Guid.NewGuid();
         public PatientId PatientId { get; private set; }

@@ -38,7 +38,20 @@ namespace Staffs.Application.Services.Interface
         /// <summary>Verifies the user's email with the token from a <see cref="GenerateEmailVerificationLinkAsync"/> link.</summary>
         Task<Result> VerifyEmailAsync(string email, string token);
 
-        Task<Result<string>> GetPasswordResetcode(string email);
+        /// <summary>The reset link to email, or null when there is nobody to send it to.
+        /// Never a failure for an unknown email, so the caller cannot tell the difference.</summary>
+        Task<Result<string?>> GetPasswordResetcode(string email);
+
+        /// <summary>Moves the sign-in role and ends every session, so the old role stops working now.</summary>
+        Task<Result> ChangeRoleAsync(Guid staffId, string role, CancellationToken cancellationToken);
+
+        /// <summary>Moves the sign-in email. It must be confirmed again before the next sign-in.</summary>
+        Task<Result> ChangeEmailAsync(Guid staffId, string email, CancellationToken cancellationToken);
+
+        /// <summary>Stops the staff member signing in and ends every session they have.</summary>
+        Task<Result> DeactivateAsync(Guid staffId, CancellationToken cancellationToken);
+
+        Task<Result> ReactivateAsync(Guid staffId, CancellationToken cancellationToken);
 
         Task<Result<bool>> ResetPasswordAsync(string password, string email, string token);
     }

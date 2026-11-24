@@ -4,15 +4,20 @@
     <PackageReference Include="Microsoft.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
      <PackageReference Include="AWSSDK.S3"  />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Modules\Patients\VCare.Modules.Patients.csproj" />
     <ProjectReference Include="..\Modules\CarePlans\VCare.Modules.CarePlans.csproj" />
-    <ProjectReference Include="..\Modules\Medications\Vcare.Modules.Medications.csproj" />
+    <ProjectReference Include="..\Modules\Medications\VCare.Modules.Medications.csproj" />
     <ProjectReference Include="..\Modules\Staffs\VCare.Modules.Staffs.csproj" />
-    <ProjectReference Include="..\Modules\CareHomes\VCare.Modules.CareHome.Csproj" />
+    <ProjectReference Include="..\Modules\CareHomes\VCare.Modules.CareHome.csproj" />
     <ProjectReference Include="..\Modules\Visitation\VCare.Modules.Visitation.csproj" />
-    <ProjectReference Include="..\Modules\Outbox\VCare.Modules.Outbox.csproj" />
+    <ProjectReference Include="..\Modules\Audit\VCare.Modules.Audit.csproj" />
      <ProjectReference Include="..\Modules\Notifications\VCare.Modules.Notifications.csproj" />
     
 

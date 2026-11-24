@@ -1,0 +1,18 @@
+$kind: http-request
+name: /api/staff/:staffId/deactivate
+url: "{{baseUrl}}/api/staff/:staffId/deactivate"
+method: POST
+description: >-
+  Admin only. The staff member can no longer sign in and every session they have ends at once.
+headers:
+  Content-Type: application/json
+pathVariables:
+  staffId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Left the home on 20 November"
+    }
+settings: {}
+order: 1000

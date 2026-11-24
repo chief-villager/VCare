@@ -17,6 +17,7 @@ namespace src.Modules.CareHomes.Infrastructure.Configuration
             builder.Property(x => x.Address).IsRequired();
             builder.HasKey(x => x.Id);
             builder.HasIndex(x => x.Email).IsUnique();
+            builder.Property(x => x.TimeZoneId).HasMaxLength(CareHome.TimeZoneIdMaxLength).IsRequired();
         }
 
         

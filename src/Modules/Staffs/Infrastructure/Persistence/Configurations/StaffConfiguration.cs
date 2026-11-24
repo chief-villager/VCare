@@ -21,6 +21,8 @@ namespace Staffs.Infrastructure.Persistence.Configurations
             builder.Property(s => s.Email).IsRequired().HasMaxLength(200);
             builder.Property(s => s.PhoneNumber).IsRequired().HasMaxLength(20);
             builder.Property(s => s.Role).IsRequired().HasMaxLength(50);
+            builder.Property(s => s.DeactivationReason).HasMaxLength(Staff.DeactivationReasonMaxLength);
+            builder.Ignore(s => s.IsActive);
             builder.Property(s => s.CareHomeId)
                 .HasConversion(id => id.Value, value => new CareHomeId(value))
                 .IsRequired();
@@ -41,6 +43,9 @@ namespace Staffs.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<StaffDocument> builder)
         {
             builder.HasKey(d => d.Id);
+            // Set in code and added to an already-loaded staff member: EF read the set
+            // key as an existing row and every upload failed with 0 rows updated.
+            builder.Property(d => d.Id).ValueGeneratedNever();
             builder.Property(d => d.FileName).IsRequired().HasMaxLength(200);
             builder.Property(d => d.StorageKeyName).IsRequired().HasMaxLength(200);
             builder.Property(d => d.StaffId).IsRequired();

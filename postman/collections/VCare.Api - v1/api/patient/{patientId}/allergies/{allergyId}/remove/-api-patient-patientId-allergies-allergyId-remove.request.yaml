@@ -1,0 +1,19 @@
+$kind: http-request
+name: /api/patient/:patientId/allergies/:allergyId/remove
+url: "{{baseUrl}}/api/patient/:patientId/allergies/:allergyId/remove"
+method: POST
+description: >-
+  Admin only. Marks an allergy entered in error as removed; it stays on the record.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+  allergyId: 5b0f7c2e-3a41-4d9e-9c1a-7e2b8d4f6a10
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Entered on the wrong resident"
+    }
+settings: {}
+order: 1000

@@ -26,12 +26,16 @@ namespace VCare.Api.Services
         public Task<(Stream Content, string ContentType)> GetProfileImageAsync(string objectKey, string sourceBucket, CancellationToken cancellationToken = default) =>
             DownloadAsync(objectKey, sourceBucket, "image/jpeg", cancellationToken);
 
+        // The client's content type is ignored: UploadPolicy decides from the extension.
         public Task<Result<string>> WritingAnObjectAsync(string bucketName, Stream content, string fileName, string contentType, string careHomeId, CancellationToken cancellationToken = default) =>
-            UploadAsync(bucketName, content, fileName, contentType, careHomeId, "documents", cancellationToken);
+            UploadAsync(bucketName, content, fileName, UploadPolicy.Documents, careHomeId, "documents", cancellationToken);
 
         public Task<Result<string>> UploadProfileImageAsync(string bucketName, Stream content, string fileName, string contentType, string careHomeId, CancellationToken cancellationToken = default) =>
-            UploadAsync(bucketName, content, fileName, contentType, careHomeId, "profiles", cancellationToken);
+            UploadAsync(bucketName, content, fileName, UploadPolicy.ProfileImages, careHomeId, "profiles", cancellationToken);
 
+        // Streamed straight from S3 to the caller. Copying into a MemoryStream first
+        // held every download whole in the server's memory, so a few large scans at
+        // once could exhaust it. The response is disposed with the stream.
         private async Task<(Stream Content, string ContentType)> DownloadAsync(string objectKey, string sourceBucket, string fallbackContentType, CancellationToken cancellationToken)
         {
             var request = new GetObjectRequest
@@ -39,28 +43,50 @@ namespace VCare.Api.Services
                 BucketName = sourceBucket,
                 Key = objectKey
             };
-            var memoryStream = new MemoryStream();
 
             try
             {
-                using var response = await _s3Client.GetObjectAsync(request, cancellationToken);
-                await response.ResponseStream.CopyToAsync(memoryStream, cancellationToken);
-
-                // CopyToAsync leaves the position at the end; without this the
-                // caller streams back an empty body.
-                memoryStream.Position = 0;
-                return (memoryStream, response.Headers.ContentType ?? fallbackContentType);
+                var response = await _s3Client.GetObjectAsync(request, cancellationToken);
+                return (new OwningStream(response.ResponseStream, response), response.Headers.ContentType ?? fallbackContentType);
             }
             catch (Exception ex)
             {
-                await memoryStream.DisposeAsync();
                 _logger.LogError(ex, "Error retrieving {Key} from S3 bucket {Bucket}", objectKey, sourceBucket);
                 throw;
             }
         }
 
-        private async Task<Result<string>> UploadAsync(string bucketName, Stream content, string fileName, string contentType,
-            string careHomeId, string folder, CancellationToken cancellationToken)
+        /// <summary>Reads from the S3 body and disposes the whole response when the caller is done.</summary>
+        private sealed class OwningStream(Stream inner, IDisposable owner) : Stream
+        {
+            public override bool CanRead => inner.CanRead;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
+            public override long Length => inner.Length;
+            public override long Position { get => inner.Position; set => throw new NotSupportedException(); }
+            public override void Flush() { }
+            public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+                inner.ReadAsync(buffer, offset, count, cancellationToken);
+            public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+                inner.ReadAsync(buffer, cancellationToken);
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    inner.Dispose();
+                    owner.Dispose();
+                }
+                base.Dispose(disposing);
+            }
+        }
+
+        private async Task<Result<string>> UploadAsync(string bucketName, Stream content, string fileName,
+            IReadOnlyDictionary<string, string> allowed, string careHomeId, string folder, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(bucketName))
             {
@@ -86,6 +112,11 @@ namespace VCare.Api.Services
             {
                 return Result.Failure<string>(new Error("FileNameRequired", "File name is required", ErrorKind.Validation));
             }
+            var contentType = UploadPolicy.ContentTypeFor(safeName, allowed);
+            if (contentType.IsFailure)
+            {
+                return Result.Failure<string>(contentType.Error);
+            }
             var keyName = $"{careHomeId}/{folder}/{Guid.NewGuid():N}_{safeName}";
 
            
@@ -98,7 +129,7 @@ namespace VCare.Api.Services
                     InputStream = content,
                     // The caller owns the stream and disposes it.
                     AutoCloseStream = false,
-                    ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType,
+                    ContentType = contentType.Value,
                     ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256
                 };
                 await _s3Client.PutObjectAsync(putRequest, cancellationToken);

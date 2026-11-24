@@ -1,95 +1,101 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Medications.Application.Abstracts;
 using Medications.Application.Services.Interfaces;
 using Medications.Domain.Entities;
+using Medications.Domain.Enum;
+using Medications.Domain.Errors;
+using VCare.SharedKernel.Abstractions;
+using VCare.SharedKernel.Results;
 
 namespace Medications.Application.Services
 {
-    internal class MarChartService (IMedicationOrderRepository _orders, 
-    IMedicalAdministrationRepository _admins, ScheduleExpander _expander ) : IMarChartService
+    internal class MarChartService (IMedicationOrderRepository _orders,
+    IMedicalAdministrationRepository _admins, ScheduleExpander _expander,
+    IOutcomeRepository _outcomes, ICurrentUser _currentUser, IResidentAbsences _absences,
+    ICareHomeClock _homeClock) : IMarChartService
     {
-        public async Task<MarChartResponse> BuildChart(Guid patientId, int year, int month)
+        public async Task<Result<MarChartResponse>> BuildChart(Guid patientId, int year, int month, CancellationToken token)
         {
+            // new DateOnly(2026, 13, 1) throws; a bad query string is the caller's
+            // mistake and gets a 400, not a 500.
+            if (year is < 1 or > 9999 || month is < 1 or > 12)
+                return Result.Failure<MarChartResponse>(MedicationErrors.InvalidMonth);
+
             // Month boundaries. "1st of next month minus a day" = last day, any length.
             var from = new DateOnly(year, month, 1);
             var to   = from.AddMonths(1).AddDays(-1);
 
-            // TWO database reads:
-            //   orders = the rows-to-be (every order live this month)
-            var orders = await _orders.ActiveBetween(patientId, from, to);
-    
-            //   admins = every signed dose this month, RE-FILED by (order, slot) so we
-            //   can look one up instantly. Think of ToLookup as building an index:
-            //     (paracetamol, 1 Aug 08:00) → SA's signature
-            //     (paracetamol, 1 Aug 20:00) → JT's signature
-            var admins = _admins.ForResidentBetween(patientId, from, to).ToList();
+            // Every order live this month (one row each), every recorded dose this
+            // month, and the outcome codes so each square can say what happened.
+            var orders = (await _orders.ActiveBetween(patientId, from, to)).ToList();
+            var admins = await _admins.ForResidentBetweenAsync(patientId, from, to, token);
+            var outcomes = (await _outcomes.GetAllAsync(token)).ToDictionary(o => o.Id);
+            var away = orders.Count == 0
+                ? []
+                : await _absences.OverlappingAsync([patientId], from.ToDateTime(TimeOnly.MinValue), to.ToDateTime(TimeOnly.MaxValue), token);
+
+            // Scheduled doses, re-filed by (order, slot) so each square finds its
+            // signature instantly: (paracetamol, 1 Aug 08:00) → SA's signature.
             var scheduledLookup = admins.Where(a => a.ScheduledFor.HasValue)
                 .ToLookup(a => (a.MedicationOrderId.Value, a.ScheduledFor!.Value));
+            var prnLookup = admins.Where(a => a.ScheduledFor is null)
+                .ToLookup(a => a.MedicationOrderId.Value);
 
-            
-                                
-            // Build each row: expand the plan, then match each slot to a signature.
-            var now = DateTime.Now;
+            var now = await _homeClock.NowAsync(_currentUser.CareHomeId, token);
+            OutcomeCode? OutcomeOf(MedicationAdministration? a) =>
+                a is not null && outcomes.TryGetValue(a.OutcomeCodeId, out var o) ? o : null;
+
             var rows = orders.Select(order =>
             {
-                var cells = _expander.ExpandSchedule(order, from, to)     // expected slots
-                    .Select(slot => new MarCell
+                if (order.IsPrn)
+                {
+                    // As-required doses have no plan to expand: the row is the doses
+                    // that were given (or offered), in time order.
+                    var entries = prnLookup[order.Id.Value]
+                        .OrderBy(a => a.AdministeredAt)
+                        .Select(a => new MarCell
+                        {
+                            DueAt = null,
+                            Dose = a.DoseGiven,
+                            Administration = a,
+                            Outcome = OutcomeOf(a),
+                            Now = now,
+                            OrderEnteredAt = order.CreatedAt
+                        })
+                        .ToList();
+                    return new MarRow { Order = order, Cells = entries };
+                }
+
+                var cells = _expander.ExpandPlanned(order, from, to)
+                    .Select(slot => (Slot: slot, Administration: scheduledLookup[(order.Id.Value, slot.DueAt)].FirstOrDefault()))
+                    .Where(x => IsPartOfRecord(order, x.Slot.DueAt, x.Administration))
+                    .Select(x => new MarCell
                     {
-                        DueAt = slot.DueAt,
-                        Dose = slot.Dose,
+                        DueAt = x.Slot.DueAt,
+                        Dose = x.Slot.Dose,
+                        Administration = x.Administration,
+                        Outcome = OutcomeOf(x.Administration),
                         Now = now,
-                        // look in the index under (this order, this slot):
-                        //   found    → attach the signature   → IsSigned true
-                        //   not found→ FirstOrDefault() = null → not due, due or missed
-                        Administration = scheduledLookup[(order.Id.Value, slot.DueAt)].FirstOrDefault()
-                        
+                        OrderEnteredAt = order.CreatedAt,
+                        IsDuringAbsence = away.Any(a => a.Covers(x.Slot.DueAt))
                     })
                     .ToList();
-    
                 return new MarRow { Order = order, Cells = cells };
             });
 
-            var prnRows = BuildPrnRows(orders, scheduledLookup, from, to);
-
-            var chart = new MarChart { Rows = rows.Concat(prnRows).ToList() };
+            var chart = new MarChart { Rows = rows.ToList() };
 
             // The chart above is the domain shape; below is the wire shape. Keeping
             // them apart is what lets MarCell own IsSigned/IsMissed while the
             // response hands the client one state it cannot misread.
-            return ToResponse(chart, patientId, year, month, from, to);
-    
-            // ── TRACE (paracetamol row, "now" = 2 Aug midday) ─────────────────────
-            //   Expected slots from ExpandSchedule → matched against the index:
-            //
-            //     slot 1 Aug 08:00 → index HIT (SA)  → IsSigned=true   → shows "SA"
-            //     slot 1 Aug 20:00 → index HIT (JT)  → IsSigned=true   → shows "JT"
-            //     slot 2 Aug 08:00 → HIT ("Missed", recorder)          → IsMissed=true (red gap)
-            //     slot 2 Aug 12:00 → miss → null → inside the grace hour→ IsDue=true (amber)
-            //     slot 2 Aug 20:00 → miss → null → FUTURE (8pm not here)→ blank, not due yet
-            //     slot 3 Aug 08:00 → miss → null → future               → blank
-            //       ... etc.
-            //
-            //   "Missed" is stored by MissedDoseRecorder once the grace hour is up.
-            //   Until it runs, the cell still reads missed: DoseWindow computes it
-            //   from the same rule, so the chart never waits on the recorder.
-    
-
+            return Result.Success(ToResponse(chart, patientId, year, month, from, to));
         }
 
-
-    // PRN row: no expansion, cells are the as-required doses that were given.
-        private IEnumerable<MarRow> BuildPrnRows(
-            IEnumerable<MedicationOrder> orders,
-            ILookup<(Guid, DateTime), MedicationAdministration> admins,
-            DateOnly from, DateOnly to)
-        {
-            // (sketch) for each order where IsPrn == true, gather its administrations
-            // straight from the data and present them as timestamped entries, not a grid.
-            return [];
-        }
+        // A planned dose belongs on the chart if the order was live when it was due.
+        // Doses due while it was held, or after it stopped, were never expected; the
+        // ones before stay, because they are the resident's record. Anything someone
+        // recorded is always shown.
+        private static bool IsPartOfRecord(MedicationOrder order, DateTime dueAt, MedicationAdministration? administration) =>
+            administration is not null || order.WasActiveAt(dueAt);
 
         private static MarChartResponse ToResponse(
             MarChart chart, Guid patientId, int year, int month, DateOnly from, DateOnly to) =>
@@ -111,7 +117,8 @@ namespace Medications.Application.Services
                 row.Order.PrnIndication,
                 row.Order.IsControlledDrug,
                 row.Order.Status,
-                [.. row.Cells.Select(ToResponse)]);
+                [.. row.Cells.Select(ToResponse)],
+                MedicationService.ToResponse(row.Order.StatusHistory));
 
         private static MarCellResponse ToResponse(MarCell cell) =>
             new(
@@ -119,16 +126,20 @@ namespace Medications.Application.Services
                 cell.Dose,
                 cell.IsSigned ? MarCellState.Signed
                     : cell.IsMissed ? MarCellState.Missed
+                    : cell.IsBeforeOrderEntered ? MarCellState.NotRecorded
+                    : cell.IsAway ? MarCellState.Away
                     : cell.IsDue ? MarCellState.Due
                     : MarCellState.NotDue,
                 cell.Administration?.Id.Value,
-                // TODO: an administration carries only OutcomeCodeId. Filling the
-                // letter the square displays needs the outcome codes loaded and
-                // indexed by id — IOutcomeRepository only looks them up by name.
-                null,
-                null,
+                // Taken and Refused are both "signed"; the letter is what tells a
+                // reader whether the resident actually had the medicine.
+                cell.Outcome?.DisplayLetter,
+                cell.Outcome?.Name,
                 cell.Administration?.AdministeredAt,
                 cell.Administration?.AdministeredByStaffId,
-                cell.Administration?.Notes);
-    }   
+                cell.Administration?.Notes,
+                cell.Administration?.IsLate ?? false,
+                cell.Administration?.Reason,
+                cell.Administration?.WitnessedByStaffId);
+    }
 }

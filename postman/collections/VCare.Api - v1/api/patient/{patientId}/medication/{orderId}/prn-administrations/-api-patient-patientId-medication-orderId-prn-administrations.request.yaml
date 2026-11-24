@@ -1,0 +1,24 @@
+$kind: http-request
+name: /api/patient/:patientId/medication/:orderId/prn-administrations
+url: "{{baseUrl}}/api/patient/:patientId/medication/:orderId/prn-administrations"
+method: POST
+description: >-
+  Records an as-required (PRN) dose. The order's minimum interval and 24-hour limit are enforced. A controlled drug needs witnessStaffId.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+  orderId: 0cbe9b07-aef0-405d-84cb-dc3ca0941c1b
+body:
+  type: json
+  content: |-
+    {
+      "outcome": "Taken",
+      "doseGiven": "2 tablets",
+      "reason": "Pain in left hip",
+      "administeredAt": null,
+      "notes": null,
+      "witnessStaffId": null
+    }
+settings: {}
+order: 1000

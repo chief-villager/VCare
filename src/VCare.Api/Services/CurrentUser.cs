@@ -1,5 +1,6 @@
 using System;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using VCare.SharedKernel.Abstractions;
 
@@ -9,7 +10,15 @@ namespace VCare.Api.Services
     {
         public const string CareHomeClaim = "care_home_id";
 
-        private ClaimsPrincipal? Principal => accessor.HttpContext?.User;
+        // A route open to anyone (sign-in, registration, password reset) works the
+        // same with or without a token, so a token sent to it is ignored. Otherwise a
+        // signed-in admin registering another care home would be held to their own,
+        // and the database would refuse to create it.
+        private ClaimsPrincipal? Principal =>
+            accessor.HttpContext is { } context
+            && context.GetEndpoint()?.Metadata.GetMetadata<IAllowAnonymous>() is null
+                ? context.User
+                : null;
 
         public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated ?? false;
 

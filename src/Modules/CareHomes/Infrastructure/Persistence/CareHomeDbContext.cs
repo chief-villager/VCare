@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,8 @@ namespace src.Modules.CareHomes.Infrastructure.Persistence
         {
             modelBuilder.HasDefaultSchema(SchemaName);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(CareHomeDbContext).Assembly);
+            // Audit rows are written in the same save as the change (see AuditSaveChangesInterceptor).
+            modelBuilder.MapAuditEntries();
             base.OnModelCreating(modelBuilder);
         }
     }

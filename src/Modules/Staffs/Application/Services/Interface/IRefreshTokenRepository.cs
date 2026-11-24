@@ -10,6 +10,7 @@ namespace Staffs.Application.Services.Interface
     {
         Task<RefreshToken?> GetByHashAsync(byte[] tokenHash, CancellationToken cancellationToken);
         Task<IEnumerable<RefreshToken>> GetAllActiveTokenAsync(Guid TokenFamilyId, CancellationToken cancellationToken);
+        Task<IEnumerable<RefreshToken>> GetAllActiveForStaffAsync(Guid staffId, CancellationToken cancellationToken);
         Task AddAsync(RefreshToken refreshToken, CancellationToken cancellationToken);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
         

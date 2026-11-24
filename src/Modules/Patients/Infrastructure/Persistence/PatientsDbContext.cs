@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using Microsoft.EntityFrameworkCore;
 using Patients.Infrastructure.Persistence;
 using VCare.Modules.Patients.Domain.Entities;
@@ -21,6 +22,8 @@ internal sealed class PatientsDbContext(DbContextOptions<PatientsDbContext> opti
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PatientsDbContext).Assembly);
+        // Audit rows are written in the same save as the change (see AuditSaveChangesInterceptor).
+        modelBuilder.MapAuditEntries();
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Patient>().HasQueryFilter(p => p.CareHomeId == CurrentCareHome);
 

@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using Microsoft.EntityFrameworkCore;
 using VCare.Modules.CarePlans.Domain.Entities;
 using VCare.SharedKernel.Abstractions;
@@ -24,6 +25,8 @@ internal sealed class CarePlanDbContext(DbContextOptions<CarePlanDbContext> opti
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CarePlanDbContext).Assembly);
+        // Audit rows are written in the same save as the change (see AuditSaveChangesInterceptor).
+        modelBuilder.MapAuditEntries();
         base.OnModelCreating(modelBuilder);
 
         // Care home isolation: a caller can only ever read care plans from their

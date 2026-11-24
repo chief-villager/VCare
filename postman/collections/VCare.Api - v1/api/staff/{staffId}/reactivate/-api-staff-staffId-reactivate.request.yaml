@@ -1,0 +1,10 @@
+$kind: http-request
+name: /api/staff/:staffId/reactivate
+url: "{{baseUrl}}/api/staff/:staffId/reactivate"
+method: POST
+description: >-
+  Admin only. Lets a deactivated staff member sign in again.
+pathVariables:
+  staffId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+settings: {}
+order: 1000

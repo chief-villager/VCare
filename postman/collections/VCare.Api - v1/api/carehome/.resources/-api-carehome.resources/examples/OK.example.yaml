@@ -11,7 +11,8 @@ request:
         "careHome": {
           "name": "string",
           "address": "string",
-          "email": "string"
+          "email": "string",
+          "timeZoneId": "Europe/London"
         },
         "admin": {
           "firstName": "string",

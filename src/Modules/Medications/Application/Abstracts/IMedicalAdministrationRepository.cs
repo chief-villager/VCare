@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
 using Medications.Domain.Entities;
 
 namespace Medications.Application.Abstracts
@@ -11,7 +6,15 @@ namespace Medications.Application.Abstracts
     {
         Task AddAsync(MedicationAdministration administration);
         Task<MedicationAdministration?> Find(Guid orderId, DateTime scheduledFor);
-        IEnumerable<MedicationAdministration> ForResidentBetween(Guid patientId, DateOnly from, DateOnly to);
+
+        /// <summary>A resident's administrations between the two days: scheduled ones
+        /// by their slot, PRN ones (which have no slot) by when they were given.</summary>
+        Task<List<MedicationAdministration>> ForResidentBetweenAsync(Guid patientId, DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
+        /// <summary>When PRN doses of this order were actually given (Taken or Vomited)
+        /// between the two times. What the minimum interval and 24-hour limit count.</summary>
+        Task<List<DateTime>> PrnGivenTimesAsync(Guid orderId, DateTime from, DateTime to, CancellationToken cancellationToken);
+
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
         /// <summary>The (order, slot) pairs already recorded for these orders between

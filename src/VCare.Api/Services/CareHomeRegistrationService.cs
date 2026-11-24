@@ -9,7 +9,7 @@ namespace VCare.Api.Services
 {
     // A care home and its first admin are created together: neither module knows
     // about the other, so the policy that joins them lives at the composition
-    // root, the same way the dashboard composes its two reads.
+    // root.
     //
     // It has to be one call. Staff creation takes the care home from the caller's
     // token, and the only way to get a token is to be staff already, so a care

@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using VCare.SharedKernel.Abstractions;
 using VCare.SharedKernel.Results;
 using Visitation.Domain.Entities;
@@ -6,7 +7,7 @@ namespace VCare.Modules.Visitation.Domain.Entities;
 
 // One staff member's attendance at a visit. Created at check-in and closed at
 // check-out, when the care given is recorded. Only reached through its Visit.
-internal sealed class VisitRecord
+internal sealed class VisitRecord : IAudited
 {
     public Guid Id {get; private set;}
     public VisitId VisitId {get; private set;}
@@ -38,7 +39,7 @@ internal sealed class VisitRecord
     }
 
     internal Result CheckOut(bool isMedicationCompleted, bool isPersonalCareCompleted, bool isFeedingTaskCompleted,
-    string medicationTaskNote, string personalCareTaskNote, string feedingTaskNote, DateTime? checkedOutAt = null)
+    string medicationTaskNote, string personalCareTaskNote, string feedingTaskNote, DateTime checkedOutAt)
     {
         if (Status is not VisitStatus.CheckedIn)
             return Result.Failure(Error.Conflict("Visits.NotCheckedIn", $"Only a checked-in visit can be checked out; this one is {Status}."));
@@ -49,7 +50,7 @@ internal sealed class VisitRecord
         if (string.IsNullOrWhiteSpace(feedingTaskNote))
             return Result.Failure("Feeding task note is required.");
 
-        var leftAt = (checkedOutAt ?? DateTime.UtcNow).ToUniversalTime();
+        var leftAt = checkedOutAt.ToUniversalTime();
         if (leftAt < CheckedInAt)
             return Result.Failure("A visit cannot end before it began.");
 

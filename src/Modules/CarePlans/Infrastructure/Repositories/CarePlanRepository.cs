@@ -16,6 +16,8 @@ internal sealed class CarePlanRepository(CarePlanDbContext context) : ICarePlanR
     public async Task<CarePlan?> GetForPatientAsync(PatientId patientId, CancellationToken cancellationToken = default) =>
         await context.CarePlans
             .Include(c => c.Diagnoses)
+            .Include(c => c.Versions)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(c => c.PatientId == patientId, cancellationToken);
 
     public async Task<bool> ExistsForPatientAsync(PatientId patientId, CancellationToken cancellationToken = default) =>

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Medications.Application.Services;
 using Medications.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -29,6 +25,8 @@ namespace Medications.Presentation
             medication.MapGet("/{orderId:Guid}", GetMedicationOrder).RequireAuthorization("Admin_Role");
             medication.MapPut("/{orderId:Guid}/status", UpdateMedicationOrderStatus).RequireAuthorization("Admin_Role");
             medication.MapPost("/{orderId:Guid}/administrations/{scheduleId:Guid}", RecordMedicationAministration).RequireAuthorization("Admin_Or_Carer");
+            // As-required doses have no slot, so they have no schedule id either.
+            medication.MapPost("/{orderId:Guid}/prn-administrations", RecordPrnAdministration).RequireAuthorization("Admin_Or_Carer");
         }
 
         public static async Task<IResult> CreateMedicationOrder(
@@ -58,28 +56,38 @@ namespace Medications.Presentation
         }
 
         public static async Task<IResult> GetMedicationOrder(
-            Guid orderId, IMedicationService medicationService, CancellationToken token)
+            Guid patientId, Guid orderId, IMedicationService medicationService, CancellationToken token)
         {
-            var response = await medicationService.GetMedicationOrder(orderId, token);
+            var response = await medicationService.GetMedicationOrder(patientId, orderId, token);
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
 
         public static async Task<IResult> UpdateMedicationOrderStatus(
-            Guid orderId, UpdateMedicationOrderStatusRequest request,
-            IMedicationService medicationService, CancellationToken token)
+            Guid patientId, Guid orderId, UpdateMedicationOrderStatusRequest request,
+            IMedicationService medicationService, ICurrentUser currentUser, CancellationToken token)
         {
-            var response = await medicationService.UpdateMedicationOrderStatusAsync(orderId, request.Status, token);
+            // Who held, restarted or stopped the order is the caller.
+            var response = await medicationService.UpdateMedicationOrderStatusAsync(patientId, orderId, request, currentUser.UserId, token);
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok();
         }
 
         // The staff member signing the dose off is the caller, never a value the
         // client gets to choose.
         public static async Task<IResult> RecordMedicationAministration(
-            Guid orderId,Guid scheduleId, RecordAdministrationRequest request,
+            Guid patientId, Guid orderId, Guid scheduleId, RecordAdministrationRequest request,
             IMedicationService medicationService, ICurrentUser currentUser, CancellationToken token)
         {
             var response = await medicationService.RecordAministration(
-                orderId, request.ScheduledFor, request.Outcome, currentUser.UserId, scheduleId, token, request.Notes);
+                patientId, orderId, scheduleId, request, currentUser.UserId, token);
+            return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
+        }
+
+        public static async Task<IResult> RecordPrnAdministration(
+            Guid patientId, Guid orderId, RecordPrnAdministrationRequest request,
+            IMedicationService medicationService, ICurrentUser currentUser, CancellationToken token)
+        {
+            var response = await medicationService.RecordPrnAdministration(
+                patientId, orderId, request, currentUser.UserId, token);
             return response.IsFailure ? response.ToProblem() : TypedResults.Ok(response.Value);
         }
     }

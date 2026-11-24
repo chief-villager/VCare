@@ -18,14 +18,17 @@ namespace Staffs.Application.Services
 {
     internal sealed class TokenService(IOptions<JwtSettings> options) : IJwtTokenService
     {
-        public Result<string> CreateToken(string name, StaffId staffId, Guid careHomeId, IEnumerable<string> roles)
+        public Result<string> CreateToken(string name, StaffId staffId, Guid careHomeId, IEnumerable<string> roles, string securityStamp)
         {
            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, name ),
                 new Claim(ClaimTypes.NameIdentifier, staffId.ToString()),
                 new Claim("care_home_id", careHomeId.ToString()),
-               
+                // Checked against the user on every request (StaffSessionValidator): a
+                // role change, deactivation or password reset changes it, and every
+                // token carrying the old one stops working at once.
+                new Claim(Staffs.Infrastructure.StaffSessionValidator.StampClaim, securityStamp),
             };
 
             // Append returns a new sequence and mutates nothing: discarding it

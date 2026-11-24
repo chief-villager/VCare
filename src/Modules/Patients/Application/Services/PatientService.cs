@@ -65,6 +65,15 @@ internal  class PatientService(
             {
                 return Result.Failure<(Stream Content, string ContentType)>(new Error("403", "You are not authorized to view documents for this patient", ErrorKind.Forbidden));
             }
+
+            // The key comes from the client. Checking only that the patient is ours
+            // and then fetching any key handed over another home's files, or this
+            // home's staff HR files, to anyone holding a key. Only this patient's
+            // own documents and profile image may come back.
+            if (string.IsNullOrWhiteSpace(key) || !await repository.OwnsStorageKeyAsync(patientId.Value, key, cancellationToken))
+            {
+                return Result.Failure<(Stream Content, string ContentType)>(Error.NotFound("Patients.DocumentNotFound", "Document not found."));
+            }
             var document = await documentService.GetObjectAsync(objectKey: key, sourceBucket: BucketName, cancellationToken);
             return Result.Success(document);
         }
@@ -107,14 +116,14 @@ internal  class PatientService(
             var patient = await repository.GetByIdAsync(id, cancellationToken);
             return patient is null
                 ? null
-                : new PatientResponse(patient.Id.Value, patient.FullName, patient.DateOfBirth);
+                : PatientResponse.From(patient);
         }
 
-    public async Task<IReadOnlyList<PatientResponse>> ListAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<PatientListItem>> ListAsync(CancellationToken cancellationToken = default)
     {
         var patients = await repository.ListAsync(cancellationToken);
         return patients
-            .Select(p => new PatientResponse(p.Id.Value, p.FullName, p.DateOfBirth))
+            .Select(PatientListItem.From)
             .ToList();
     }
 
@@ -132,7 +141,7 @@ internal  class PatientService(
         await repository.AddAsync(patient.Value, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new PatientResponse(patient.Value.Id.Value, patient.Value.FullName, patient.Value.DateOfBirth));
+        return Result.Success(PatientResponse.From(patient.Value));
     }
 
     public async Task<Result> UpdateAsync(Guid id, UpdatePatientRequest request, CancellationToken cancellationToken = default)

@@ -47,6 +47,10 @@ namespace VCare.Modules.CarePlans.Migrations
                     b.Property<Guid>("StaffId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CareHomeId");
@@ -55,6 +59,96 @@ namespace VCare.Modules.CarePlans.Migrations
                         .IsUnique();
 
                     b.ToTable("CarePlans", "CarePlan");
+                });
+
+            modelBuilder.Entity("VCare.Modules.CarePlans.Domain.Entities.CarePlanVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CarePlanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Diagnoses")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EditedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EditedByStaffId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Goal")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarePlanId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("CarePlanVersions", "CarePlan");
+                });
+
+            modelBuilder.Entity("VCare.SharedKernel.Auditing.AuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<Guid?>("CareHomeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ResidentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("StaffId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TraceId")
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ResidentId", "OccurredAt");
+
+                    b.HasIndex("EntityType", "EntityId", "OccurredAt");
+
+                    b.ToTable("AuditEntries", "audit", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("VCare.Modules.CarePlans.Domain.Entities.CarePlan", b =>
@@ -89,6 +183,20 @@ namespace VCare.Modules.CarePlans.Migrations
                         });
 
                     b.Navigation("Diagnoses");
+                });
+
+            modelBuilder.Entity("VCare.Modules.CarePlans.Domain.Entities.CarePlanVersion", b =>
+                {
+                    b.HasOne("VCare.Modules.CarePlans.Domain.Entities.CarePlan", null)
+                        .WithMany("Versions")
+                        .HasForeignKey("CarePlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VCare.Modules.CarePlans.Domain.Entities.CarePlan", b =>
+                {
+                    b.Navigation("Versions");
                 });
 #pragma warning restore 612, 618
         }

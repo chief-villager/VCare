@@ -112,9 +112,34 @@ namespace Staffs.Application.Services
             {
                 return Result.Failure<(string, string)>(Error.Unauthorized("Auth.InvalidCredentials", "invalid login credentials"));
             }
+
+            // Accounts created before lockout was configured have it switched off;
+            // turn it on the first time they are used.
+            if (!user.LockoutEnabled)
+            {
+                await userManager.SetLockoutEnabledAsync(user, true);
+            }
+
+            // Checked before the password, and answered the same whatever the
+            // password: otherwise a locked account would still say when a guess was right.
+            if (await userManager.IsLockedOutAsync(user))
+            {
+                return Result.Failure<(string, string)>(LockedOut);
+            }
             if (!await userManager.CheckPasswordAsync(user!, password))
             {
-               return Result.Failure<(string, string)>(Error.Unauthorized("Auth.InvalidCredentials", "invalid login credentials"));
+                await userManager.AccessFailedAsync(user);
+                return Result.Failure<(string, string)>(await userManager.IsLockedOutAsync(user)
+                    ? LockedOut
+                    : Error.Unauthorized("Auth.InvalidCredentials", "invalid login credentials"));
+            }
+            await userManager.ResetAccessFailedCountAsync(user);
+
+            // Only someone who already holds the password learns the account is deactivated.
+            if (user.DeactivatedAt is not null)
+            {
+                return Result.Failure<(string, string)>(Error.Forbidden("Auth.Deactivated",
+                    "This account has been deactivated. Speak to the care home's manager."));
             }
 
             // New staff must confirm their email before they can sign in. Checked
@@ -134,7 +159,8 @@ namespace Staffs.Application.Services
             // Each login opens a new token family, so ending one session leaves the
             // same staff member's other sessions alone.
             return await refreshTokenService.CreateTokensAsync(
-                userName, Guid.NewGuid(), new StaffId(user.Id), user.CareHomeId, role, cancellationToken);
+                userName, Guid.NewGuid(), new StaffId(user.Id), user.CareHomeId, role, user.SecurityStamp ?? string.Empty,
+                cancellationToken);
         }
 
         public async Task<Result<(string AccessToken, string RefreshToken)>> RefreshAsync (string refreshToken, CancellationToken cancellationToken)
@@ -197,22 +223,21 @@ namespace Staffs.Application.Services
             return result.Succeeded ? Result.Success() : Result.Failure(StaffErrors.InvalidVerificationLink);
         }
 
-        public async Task<Result<string>> GetPasswordResetcode(string email)
+        public async Task<Result<string?>> GetPasswordResetcode(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                return Result.Failure<string>("Email is required");
+                return Result.Failure<string?>("Email is required");
             }
 
+            // No account, an unconfirmed one, or a deactivated one: nothing to send,
+            // and the same answer as for a real account, so the endpoint cannot be
+            // used to find out who works where.
              var user = await userManager.FindByEmailAsync(email);
-             if (user == null)
+             if (user == null || !user.EmailConfirmed || user.DeactivatedAt is not null)
             {
-                return Result.Failure<string>("Invalid user");
+                return Result.Success<string?>(null);
             }
-             if (!user.EmailConfirmed)
-             {
-                return Result.Failure<string>("Valid email required");
-             }
             
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
             // Points at the front-end page, not the API: following a link can't
@@ -220,22 +245,111 @@ namespace Staffs.Application.Services
             var page = options.Value.ResetPasswordPageUrl;
             var separator = page.Contains('?') ? '&' : '?';
             var callbackurl = $"{page}{separator}email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
-            return Result.Success<string>(callbackurl);
+            return Result.Success<string?>(callbackurl);
         }
 
          public async Task<Result<bool>> ResetPasswordAsync(string password, string email, string token)
         {
+            // An unknown email reads like a bad link, so this cannot be used to
+            // probe for accounts either.
             var user = await userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Result.Failure<bool>("Invalid user");
+                return Result.Failure<bool>(InvalidResetLink);
             }
             var result = await userManager.ResetPasswordAsync(user, token, password);
             if (!result.Succeeded)
             {
-                return Result.Failure<bool>(string.Join("; ", result.Errors.Select(e => e.Description)));
+                return Result.Failure<bool>(result.Errors.Any(e => e.Code == "InvalidToken")
+                    ? InvalidResetLink
+                    : Error.Validation("Auth.PasswordRejected", Describe(result)));
             }
+            // Identity has changed the security stamp, so access tokens already stop
+            // working; the refresh tokens go too, so a session someone else may hold
+            // with the old password cannot be renewed.
+            await refreshTokenService.RevokeAllForStaffAsync(new StaffId(user.Id), CancellationToken.None);
+            await userManager.ResetAccessFailedCountAsync(user);
             return Result.Success(true);
+        }
+
+        private static readonly Error InvalidResetLink =
+            Error.Validation("Auth.InvalidResetLink", "This password reset link is invalid or has expired. Request a new one.");
+
+        private static readonly Error LockedOut = Error.Unauthorized("Auth.LockedOut",
+            "Too many failed sign-in attempts. Try again in 15 minutes, or reset your password.");
+
+        public async Task<Result> ChangeRoleAsync(Guid staffId, string role, CancellationToken cancellationToken)
+        {
+            if (!IsAllowedRole(role))
+                return Result.Failure(Error.Validation("Staffs.InvalidRole", "The role must be Admin or Carer."));
+            var user = await userManager.FindByIdAsync(staffId.ToString());
+            if (user is null)
+                return Result.Failure(StaffErrors.NotFound);
+
+            var current = await userManager.GetRolesAsync(user);
+            if (current.Count > 0)
+            {
+                var removed = await userManager.RemoveFromRolesAsync(user, current);
+                if (!removed.Succeeded)
+                    return Result.Failure(Describe(removed));
+            }
+            var added = await userManager.AddToRoleAsync(user, role.ToUpper());
+            if (!added.Succeeded)
+                return Result.Failure(Describe(added));
+
+            // Tokens carry the role: the stamp change stops the ones already issued,
+            // and the revoked refresh tokens cannot mint new ones under the old role.
+            await userManager.UpdateSecurityStampAsync(user);
+            await refreshTokenService.RevokeAllForStaffAsync(new StaffId(user.Id), cancellationToken);
+            return Result.Success();
+        }
+
+        public async Task<Result> ChangeEmailAsync(Guid staffId, string email, CancellationToken cancellationToken)
+        {
+            var user = await userManager.FindByIdAsync(staffId.ToString());
+            if (user is null)
+                return Result.Failure(StaffErrors.NotFound);
+            if (string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
+                return Result.Success();
+            if (await userManager.FindByEmailAsync(email) is not null)
+                return Result.Failure(Error.Conflict("Auth.EmailRegistered", "That email address is already registered"));
+
+            // SetEmailAsync clears EmailConfirmed and changes the security stamp: the
+            // new address is confirmed before it can be used to sign in or reset.
+            var changed = await userManager.SetEmailAsync(user, email);
+            if (!changed.Succeeded)
+                return Result.Failure(Describe(changed));
+            await refreshTokenService.RevokeAllForStaffAsync(new StaffId(user.Id), cancellationToken);
+            return Result.Success();
+        }
+
+        public async Task<Result> DeactivateAsync(Guid staffId, CancellationToken cancellationToken)
+        {
+            var user = await userManager.FindByIdAsync(staffId.ToString());
+            if (user is null)
+                return Result.Failure(StaffErrors.NotFound);
+
+            user.DeactivatedAt = DateTimeOffset.UtcNow;
+            var updated = await userManager.UpdateAsync(user);
+            if (!updated.Succeeded)
+                return Result.Failure(Describe(updated));
+            await userManager.UpdateSecurityStampAsync(user);
+            await refreshTokenService.RevokeAllForStaffAsync(new StaffId(user.Id), cancellationToken);
+            return Result.Success();
+        }
+
+        public async Task<Result> ReactivateAsync(Guid staffId, CancellationToken cancellationToken)
+        {
+            var user = await userManager.FindByIdAsync(staffId.ToString());
+            if (user is null)
+                return Result.Failure(StaffErrors.NotFound);
+
+            user.DeactivatedAt = null;
+            var updated = await userManager.UpdateAsync(user);
+            if (!updated.Succeeded)
+                return Result.Failure(Describe(updated));
+            await userManager.ResetAccessFailedCountAsync(user);
+            return Result.Success();
         }
 
         public async Task<Result<ApplicationUserResponse>> GetApplicationUserByEmailAsync(string email, CancellationToken cancellationToken)

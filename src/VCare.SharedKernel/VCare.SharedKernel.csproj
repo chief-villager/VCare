@@ -4,4 +4,9 @@
          Nothing else here may depend on ASP.NET: modules stay web-framework free. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- For the audit trail (Auditing/): the interceptor every module's DbContext
+         adds, and the shared table mapping. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+  </ItemGroup>
 </Project>

@@ -46,7 +46,8 @@ body:
         }
       ],
       "status": "Active",
-      "createdAt": "2026-10-19T09:00:00Z"
+      "prnMaxDosesPer24h": null,
+      "allergyOverrideReason": null
     }
 settings: {}
 examples: ./.resources/-api-patient-patientId-medication.resources/examples

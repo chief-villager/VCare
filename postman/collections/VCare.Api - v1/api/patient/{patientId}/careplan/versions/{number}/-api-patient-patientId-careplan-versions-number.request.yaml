@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/patient/:patientId/careplan/versions/:number
+url: "{{baseUrl}}/api/patient/:patientId/careplan/versions/:number"
+method: GET
+description: >-
+  The care plan as it stood at one version: its goal and diagnoses.
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+  number: 1
+settings: {}
+order: 1000

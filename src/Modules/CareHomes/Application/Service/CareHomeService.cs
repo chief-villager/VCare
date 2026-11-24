@@ -15,7 +15,7 @@ namespace src.Modules.CareHomes.Application.Service
     {
         public async Task<Result<string>> RegisterCareHomeAsync(CreateCareHomeRequest request, CancellationToken cancellationToken)
         {
-          var careHome = CareHome.CreateCareHome(request.Name, request.Address,request.Email);
+          var careHome = CareHome.CreateCareHome(request.Name, request.Address,request.Email, request.TimeZoneId);
           if (careHome.IsFailure)
           {
             return Result.Failure<string>(careHome.Error);
@@ -45,7 +45,11 @@ namespace src.Modules.CareHomes.Application.Service
             {
                 return Result.Failure(Error.NotFound("CareHomes.NotFound", "Care home does not exist."));
             }
-            careHome.UpdateCareHome(request.Name,request.Address,request.Email);
+            var updated = careHome.UpdateCareHome(request.Name,request.Address,request.Email, request.TimeZoneId);
+            if (updated.IsFailure)
+            {
+                return updated;
+            }
             careHomeRepository.UpdateAsync(careHome);
             await careHomeRepository.SaveChangesAsync(cancellationToken);
             return Result.Success();

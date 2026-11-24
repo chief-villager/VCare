@@ -1,0 +1,19 @@
+$kind: http-request
+name: /api/patient/:patientId/weights
+url: "{{baseUrl}}/api/patient/:patientId/weights"
+method: POST
+description: >-
+  Records a weight, stored to one decimal place. MeasuredAt is the time in the home and defaults to now.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "kilograms": 61.4,
+      "measuredAt": null
+    }
+settings: {}
+order: 2000

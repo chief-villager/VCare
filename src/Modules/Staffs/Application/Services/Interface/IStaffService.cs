@@ -27,6 +27,11 @@ namespace Staffs.Application.Services.Interface
         /// <summary>Checks these staff details could be created, writing nothing.</summary>
         Task<Result> ValidateNewStaffAsync(CreateStaffRequest staffRequest);
         Task<Result> UpdateStaffAsync(StaffId staffId, UpdateStaffRequest staff, CancellationToken cancellationToken);
+
+        /// <summary>For a staff member who leaves or is suspended: they cannot sign in, and every session ends.</summary>
+        Task<Result> DeactivateStaffAsync(StaffId staffId, DeactivateStaffRequest request, CancellationToken cancellationToken);
+
+        Task<Result> ReactivateStaffAsync(StaffId staffId, CancellationToken cancellationToken);
         Task<Result<(string AccessToken, string RefreshToken)>> LoginStaffAsync(string userName, string password, CancellationToken cancellationToken);
 
         /// <summary>Exchanges a refresh token for a new pair, rotating the old one out.</summary>

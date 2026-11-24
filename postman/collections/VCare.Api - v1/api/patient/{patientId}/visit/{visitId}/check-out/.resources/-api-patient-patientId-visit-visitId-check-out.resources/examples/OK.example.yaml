@@ -10,7 +10,6 @@ request:
     type: json
     content: |-
       {
-        "checkedOutAt": null,
         "isMedicationCompleted": true,
         "isPersonalCareCompleted": false,
         "isFeedingTaskCompleted": true,

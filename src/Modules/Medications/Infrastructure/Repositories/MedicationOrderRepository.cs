@@ -29,6 +29,8 @@ namespace Medications.Infrastructure.Repositories
         {
             var patient = new PatientId(patientId);
             var listofOrder = await _medicationOrderDb.MedicationOrders.Include(o => o.Schedule)                      // load the schedule too
+                .Include(o => o.StatusHistory)
+                .AsSplitQuery()                                   // two collections: one query each, not a cross join
                 .Where(o => o.PatientId == patient
                    && o.StartDate <= to                  // started on/before month end
                    && (o.EndDate == null || o.EndDate >= from))  // and not ended before month start
@@ -54,17 +56,22 @@ namespace Medications.Infrastructure.Repositories
         public async Task<MedicationOrder?> GetAsync(Guid Id, CancellationToken cancellationToken)
         {
             var orderId = new MedicationOrderId(Id);
-            return await _medicationOrderDb.MedicationOrders.Include( x => x.Schedule).FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken: cancellationToken);
+            return await _medicationOrderDb.MedicationOrders.Include( x => x.Schedule).Include(x => x.StatusHistory).AsSplitQuery().FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken: cancellationToken);
         }
 
         public async Task<List<MedicationOrder>> ActiveScheduledForAllCareHomesAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
         {
             // Read-only: the recorder writes administrations, never orders.
+            var since = from.ToDateTime(TimeOnly.MinValue);
             return await _medicationOrderDb.MedicationOrders
                 .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Include(o => o.Schedule)
-                .Where(o => o.Status == Domain.Enum.OrderStatus.Active
+                .Include(o => o.StatusHistory)
+                .AsSplitQuery()
+                // Active now, or changed during the lookback: a dose due just before
+                // a hold still closes unsigned and must still be recorded.
+                .Where(o => (o.Status == Domain.Enum.OrderStatus.Active || o.StatusChangedAt >= since)
                          && !o.IsPrn
                          && o.StartDate <= to
                          && (o.EndDate == null || o.EndDate >= from))

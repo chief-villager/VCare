@@ -32,8 +32,11 @@ namespace Staffs.Application.Dto
         string Email,
         string PhoneNumber,
         string Address,
-        string Role
+        string Role,
+        bool IsActive = true
     );
+
+    public record DeactivateStaffRequest(string Reason);
 
     public record CreateStaffResponse(
         Guid Id,

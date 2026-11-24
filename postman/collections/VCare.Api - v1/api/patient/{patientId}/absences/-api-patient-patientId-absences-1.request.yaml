@@ -1,0 +1,20 @@
+$kind: http-request
+name: /api/patient/:patientId/absences
+url: "{{baseUrl}}/api/patient/:patientId/absences"
+method: POST
+description: >-
+  The resident leaves: Kind is Hospital or Leave. StartedAt is the time in the home and defaults to now. Doses due while away are recorded as In hospital or On leave, not missed.
+headers:
+  Content-Type: application/json
+pathVariables:
+  patientId: d2d0e4fb-b6fd-bde9-e96c-63e0da48a963
+body:
+  type: json
+  content: |-
+    {
+      "kind": "Hospital",
+      "startedAt": null,
+      "note": "Fall at 14:10; taken to A&E"
+    }
+settings: {}
+order: 2000

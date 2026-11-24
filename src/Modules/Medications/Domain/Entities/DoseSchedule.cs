@@ -1,3 +1,4 @@
+using VCare.SharedKernel.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ using VCare.SharedKernel.Results;
 
 namespace Medications.Domain.Entities
 {
-    internal class DoseSchedule
+    internal class DoseSchedule : IAudited
     {
         public Guid Id { get; private set; }
         public MedicationOrderId MedicationOrderId { get; private set; }
@@ -66,6 +67,29 @@ namespace Medications.Domain.Entities
             if (fType == FrequencyType.IntervalDays && intervalDays < 1)
             {
                 return Result.Failure<DoseSchedule>("Interval days must be at least 1 for an IntervalDays schedule");
+            }
+            times ??= [];
+            // Each of these is a schedule that would never fall due, so the
+            // medicine would silently never be given.
+            if (fType != FrequencyType.Prn && times.Count == 0)
+            {
+                return Result.Failure<DoseSchedule>("A timed schedule needs at least one dose time");
+            }
+            if (times.Distinct().Count() != times.Count)
+            {
+                return Result.Failure<DoseSchedule>("A dose time is listed twice");
+            }
+            if (fType == FrequencyType.SpecificWeekdays && dayOfWeek == DayOfWeekFlags.None)
+            {
+                return Result.Failure<DoseSchedule>("A weekday schedule needs at least one day");
+            }
+            if (fType == FrequencyType.OneOff && times.Count != 1)
+            {
+                return Result.Failure<DoseSchedule>("A one-off dose has exactly one time; it is given once, on its effective-from day");
+            }
+            if (effectiveTo.HasValue && effectiveTo.Value < effectiveFrom)
+            {
+                return Result.Failure<DoseSchedule>("A schedule cannot end before it starts");
             }
             // The anchor only means something for interval schedules. Left out, the
             // cycle starts on the phase's first day; given, it continues an existing

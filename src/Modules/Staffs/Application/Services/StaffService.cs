@@ -110,6 +110,15 @@ namespace Staffs.Application.Services
             {
                 return Result.Failure<(Stream Content, string ContentType)>(new Error("403", "You are not authorized to view documents for this staff", ErrorKind.Forbidden));
             }
+
+            // The key comes from the client. Checking only that the staff member is
+            // ours and then fetching any key handed over other homes' files, or
+            // residents' records, to anyone holding a key. Only this staff member's
+            // own documents and profile image may come back.
+            if (string.IsNullOrWhiteSpace(key) || !await staffRepository.OwnsStorageKeyAsync(staffId, key, cancellationToken))
+            {
+                return Result.Failure<(Stream Content, string ContentType)>(Error.NotFound("Staffs.DocumentNotFound", "Document not found."));
+            }
             var document = await documentService.GetObjectAsync(objectKey: key, sourceBucket: options.Value.BucketName, cancellationToken);
             return Result.Success(document);
         }
@@ -128,7 +137,8 @@ namespace Staffs.Application.Services
                 Email: result.Email,
                 PhoneNumber: result.PhoneNumber,
                 Address: result.Address,
-                Role: result.Role
+                Role: result.Role,
+                IsActive: result.IsActive
             ));
         }
 
@@ -183,12 +193,124 @@ namespace Staffs.Application.Services
                 return Result.Failure(StaffErrors.NotFound);
             }
 
-            existingStaff.Update(staff.FirstName, staff.LastName, staff.Email, staff.PhoneNumber, staff.Role, staff.Address);
+            // Any text used to be accepted as a role, and the change stopped at this
+            // record: sign-in kept the old role, so a demoted admin stayed an admin.
+            string? newRole = null;
+            if (!string.IsNullOrWhiteSpace(staff.Role))
+            {
+                newRole = Staff.CanonicalRole(staff.Role);
+                if (newRole is null)
+                {
+                    return Result.Failure(InvalidRole);
+                }
+                if (newRole == existingStaff.Role)
+                {
+                    newRole = null;
+                }
+            }
+            if (newRole is not null && existingStaff.Role == nameof(Staffs.Domain.RoleEnum.Admin) && await IsLastActiveAdminAsync(existingStaff, cancellationToken))
+            {
+                return Result.Failure(LastAdmin);
+            }
+            var newEmail = !string.IsNullOrWhiteSpace(staff.Email)
+                && !string.Equals(staff.Email.Trim(), existingStaff.Email, StringComparison.OrdinalIgnoreCase)
+                ? staff.Email.Trim()
+                : null;
+
+            // The sign-in record first: if it refuses (the email is taken), nothing
+            // here has changed, and the two never disagree about who this is.
+            if (newEmail is not null)
+            {
+                var email = await authService.ChangeEmailAsync(staffId.Value, newEmail, cancellationToken);
+                if (email.IsFailure)
+                {
+                    return email;
+                }
+            }
+            if (newRole is not null)
+            {
+                var role = await authService.ChangeRoleAsync(staffId.Value, newRole, cancellationToken);
+                if (role.IsFailure)
+                {
+                    return role;
+                }
+            }
+
+            existingStaff.Update(staff.FirstName, staff.LastName, newEmail, staff.PhoneNumber, newRole, staff.Address);
             staffRepository.Update(existingStaff);
             await staffRepository.SaveChangesAsync(cancellationToken);
 
+            // The new address has to be confirmed before it can be used to sign in.
+            if (newEmail is not null)
+            {
+                await SendEmailVerificationLinkAsync(newEmail, existingStaff.UserName, cancellationToken);
+            }
             return Result.Success();
         }
+
+        public async Task<Result> DeactivateStaffAsync(StaffId staffId, DeactivateStaffRequest request, CancellationToken cancellationToken)
+        {
+            var staff = await staffRepository.GetByIdAsync(staffId, cancellationToken);
+            if (staff is null)
+            {
+                return Result.Failure(StaffErrors.NotFound);
+            }
+            if (staffId.Value == currentUser.UserId)
+            {
+                return Result.Failure(Error.Conflict("Staffs.CannotDeactivateSelf", "You cannot deactivate your own account."));
+            }
+            if (staff.Role == nameof(Staffs.Domain.RoleEnum.Admin) && await IsLastActiveAdminAsync(staff, cancellationToken))
+            {
+                return Result.Failure(LastAdmin);
+            }
+
+            // Checked in memory first, then sign-in is closed, then the record is
+            // saved: if the save fails the staff member can no longer sign in, which
+            // is the safe way round.
+            var deactivated = staff.Deactivate(currentUser.UserId, request.Reason, DateTime.Now);
+            if (deactivated.IsFailure)
+            {
+                return deactivated;
+            }
+            var signIn = await authService.DeactivateAsync(staffId.Value, cancellationToken);
+            if (signIn.IsFailure)
+            {
+                return signIn;
+            }
+            await staffRepository.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }
+
+        public async Task<Result> ReactivateStaffAsync(StaffId staffId, CancellationToken cancellationToken)
+        {
+            var staff = await staffRepository.GetByIdAsync(staffId, cancellationToken);
+            if (staff is null)
+            {
+                return Result.Failure(StaffErrors.NotFound);
+            }
+            var reactivated = staff.Reactivate(DateTime.Now);
+            if (reactivated.IsFailure)
+            {
+                return reactivated;
+            }
+            var signIn = await authService.ReactivateAsync(staffId.Value, cancellationToken);
+            if (signIn.IsFailure)
+            {
+                return signIn;
+            }
+            await staffRepository.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }
+
+        // A care home always keeps one active admin: without one, nobody can add
+        // staff, change roles or undo this.
+        private async Task<bool> IsLastActiveAdminAsync(Staff staff, CancellationToken cancellationToken) =>
+            staff.IsActive && await staffRepository.CountActiveAdminsAsync(cancellationToken) <= 1;
+
+        private static readonly Error InvalidRole = Error.Validation("Staffs.InvalidRole", "The role must be Admin or Carer.");
+
+        private static readonly Error LastAdmin = Error.Conflict("Staffs.LastAdmin",
+            "This is the care home's only active admin. Make someone else an admin first.");
 
         public async Task<Result<(string AccessToken, string RefreshToken)>> LoginStaffAsync( string userName, string password, CancellationToken token)
         {
@@ -251,7 +373,7 @@ namespace Staffs.Application.Services
             var link = await authService.GenerateEmailVerificationLinkAsync(email);
             if (link.IsFailure)
             {
-                logger.LogWarning("Could not build an email verification link for {Email}: {Error}", email, link.Error.Description);
+                logger.LogWarning("Could not build an email verification link for {UserName}: {Error}", userName, link.Error.Description);
                 return;
             }
             try
@@ -259,12 +381,12 @@ namespace Staffs.Application.Services
                 var sent = await notification.SendEmailVerificationLinkAsync(email, userName, link.Value, cancellationToken);
                 if (sent.IsFailure)
                 {
-                    logger.LogWarning("Email verification link to {Email} was not sent: {Error}", email, sent.Error.Description);
+                    logger.LogWarning("The email verification link for {UserName} was not sent: {Error}", userName, sent.Error.Description);
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Sending the email verification link to {Email} failed.", email);
+                logger.LogError(ex, "Sending the email verification link for {UserName} failed.", userName);
             }
         }
 
@@ -289,19 +411,27 @@ namespace Staffs.Application.Services
                 return Result.Failure(callbackUrl.Error);
             }
 
-            // Sent straight to the notification service, not queued. Unlike the
-            // verification link, a failure is returned: nothing else was changed, so
-            // the caller can simply ask again.
+            // Every well-formed request gets the same answer, whether or not there was
+            // an account to send to and whether or not the mail server took it:
+            // "Invalid user" here told anyone which emails belong to staff. The staff
+            // member who gets no email asks again.
+            if (callbackUrl.Value is null)
+            {
+                return Result.Success();
+            }
             try
             {
-                return await notification.SendPasswordResetLinkAsync(email, callbackUrl.Value, cancellationToken);
+                var sent = await notification.SendPasswordResetLinkAsync(email, callbackUrl.Value, cancellationToken);
+                if (sent.IsFailure)
+                {
+                    logger.LogWarning("A password reset link was not sent: {Error}", sent.Error.Description);
+                }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Sending the password reset link to {Email} failed.", email);
-                return Result.Failure(Error.Validation("Auth.ResetEmailFailed",
-                    "We couldn't send the password reset email. Please try again."));
+                logger.LogError(ex, "Sending a password reset link failed.");
             }
+            return Result.Success();
         }
 
         public async Task<Result<bool>> ResetPasswordAsync(string email, string token, string password)

@@ -11,6 +11,10 @@ namespace Staffs.Infrastructure
     {
         public Guid CareHomeId {get; set;}
 
+        // Set when the staff member leaves or is suspended. A deactivated user
+        // cannot sign in, refresh, or use a token issued before.
+        public DateTimeOffset? DeactivatedAt {get; set;}
+
       
     }
 }
